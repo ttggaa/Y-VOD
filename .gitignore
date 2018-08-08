@@ -89,6 +89,7 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+lint/
 
 # Spyder project settings
 .spyderproject
@@ -102,3 +103,27 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+# SQLite database
+*.sqlite
+*.sqlite-journal
+*.db
+
+# uWSGI configuration
+uwsgi_config.ini
+
+# Supervisor log
+uwsgi.log
+uwsgi.log.*
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+
+# Data
+data/
+
+# Cache
+cache/
