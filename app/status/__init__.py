@@ -3,7 +3,7 @@
 from flask import Blueprint
 
 
-manage = Blueprint('manage', __name__)
+status = Blueprint('status', __name__)
 
 
 from . import views

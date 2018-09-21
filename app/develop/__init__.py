@@ -3,7 +3,7 @@
 from flask import Blueprint
 
 
-manage = Blueprint('manage', __name__)
+develop = Blueprint('develop', __name__)
 
 
 from . import views
