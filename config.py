@@ -40,9 +40,6 @@ class Config:
     # Authentication
     MAX_INVALID_LOGIN_COUNT = 10
 
-    # iPad
-    LOW_BATTERY_LEVEL = 30
-
     @staticmethod
     def init_app(app):
         pass

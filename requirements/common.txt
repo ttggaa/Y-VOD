@@ -7,3 +7,4 @@ Flask-WTF==0.14.2
 htmlmin==0.1.12
 pypinyin==0.33.1
 python-dotenv==0.9.1
+PyYAML==3.13
