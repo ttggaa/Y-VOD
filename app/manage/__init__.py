@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+'''app/manage/__init___.py'''
+
 from flask import Blueprint
 
 

@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+
 '''config.py'''
 
 import os

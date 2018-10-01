@@ -1,11 +1,14 @@
 # -*- coding: utf-8 -*-
 
+'''app/decorators.py'''
+
 from functools import wraps
 from flask import abort
 from flask_login import current_user
 
 
 def permission_required(permission_name):
+    '''permission_required(permission_name)'''
     def decorator(f):
         @wraps(f)
         def decorated_function(*args, **kwargs):
@@ -17,6 +20,7 @@ def permission_required(permission_name):
 
 
 def role_required(role_name):
+    '''role_required(role_name)'''
     def decorator(f):
         @wraps(f)
         def decorated_function(*args, **kwargs):
