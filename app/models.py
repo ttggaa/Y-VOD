@@ -2,9 +2,12 @@
 
 '''app/models.py'''
 
+import os
+import io
+from datetime import datetime
 from flask_login import UserMixin, AnonymousUserMixin
 from . import db, login_manager
-from .datautils import CSVReader, CSVWriter, load_yaml
+from .utils import CSVReader, CSVWriter, load_yaml
 
 
 class RolePermission(db.Model):
@@ -52,7 +55,7 @@ class Role(db.Model):
         return '<Role {}>'.format(self.name)
 
 
-class IDType(object):
+class IDType(db.Model):
     '''Table: id_types'''
     __tablename__ = 'id_types'
     id = db.Column(db.Integer, primary_key=True)
@@ -61,6 +64,7 @@ class IDType(object):
 
     @staticmethod
     def insert_entries(data, basedir, verbose=False):
+        '''insert_entries(data, basedir, verbose=False)'''
         yaml_file = os.path.join(basedir, 'data', data, 'id_types.yml')
         entries = load_yaml(yaml_file=yaml_file)
         if entries is not None:
@@ -87,6 +91,7 @@ class Gender(db.Model):
 
     @staticmethod
     def insert_entries(data, basedir, verbose=False):
+        '''insert_entries(data, basedir, verbose=False)'''
         yaml_file = os.path.join(basedir, 'data', data, 'genders.yml')
         entries = load_yaml(yaml_file=yaml_file)
         if entries is not None:
@@ -127,58 +132,74 @@ class User(UserMixin, db.Model):
     user_logs = db.relationship('UserLog', backref='user', lazy='dynamic')
 
     def ping(self):
+        '''ping(self)'''
         self.last_seen_at = datetime.utcnow()
         db.session.add(self)
 
     def update_ip(self, ip_address):
+        '''update_ip(self, ip_address)'''
         self.last_seen_ip = ip_address
         db.session.add(self)
 
     def increase_invalid_login_count(self):
+        '''increase_invalid_login_count(self)'''
         self.invalid_login_count += 1
         db.session.add(self)
 
     def reset_invalid_login_count(self):
+        '''reset_invalid_login_count(self)'''
         self.invalid_login_count = 0
         db.session.add(self)
 
     @property
     def locked(self):
+        '''locked(self)'''
         return self.invalid_login_count >= current_app.config['MAX_INVALID_LOGIN_COUNT']
 
 
 class AnonymousUser(AnonymousUserMixin):
+    '''AnonymousUser(AnonymousUserMixin)'''
+
     def can(self, permission_name):
+        '''can(self, permission_name)'''
         return False
 
     def plays(self, role_name):
+        '''plays(self, role_name)'''
         return False
 
     @property
     def is_suspended(self):
+        '''is_suspended(self)'''
         return False
 
     @property
     def is_student(self):
+        '''is_student(self)'''
         return False
 
     @property
     def is_staff(self):
+        '''is_staff(self)'''
         return False
 
     @property
     def is_moderator(self):
+        '''is_moderator(self)'''
         return False
 
     @property
     def is_administrator(self):
+        '''is_administrator(self)'''
         return False
 
     @property
     def is_developer(self):
+        '''is_developer(self)'''
         return False
 
     def is_superior_than(self, user):
+        '''is_superior_than(self, user)'''
         return False
 
 
@@ -187,6 +208,7 @@ login_manager.anonymous_user = AnonymousUser
 
 @login_manager.user_loader
 def load_user(user_id):
+    '''load_user(user_id)'''
     return User.query.get(int(user_id))
 
 
@@ -199,6 +221,7 @@ class Room(db.Model):
 
     @staticmethod
     def insert_entries(data, basedir, verbose=False):
+        '''insert_entries(data, basedir, verbose=False)'''
         yaml_file = os.path.join(basedir, 'data', data, 'rooms.yml')
         entries = load_yaml(yaml_file=yaml_file)
         if entries is not None:
@@ -256,6 +279,7 @@ class UserLog(db.Model):
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
 
     def to_csv(self):
+        '''to_csv(self)'''
         entry_csv = [
             str(self.id),
             str(self.user_id),
@@ -267,6 +291,7 @@ class UserLog(db.Model):
 
     @staticmethod
     def insert_entries(data, basedir, verbose=False):
+        '''insert_entries(data, basedir, verbose=False)'''
         csv_file = os.path.join(basedir, 'data', data, 'user_logs.csv')
         if os.path.exists(csv_file):
             print('---> Read: {}'.format(csv_file))
@@ -292,6 +317,7 @@ class UserLog(db.Model):
 
     @staticmethod
     def backup_entries(data, basedir):
+        '''backup_entries(data, basedir)'''
         csv_file = os.path.join(basedir, 'data', data, 'user_logs.csv')
         if os.path.exists(csv_file):
             os.remove(csv_file)
