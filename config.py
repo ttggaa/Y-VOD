@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+'''config.py'''
 
 import os
 import sys
@@ -9,9 +10,12 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 
 
 class Config:
+    '''Config'''
+
     # Directories
     BASE_DIR = basedir
     DATA_DIR = os.path.join(BASE_DIR, 'data')
+    VIDEO_DIR = os.path.join(DATA_DIR, 'videos')
 
     # Version
     PYTHON_VERSION = '{0.major}.{0.minor}.{0.micro}'.format(sys.version_info)
@@ -42,10 +46,13 @@ class Config:
 
     @staticmethod
     def init_app(app):
+        '''init_app(app)'''
         pass
 
 
 class DevelopmentConfig(Config):
+    '''DevelopmentConfig'''
+
     ENV = 'development'
     DEBUG = True
 
@@ -57,15 +64,13 @@ class DevelopmentConfig(Config):
 
 
 class ProductionConfig(Config):
+    '''ProductionConfig'''
+
     # Security
     SECRET_KEY = os.getenv('YVOD_PROD_SECRET_KEY')
 
     # Database
     SQLALCHEMY_DATABASE_URI = os.getenv('YVOD_PROD_DATABASE_URL')
-
-    @classmethod
-    def init_app(cls, app):
-        Config.init_app(app)
 
 
 config = {

@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+'''manage.py'''
 
 import os
 
@@ -20,6 +21,7 @@ migrate = Migrate(app, db)
 
 
 def make_shell_context():
+    '''Make shell context'''
     return dict(app=app, db=db)
 
 
@@ -29,18 +31,16 @@ manager.add_command('db', MigrateCommand)
 
 @manager.command
 def create():
-    '''
-    Run create tasks.
-    '''
+    '''Run create tasks'''
+
     db.create_all()
     print('---> All tables are created.')
 
 
 @manager.command
 def cleanup():
-    '''
-    Run cleanup tasks.
-    '''
+    '''Run cleanup tasks'''
+
     if app.debug:
         remove_database_confirm = input('Would you like to remove all database files? [yes/No]: ')
         if remove_database_confirm.lower() in ['y', 'yes']:
@@ -66,9 +66,7 @@ def cleanup():
 
 @manager.command
 def deploy():
-    '''
-    Run deployment tasks.
-    '''
+    '''Run deployment tasks'''
 
     # migrate database to latest revision
     from flask_migrate import upgrade
@@ -123,9 +121,8 @@ def deploy():
 
 @manager.command
 def backup():
-    '''
-    Run backup tasks.
-    '''
+    '''Run backup tasks'''
+
     from config import basedir
     data = input('Enter data identifier (e.g.: backup or 20160422 or press the enter/return key): ')
     if data == '':
