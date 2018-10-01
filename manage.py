@@ -95,12 +95,6 @@ def deploy():
     from app.models import CourseType
     CourseType.insert_entries(data=data, basedir=basedir, verbose=verbose)
 
-    from app.models import iPadCapacity
-    iPadCapacity.insert_entries(data=data, basedir=basedir, verbose=verbose)
-
-    from app.models import iPadState
-    iPadState.insert_entries(data=data, basedir=basedir, verbose=verbose)
-
     from app.models import Room
     Room.insert_entries(data=data, basedir=basedir, verbose=verbose)
 
