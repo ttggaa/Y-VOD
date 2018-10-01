@@ -3,7 +3,8 @@
 '''app/models.py'''
 
 from flask_login import UserMixin, AnonymousUserMixin
-from . import db
+from . import db, login_manager
+from .datautils import CSVReader, CSVWriter, load_yaml
 
 
 class RolePermission(db.Model):
@@ -60,10 +61,10 @@ class IDType(object):
 
     @staticmethod
     def insert_entries(data, basedir, verbose=False):
-        datafile = os.path.join(basedir, 'data', data, 'id_types.yml')
-        entries = load_yaml(datafile=datafile)
+        yaml_file = os.path.join(basedir, 'data', data, 'id_types.yml')
+        entries = load_yaml(yaml_file=yaml_file)
         if entries is not None:
-            print('---> Read: {}'.format(datafile))
+            print('---> Read: {}'.format(yaml_file))
             for entry in entries:
                 id_type = IDType(name=entry['name'])
                 db.session.add(id_type)
@@ -71,7 +72,7 @@ class IDType(object):
                     print('导入ID类型信息', entry['name'])
             db.session.commit()
         else:
-            print('文件不存在', datafile)
+            print('文件不存在', yaml_file)
 
     def __repr__(self):
         return '<ID Type {}>'.format(self.name)
@@ -86,10 +87,10 @@ class Gender(db.Model):
 
     @staticmethod
     def insert_entries(data, basedir, verbose=False):
-        datafile = os.path.join(basedir, 'data', data, 'genders.yml')
-        entries = load_yaml(datafile=datafile)
+        yaml_file = os.path.join(basedir, 'data', data, 'genders.yml')
+        entries = load_yaml(yaml_file=yaml_file)
         if entries is not None:
-            print('---> Read: {}'.format(datafile))
+            print('---> Read: {}'.format(yaml_file))
             for entry in entries:
                 gender = Gender(name=entry['name'])
                 db.session.add(gender)
@@ -97,7 +98,7 @@ class Gender(db.Model):
                     print('导入性别类型信息', entry['name'])
             db.session.commit()
         else:
-            print('文件不存在', datafile)
+            print('文件不存在', yaml_file)
 
     def __repr__(self):
         return '<Gender {}>'.format(self.name)
@@ -122,6 +123,8 @@ class User(UserMixin, db.Model):
     gender_id = db.Column(db.Integer, db.ForeignKey('genders.id'))
     # study properties
     time_factor = db.Column(db.Float, default=1.0)
+    # user logs
+    user_logs = db.relationship('UserLog', backref='user', lazy='dynamic')
 
     def ping(self):
         self.last_seen_at = datetime.utcnow()
@@ -144,6 +147,49 @@ class User(UserMixin, db.Model):
         return self.invalid_login_count >= current_app.config['MAX_INVALID_LOGIN_COUNT']
 
 
+class AnonymousUser(AnonymousUserMixin):
+    def can(self, permission_name):
+        return False
+
+    def plays(self, role_name):
+        return False
+
+    @property
+    def is_suspended(self):
+        return False
+
+    @property
+    def is_student(self):
+        return False
+
+    @property
+    def is_staff(self):
+        return False
+
+    @property
+    def is_moderator(self):
+        return False
+
+    @property
+    def is_administrator(self):
+        return False
+
+    @property
+    def is_developer(self):
+        return False
+
+    def is_superior_than(self, user):
+        return False
+
+
+login_manager.anonymous_user = AnonymousUser
+
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
+
+
 class Room(db.Model):
     '''Table: rooms'''
     __tablename__ = 'rooms'
@@ -153,10 +199,10 @@ class Room(db.Model):
 
     @staticmethod
     def insert_entries(data, basedir, verbose=False):
-        datafile = os.path.join(basedir, 'data', data, 'rooms.yml')
-        entries = load_yaml(datafile=datafile)
+        yaml_file = os.path.join(basedir, 'data', data, 'rooms.yml')
+        entries = load_yaml(yaml_file=yaml_file)
         if entries is not None:
-            print('---> Read: {}'.format(datafile))
+            print('---> Read: {}'.format(yaml_file))
             for entry in entries:
                 room = Room(name=entry['name'])
                 db.session.add(room)
@@ -164,7 +210,7 @@ class Room(db.Model):
                     print('导入房间信息', entry['name'])
             db.session.commit()
         else:
-            print('文件不存在', datafile)
+            print('文件不存在', yaml_file)
 
     def __repr__(self):
         return '<Room {}>'.format(self.name)
@@ -198,3 +244,69 @@ class Video(db.Model):
 
     def __repr__(self):
         return '<Video {}>'.format(self.name)
+
+
+class UserLog(db.Model):
+    '''Table: user_logs'''
+    __tablename__ = 'user_logs'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    event = db.Column(db.UnicodeText)
+    category = db.Column(db.Unicode(64), index=True)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def to_csv(self):
+        entry_csv = [
+            str(self.id),
+            str(self.user_id),
+            self.event,
+            self.category,
+            self.timestamp.strftime('%Y-%m-%dT%H:%M:%S'),
+        ]
+        return entry_csv
+
+    @staticmethod
+    def insert_entries(data, basedir, verbose=False):
+        csv_file = os.path.join(basedir, 'data', data, 'user_logs.csv')
+        if os.path.exists(csv_file):
+            print('---> Read: {}'.format(csv_file))
+            with io.open(csv_file, 'rt', newline='') as f:
+                reader = CSVReader(f)
+                line_num = 0
+                for entry in reader:
+                    if line_num >= 1:
+                        user_log = UserLog(
+                            id=int(entry[0]),
+                            user_id=int(entry[1]),
+                            event=entry[2],
+                            category=entry[3],
+                            timestamp=datetime.strptime(entry[4], '%Y-%m-%dT%H:%M:%S')
+                        )
+                        db.session.add(user_log)
+                        if verbose:
+                            print('导入用户日志信息', entry[1], entry[2], entry[3], entry[4])
+                    line_num += 1
+                db.session.commit()
+        else:
+            print('文件不存在', csv_file)
+
+    @staticmethod
+    def backup_entries(data, basedir):
+        csv_file = os.path.join(basedir, 'data', data, 'user_logs.csv')
+        if os.path.exists(csv_file):
+            os.remove(csv_file)
+        with io.open(csv_file, 'wt', newline='') as f:
+            writer = CSVWriter(f)
+            writer.writerow([
+                'id',
+                'user_id',
+                'event',
+                'category',
+                'timestamp',
+            ])
+            for entry in UserLog.query.all():
+                writer.writerow(entry.to_csv())
+            print('---> Write: {}'.format(csv_file))
+
+    def __repr__(self):
+        return '<User Log {}, {}, {}, {}>'.format(self.user.name_alias, self.event, self.category, self.timestamp)
