@@ -326,7 +326,7 @@ class Video(db.Model):
     '''Table: videos'''
     __tablename__ = 'videos'
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.Unicode(64), unique=True, index=True)
+    name = db.Column(db.Unicode(64), index=True)
     description = db.Column(db.Unicode(64))
     lesson_id = db.Column(db.Integer, db.ForeignKey('lessons.id'))
     duration = db.Column(db.Interval, default=timedelta(milliseconds=0))
