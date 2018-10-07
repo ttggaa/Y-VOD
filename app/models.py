@@ -7,7 +7,7 @@ import io
 from datetime import datetime
 from flask_login import UserMixin, AnonymousUserMixin
 from . import db, login_manager
-from .utils import CSVReader, CSVWriter, load_yaml
+from .utils import CSVReader, CSVWriter, load_yaml, get_video_duration, to_pinyin
 
 
 class RolePermission(db.Model):
@@ -64,7 +64,7 @@ class IDType(db.Model):
 
     @staticmethod
     def insert_entries(data, basedir, verbose=False):
-        '''insert_entries(data, basedir, verbose=False)'''
+        '''IDType.insert_entries(data, basedir, verbose=False)'''
         yaml_file = os.path.join(basedir, 'data', data, 'id_types.yml')
         entries = load_yaml(yaml_file=yaml_file)
         if entries is not None:
@@ -91,7 +91,7 @@ class Gender(db.Model):
 
     @staticmethod
     def insert_entries(data, basedir, verbose=False):
-        '''insert_entries(data, basedir, verbose=False)'''
+        '''Gender.insert_entries(data, basedir, verbose=False)'''
         yaml_file = os.path.join(basedir, 'data', data, 'genders.yml')
         entries = load_yaml(yaml_file=yaml_file)
         if entries is not None:
@@ -132,74 +132,87 @@ class User(UserMixin, db.Model):
     user_logs = db.relationship('UserLog', backref='user', lazy='dynamic')
 
     def ping(self):
-        '''ping(self)'''
+        '''User.ping(self)'''
         self.last_seen_at = datetime.utcnow()
         db.session.add(self)
 
     def update_ip(self, ip_address):
-        '''update_ip(self, ip_address)'''
+        '''User.update_ip(self, ip_address)'''
         self.last_seen_ip = ip_address
         db.session.add(self)
 
     def increase_invalid_login_count(self):
-        '''increase_invalid_login_count(self)'''
+        '''User.increase_invalid_login_count(self)'''
         self.invalid_login_count += 1
         db.session.add(self)
 
     def reset_invalid_login_count(self):
-        '''reset_invalid_login_count(self)'''
+        '''User.reset_invalid_login_count(self)'''
         self.invalid_login_count = 0
         db.session.add(self)
 
     @property
     def locked(self):
-        '''locked(self)'''
+        '''User.locked(self)'''
         return self.invalid_login_count >= current_app.config['MAX_INVALID_LOGIN_COUNT']
+
+    @staticmethod
+    def on_changed_name(target, value, oldvalue, initiator):
+        '''User.on_changed_name(target, value, oldvalue, initiator)'''
+        name_pinyin = '{} {}'.format(to_pinyin(value), to_pinyin(value, initials=True))
+        if name_pinyin != ' ':
+            target.name_pinyin = name_pinyin
+
+    def __repr__(self):
+        return '<User {}>'.format(self.name)
+
+
+db.event.listen(User.name, 'set', User.on_changed_name)
 
 
 class AnonymousUser(AnonymousUserMixin):
     '''AnonymousUser(AnonymousUserMixin)'''
 
     def can(self, permission_name):
-        '''can(self, permission_name)'''
+        '''AnonymousUser.can(self, permission_name)'''
         return False
 
     def plays(self, role_name):
-        '''plays(self, role_name)'''
+        '''AnonymousUser.plays(self, role_name)'''
         return False
 
     @property
     def is_suspended(self):
-        '''is_suspended(self)'''
+        '''AnonymousUser.is_suspended(self)'''
         return False
 
     @property
     def is_student(self):
-        '''is_student(self)'''
+        '''AnonymousUser.is_student(self)'''
         return False
 
     @property
     def is_staff(self):
-        '''is_staff(self)'''
+        '''AnonymousUser.is_staff(self)'''
         return False
 
     @property
     def is_moderator(self):
-        '''is_moderator(self)'''
+        '''AnonymousUser.is_moderator(self)'''
         return False
 
     @property
     def is_administrator(self):
-        '''is_administrator(self)'''
+        '''AnonymousUser.is_administrator(self)'''
         return False
 
     @property
     def is_developer(self):
-        '''is_developer(self)'''
+        '''AnonymousUser.is_developer(self)'''
         return False
 
     def is_superior_than(self, user):
-        '''is_superior_than(self, user)'''
+        '''AnonymousUser.is_superior_than(self, user)'''
         return False
 
 
@@ -221,7 +234,7 @@ class Room(db.Model):
 
     @staticmethod
     def insert_entries(data, basedir, verbose=False):
-        '''insert_entries(data, basedir, verbose=False)'''
+        '''Room.insert_entries(data, basedir, verbose=False)'''
         yaml_file = os.path.join(basedir, 'data', data, 'rooms.yml')
         entries = load_yaml(yaml_file=yaml_file)
         if entries is not None:
@@ -249,11 +262,61 @@ class ClientDevice(db.Model):
         return '<Client Device {}>'.format(self.name)
 
 
+class LessonType(db.Model):
+    '''Table: lesson_types'''
+    __tablename__ = 'lesson_types'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.Unicode(64), unique=True, index=True)
+    lessons = db.relationship('Lesson', backref='type', lazy='dynamic')
+
+    @staticmethod
+    def insert_entries(data, basedir, verbose=False):
+        '''LessonType.insert_entries(data, basedir, verbose=False)'''
+        datafile = os.path.join(basedir, 'data', data, 'lesson_types.yml')
+        entries = load_yaml(datafile=datafile)
+        if entries is not None:
+            print('---> Read: {}'.format(datafile))
+            for entry in entries:
+                lesson_type = LessonType(name=entry['name'])
+                db.session.add(lesson_type)
+                if verbose:
+                    print('导入课程类型信息', entry['name'])
+            db.session.commit()
+        else:
+            print('文件不存在', datafile)
+
+    def __repr__(self):
+        return '<Lesson Type {}>'.format(self.name)
+
+
 class Lesson(db.Model):
     '''Table: lessons'''
     __tablename__ = 'lessons'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.Unicode(64), unique=True, index=True)
+    abbr = db.Column(db.Unicode(64))
+    type_id = db.Column(db.Integer, db.ForeignKey('lesson_types.id'))
+    videos = db.relationship('Video', backref='lesson', lazy='dynamic')
+
+    @staticmethod
+    def insert_entries(data, basedir, verbose=False):
+        '''Lesson.insert_entries(data, basedir, verbose=False)'''
+        datafile = os.path.join(basedir, 'data', data, 'lessons.yml')
+        entries = load_yaml(datafile=datafile)
+        if entries is not None:
+            print('---> Read: {}'.format(datafile))
+            for entry in entries:
+                lesson = Lesson(
+                    name=entry['name'],
+                    abbr=entry['abbr'],
+                    type_id=LessonType.query.filter_by(name=entry['lesson_type_name']).first().id
+                )
+                db.session.add(lesson)
+                if verbose:
+                    print('导入课程信息', entry['name'])
+            db.session.commit()
+        else:
+            print('文件不存在', datafile)
 
     def __repr__(self):
         return '<Lesson {}>'.format(self.name)
@@ -264,6 +327,37 @@ class Video(db.Model):
     __tablename__ = 'videos'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.Unicode(64), unique=True, index=True)
+    description = db.Column(db.Unicode(64))
+    lesson_id = db.Column(db.Integer, db.ForeignKey('lessons.id'))
+    duration = db.Column(db.Interval, default=timedelta(milliseconds=0))
+    file_name = db.Column(db.Unicode(64))
+
+    @staticmethod
+    def insert_entries(data, basedir, verbose=False):
+        '''Video.insert_entries(data, basedir, verbose=False)'''
+        datafile = os.path.join(basedir, 'data', data, 'videos.yml')
+        entries = load_yaml(datafile=datafile)
+        if entries is not None:
+            print('---> Read: {}'.format(datafile))
+            for entry in entries:
+                video_file = os.path.join(basedir, 'data', 'videos', entry['file_name'])
+                if os.path.exists(video_file):
+                    video = Video(
+                        name=entry['name'],
+                        description=entry['description'],
+                        lesson_id=Lesson.query.filter_by(name=entry['lesson_name']).first().id,
+                        duration=get_video_duration(video_file),
+                        file_name=entry['file_name']
+                    )
+                    db.session.add(video)
+                    if verbose:
+                        print('导入视频信息', entry['name'], entry['file_name'])
+                else:
+                    if verbose:
+                        print('视频文件不存在', entry['name'], entry['file_name'])
+            db.session.commit()
+        else:
+            print('文件不存在', datafile)
 
     def __repr__(self):
         return '<Video {}>'.format(self.name)
@@ -291,7 +385,7 @@ class UserLog(db.Model):
 
     @staticmethod
     def insert_entries(data, basedir, verbose=False):
-        '''insert_entries(data, basedir, verbose=False)'''
+        '''UserLog.insert_entries(data, basedir, verbose=False)'''
         csv_file = os.path.join(basedir, 'data', data, 'user_logs.csv')
         if os.path.exists(csv_file):
             print('---> Read: {}'.format(csv_file))
@@ -317,7 +411,7 @@ class UserLog(db.Model):
 
     @staticmethod
     def backup_entries(data, basedir):
-        '''backup_entries(data, basedir)'''
+        '''UserLog.backup_entries(data, basedir)'''
         csv_file = os.path.join(basedir, 'data', data, 'user_logs.csv')
         if os.path.exists(csv_file):
             os.remove(csv_file)

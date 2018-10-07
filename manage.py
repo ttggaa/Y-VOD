@@ -92,11 +92,11 @@ def deploy():
     from app.models import Gender
     Gender.insert_entries(data=data, basedir=basedir, verbose=verbose)
 
-    from app.models import CourseType
-    CourseType.insert_entries(data=data, basedir=basedir, verbose=verbose)
-
     from app.models import Room
     Room.insert_entries(data=data, basedir=basedir, verbose=verbose)
+
+    from app.models import LessonType
+    LessonType.insert_entries(data=data, basedir=basedir, verbose=verbose)
 
     from app.models import Lesson
     Lesson.insert_entries(data=data, basedir=basedir, verbose=verbose)
@@ -112,6 +112,9 @@ def deploy():
 
         from app.models import UserLog
         UserLog.insert_entries(data=data, basedir=basedir, verbose=verbose)
+
+        from app.models import ClientDevice
+        ClientDevice.insert_entries(data=data, basedir=basedir, verbose=verbose)
 
 
 @manager.command
@@ -132,6 +135,9 @@ def backup():
 
     from app.models import UserLog
     UserLog.backup_entries(data=data, basedir=basedir)
+
+    from app.models import ClientDevice
+    ClientDevice.backup_entries(data=data, basedir=basedir)
 
 
 if __name__ == '__main__':
