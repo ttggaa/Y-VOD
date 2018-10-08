@@ -3,17 +3,15 @@
 '''manage.py'''
 
 import os
+from flask_script import Manager, Shell
+from flask_migrate import Migrate, MigrateCommand
+from app import create_app, db
 
 
 if os.path.exists('.env'):
     print('Importing environment from .env...')
     from dotenv import load_dotenv
     load_dotenv()
-
-
-from app import create_app, db
-from flask_script import Manager, Shell
-from flask_migrate import Migrate, MigrateCommand
 
 
 app = create_app(os.getenv('YVOD_CONFIG') or 'default')
@@ -89,11 +87,17 @@ def deploy():
     from app.models import Role
     Role.insert_entries(data=data, basedir=basedir, verbose=verbose)
 
+    from app.models import IDType
+    IDType.insert_entries(data=data, basedir=basedir, verbose=verbose)
+
     from app.models import Gender
     Gender.insert_entries(data=data, basedir=basedir, verbose=verbose)
 
     from app.models import Room
     Room.insert_entries(data=data, basedir=basedir, verbose=verbose)
+
+    from app.models import DeviceType
+    DeviceType.insert_entries(data=data, basedir=basedir, verbose=verbose)
 
     from app.models import LessonType
     LessonType.insert_entries(data=data, basedir=basedir, verbose=verbose)
@@ -104,17 +108,17 @@ def deploy():
     from app.models import Video
     Video.insert_entries(data=data, basedir=basedir, verbose=verbose)
 
-    data = input('Enter data identifier (e.g.: initial or 20160422): ')
+    data = input('Enter data identifier (e.g.: initial or 20180805): ')
     datadir = os.path.join(basedir, 'data', data)
     if os.path.exists(datadir):
         from app.models import User
         User.insert_entries(data=data, basedir=basedir, verbose=verbose)
 
+        from app.models import Device
+        Device.insert_entries(data=data, basedir=basedir, verbose=verbose)
+
         from app.models import UserLog
         UserLog.insert_entries(data=data, basedir=basedir, verbose=verbose)
-
-        from app.models import ClientDevice
-        ClientDevice.insert_entries(data=data, basedir=basedir, verbose=verbose)
 
 
 @manager.command
@@ -122,7 +126,7 @@ def backup():
     '''Run backup tasks'''
 
     from config import basedir
-    data = input('Enter data identifier (e.g.: backup or 20160422 or press the enter/return key): ')
+    data = input('Enter data identifier (e.g.: backup or 20180805 or press the enter/return key): ')
     if data == '':
         from datetime import datetime
         data = datetime.now().strftime('%Y%m%d%H%M%S')
@@ -133,11 +137,11 @@ def backup():
     from app.models import User
     User.backup_entries(data=data, basedir=basedir)
 
+    from app.models import Device
+    Device.backup_entries(data=data, basedir=basedir)
+
     from app.models import UserLog
     UserLog.backup_entries(data=data, basedir=basedir)
-
-    from app.models import ClientDevice
-    ClientDevice.backup_entries(data=data, basedir=basedir)
 
 
 if __name__ == '__main__':

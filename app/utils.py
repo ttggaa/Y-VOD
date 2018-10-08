@@ -9,8 +9,6 @@ import csv
 import yaml
 from pymediainfo import MediaInfo
 from pypinyin import slug, Style
-from . import db
-from .models import UserLog
 
 
 class CSVReader:
@@ -62,9 +60,3 @@ def to_pinyin(hans, initials=False):
     if initials:
         return slug(hans=hans, style=Style.FIRST_LETTER, separator='', errors='ignore')
     return slug(hans=hans, style=Style.NORMAL, separator='', errors='ignore')
-
-
-def add_user_log(user, event, category):
-    '''add_user_log(user, event, category)'''
-    user_log = UserLog(user_id=user.id, event=event, category=category)
-    db.session.add(user_log)
