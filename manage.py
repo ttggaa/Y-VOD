@@ -3,15 +3,17 @@
 '''manage.py'''
 
 import os
-from flask_script import Manager, Shell
-from flask_migrate import Migrate, MigrateCommand
-from app import create_app, db
 
 
 if os.path.exists('.env'):
     print('Importing environment from .env...')
     from dotenv import load_dotenv
     load_dotenv()
+
+
+from flask_script import Manager, Shell
+from flask_migrate import Migrate, MigrateCommand
+from app import create_app, db
 
 
 app = create_app(os.getenv('YVOD_CONFIG') or 'default')
