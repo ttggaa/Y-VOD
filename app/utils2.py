@@ -10,10 +10,12 @@ def get_device_info(ip_address, show_ip=False):
     '''get_device_info(ip_address, show_ip=False)'''
     if ip_address is not None:
         device = Device.query.filter_by(ip_address=ip_address).first()
-        if show_ip:
-            return '{} {}'.format(ip_address, device.alias)
-        return device.alias
-    return '未授权设备'
+        if device is not None:
+            if show_ip:
+                return '{} {}'.format(ip_address, device.alias)
+            return device.alias
+        return '未授权设备'
+    return 'N/A'
 
 
 def add_user_log(user, event, category):
