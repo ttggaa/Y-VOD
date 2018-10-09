@@ -9,14 +9,16 @@
     <a class="item" href="{{ current_user.url }}"><i class="id card icon"></i>个人档案</a>
     {% if current_user.is_staff %}<a class="item" href="{{ url_for('status.home') }}" ><i class="tachometer alternate icon"></i>系统实况</a>{% endif %}
     <a class="item" href="{{ url_for('study.home') }}" ><i class="chalkboard teacher icon"></i>视频研修</a>
-    <a class="item" href="{{ url_for('auth.logout') }}" ><i class="door open icon"></i>登出</a>
     {% if current_user.is_developer %}<div class="item">
         <div class="header">系统信息</div>
         <div class="menu">
-            <div class="item"><i class="python icon"></i>v{{ config.VERSION }} (Python {{ config.PYTHON_VERSION }})</div>
-            <div class="item"><i class="laptop code icon"></i>{{ current_user.last_login_device_with_ip }}</div>
+            <div class="item"><i class="tag icon"></i>v{{ config.VERSION }}</div>
+            <div class="item"><i class="python icon"></i>Python {{ config.PYTHON_VERSION }}</div>
+            <div class="item">{% with device = current_user.last_login_device %}<i class="{% if device.category == 'development' %}laptop code{% elif device.type.name == 'Desktop' %}desktop{% elif device.type.name == 'Tablet' %}tablet alternate{% elif device.type.name == 'Mobile' %}mobile alternate{% endif %} icon"></i>{{ device.alias }}{% endwith %}</div>
+            <div class="item"><i class="globe icon"></i>{{ current_user.last_seen_ip }}</div>
         </div>
     </div>{% endif %}
+    <a class="item" href="{{ url_for('auth.logout') }}" ><i class="door open icon"></i>登出</a>
     {% else %}
     <a class="item" href="{{ url_for('auth.login') }}"><i class="user circle icon"></i>登录</a>
     {% endif %}

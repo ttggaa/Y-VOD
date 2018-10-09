@@ -15,7 +15,7 @@ def get_device_info(ip_address, show_ip=False):
         else:
             device_info = '未授权设备'
         if show_ip:
-            return '{} {}'.format(ip_address, device_info)
+            return '{} {}'.format(device_info, ip_address)
         return device_info
     return 'N/A'
 

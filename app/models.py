@@ -239,10 +239,12 @@ class User(UserMixin, db.Model):
 
     @property
     def last_login_device(self):
+        '''User.last_login_device(self)'''
         return Device.query.filter_by(ip_address=self.last_seen_ip).first()
 
     @property
     def last_login_device_with_ip(self):
+        '''User.last_login_device_with_ip(self)'''
         if self.last_login_device is not None:
             device_info = self.last_login_device.alias
         else:
