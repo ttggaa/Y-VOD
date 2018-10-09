@@ -1,11 +1,13 @@
 <div class="ui inverted borderless fixed menu">
     <div class="ui container">
-        <div class="item">
+        <div class="logo item">
             <div class="ui middle aligned image">
                 <img class="logo-image" src="{{ url_for('static', filename='images/logo-white.svg') }}" alt="Logo">
             </div>
-            <!-- <div class="logo-text">云英语 &middot; Y-VOD</div> -->
         </div>
         <div class="toc link header item" data-tooltip="菜单" data-position="bottom center" data-inverted=""><i class="sidebar icon"></i>云英语 &middot; Y-VOD</div>
+        {% if current_user.is_authenticated %}<div class="right menu">
+            <a class="item" href="{{ current_user.url }}" data-tooltip="个人档案" data-position="bottom center" data-inverted=""><i class="user {% if current_user.is_developer %}secret{% elif current_user.is_student %}graduate{% elif current_user.is_staff %}tie{% else %}circle{% endif %} icon"></i>{{ current_user.name }}</a>
+        </div>{% endif %}
     </div>
 </div>

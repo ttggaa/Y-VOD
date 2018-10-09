@@ -11,10 +11,12 @@ def get_device_info(ip_address, show_ip=False):
     if ip_address is not None:
         device = Device.query.filter_by(ip_address=ip_address).first()
         if device is not None:
-            if show_ip:
-                return '{} {}'.format(ip_address, device.alias)
-            return device.alias
-        return '未授权设备'
+            device_info = device.alias
+        else:
+            device_info = '未授权设备'
+        if show_ip:
+            return '{} {}'.format(ip_address, device_info)
+        return device_info
     return 'N/A'
 
 

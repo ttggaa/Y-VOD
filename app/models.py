@@ -237,6 +237,18 @@ class User(UserMixin, db.Model):
         self.last_seen_ip = ip_address
         db.session.add(self)
 
+    @property
+    def last_login_device(self):
+        return Device.query.filter_by(ip_address=self.last_seen_ip).first()
+
+    @property
+    def last_login_device_with_ip(self):
+        if self.last_login_device is not None:
+            device_info = self.last_login_device.alias
+        else:
+            device_info = '未授权设备'
+        return '{} ({})'.format(device_info, self.last_seen_ip)
+
     def increase_invalid_login_count(self):
         '''User.increase_invalid_login_count(self)'''
         self.invalid_login_count += 1
