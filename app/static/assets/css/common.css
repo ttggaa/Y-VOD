@@ -1,15 +1,15 @@
 /* common.css */
 
 .ui.borderless.menu .toc.item {
-    display: none;
+    /*display: none;*/
 }
 
 .logo-image {
-    width: 30px;
+    width: 24px;
 }
 .logo-text {
     margin-left: 10px;
-    font-size: 1.6em;
+    font-size: 1.2em;
     font-weight: normal;
     display: inline-block;
     vertical-align: middle;
@@ -40,11 +40,10 @@
 @media only screen and (max-width: 767px) {
     .ui.borderless.menu .item,
     .ui.borderless.menu .menu {
-        display: none;
+        /*display: none;*/
     }
-    .ui.borderless.menu .toc.item,
-    .ui.borderless.menu .advertisement.item {
-        display: block;
+    .ui.borderless.menu .toc.item {
+        /*display: block;*/
     }
     .ui.vertical.segment {
         padding-top: 4em;

@@ -1,0 +1,13 @@
+<div class="ui inverted sidebar vertical menu">
+    <div class="header item"">
+        <div class="ui middle aligned image">
+            <img class="logo-image" src="{{ url_for('static', filename='images/logo-white.svg') }}" alt="Logo">
+        </div>
+        <div class="logo-text">云英语 &middot; Y-VOD</div>
+    </div>
+    {% if current_user.is_authenticated %}
+    {% if current_user.is_staff %}<a class="item" href="{{ url_for('status.home') }}" ><i class="tachometer alternate icon"></i>系统实况</a>{% endif %}
+    <a class="item" href="{{ url_for('study.home') }}" ><i class="chalkboard teacher icon"></i>视频研修</a>
+    <a class="item" href="{{ url_for('auth.logout') }}" ><i class="door open icon"></i>登出</a>
+    {% endif %}
+</div>
