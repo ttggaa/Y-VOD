@@ -22,11 +22,11 @@
 
 .ui.masthead.vertical.segment,
 .ui.main.vertical.segment {
-    margin-top: 5em;
+    padding-top: 11em;
 }
 
 .ui.masthead.vertical.segment+.ui.main.vertical.segment {
-    margin-top: 0em;
+    padding-top: 6em;
 }
 
 .ui.error.header {
@@ -42,10 +42,12 @@
         padding-top: 4em;
         padding-bottom: 4em;
     }
-
     .ui.masthead.vertical.segment,
     .ui.main.vertical.segment {
-        margin-top: 3em;
+        padding-top: 7em;
+    }
+    .ui.masthead.vertical.segment+.ui.main.vertical.segment {
+        padding-top: 4em;
     }
     .ui.error.header {
         font-size: 4em;

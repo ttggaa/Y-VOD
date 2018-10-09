@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% import "_macros.html" as macros %}
+
+{% block title %}系统配置{% endblock %}
+
+{% block header %}
+<h1 class="ui header"><i class="cog icon"></i>系统配置</h1>
+{% endblock %}
+
+{% block content %}
+<div class="ui masthead vertical segment">
+    <div class="ui container">
+        {{ macros.message_widget() }}
+        <h1 class="ui center aligned header"><i class="cog icon"></i>系统配置</h1>
+    </div>
+</div>
+<div class="ui main vertical segment">
+    <div class="ui container">
+        <h3 class="ui header"><i class="cog icon"></i>配置列表</h3>
+        <table class="ui sortable selectable celled table">
+            <thead>
+                <tr>
+                    <th>配置项</th>
+                    <th>值</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for key, value in config|dictsort %}
+                <tr>
+                    <td>{{ key }}</td>
+                    <td>{% if value != None %}<code>{% if 'PASSWORD' in key or 'SECRET' in key or 'TOKEN' in key or 'URI' in key or 'SERIAL' in key %}********{% elif key == 'RENDERED_AT' %}{{ value().strftime('%Y-%m-%dT%H:%M:%SZ') }}{% else %}{{ value }}{% endif %}</code>{% endif %}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr>
+                    <th>共 {{ config|length }} 项</th>
+                    <th></th>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script type="text/javascript" src="{{ url_for('static', filename='assets/library/ui/tablesort.min.js') }}"></script>
+<script type="text/javascript">
+$('.message .close').click(function () {
+    $(this).closest('.message').transition('fade');
+});
+
+$('.ui.sortable.table').tablesort();
+</script>
+{% endblock %}
