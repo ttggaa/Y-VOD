@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% import "_macros.html" as macros %}
+
+{% block title %}登录{% endblock %}
+
+{% block content %}
+<div class="ui masthead vertical segment">
+    <div class="ui narrow container">
+        <h1 class="ui center aligned header"><i class="user circle icon"></i>登录账户</h1>
+        <form id="login" action="{{ url_for('auth.login', next=request.args.get('next')) }}" method="POST" class="ui form">
+            {{ form.hidden_tag() }}
+            <div class="field">
+                <div class="ui large left icon input">
+                    <i class="user icon"></i>
+                    {{ form.name(placeholder='姓名') }}
+                </div>
+            </div>
+            <div class="field">
+                <div class="ui large left icon input">
+                    <i class="id card icon"></i>
+                    {{ form.id_number(placeholder='证件号码') }}
+                </div>
+            </div>
+            {{ form.submit(class='ui large primary fluid button') }}
+        </form>
+        <div class="ui message">
+            <i class="info icon"></i>若证件号码包含字母，请使用大写。</a>
+        </div>
+        {{ macros.message_widget() }}
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script type="text/javascript">
+$('.message .close').click(function () {
+    $(this).closest('.message').transition('fade');
+});
+
+$(document).ready(function () {
+    $('#login').form({
+        inline: true,
+        on: 'blur',
+        fields: {
+            name: {
+                identifier: 'name',
+                rules: [
+                    {
+                        type: 'empty',
+                        prompt: '请输入您的姓名'
+                    }
+                ]
+            },
+            id_number: {
+                identifier: 'id_number',
+                rules: [
+                    {
+                        type: 'empty',
+                        prompt: '请输入您的证件号码'
+                    }
+                ]
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

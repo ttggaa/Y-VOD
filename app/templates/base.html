@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0">
+    <title>{% block title %}{% endblock %} &middot;{% if current_user.is_authenticated %} {{ current_user.name }} &middot;{% endif %} Y-VOD &middot; 云英语</title>
+    <meta name="version" content="Y-VOD v{{ config.VERSION }} (Python {{ config.PYTHON_VERSION }})">
+    <meta name="author" content="iROCKBUNNY">
+    <meta name="description" content="Y-VOD: Y-English Intranet Video-On-Demand Solution">
+    <meta name="keywords" content="Y-English, Y-VOD, VOD, English, Education">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='assets/library/ui/semantic.min.css') }}">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='assets/css/common.css') }}">
+    {% block css %}{% endblock %}
+    <link rel="apple-touch-icon" type="image/png" href="{{ url_for('static', filename='apple-touch-icon.png') }}">
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
+</head>
+<body>
+    {% include "_sidebar.html" %}
+    <div class="pusher">
+        {% include "_header.html" %}
+        {% block content %}{% endblock %}
+        {% include "_footer.html" %}
+    </div>
+    <script type="text/javascript" src="{{ url_for('static', filename='assets/library/jquery/jquery.min.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='assets/library/ui/semantic.min.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='assets/library/day/dayjs.min.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='assets/library/day/relativeTime.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='assets/library/day/zh-cn.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='assets/js/common.js') }}"></script>
+    {% block js %}{% endblock %}
+</body>
+</html>
