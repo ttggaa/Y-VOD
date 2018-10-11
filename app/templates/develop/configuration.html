@@ -42,9 +42,7 @@
 {% block js %}
 <script type="text/javascript" src="{{ url_for('static', filename='assets/library/ui/tablesort.min.js') }}"></script>
 <script type="text/javascript">
-$('.message .close').click(function () {
-    $(this).closest('.message').transition('fade');
-});
+{{ macros.close_message_js_snippet() }}
 
 $('.ui.sortable.table').tablesort();
 </script>
