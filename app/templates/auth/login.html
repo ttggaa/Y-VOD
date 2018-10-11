@@ -33,35 +33,31 @@
 
 {% block js %}
 <script type="text/javascript">
-$('.message .close').click(function () {
-    $(this).closest('.message').transition('fade');
-});
+{{ macros.close_message_js_snippet() }}
 
-$(document).ready(function () {
-    $('#login').form({
-        inline: true,
-        on: 'blur',
-        fields: {
-            name: {
-                identifier: 'name',
-                rules: [
-                    {
-                        type: 'empty',
-                        prompt: '请输入您的姓名'
-                    }
-                ]
-            },
-            id_number: {
-                identifier: 'id_number',
-                rules: [
-                    {
-                        type: 'empty',
-                        prompt: '请输入您的证件号码'
-                    }
-                ]
-            }
+$('#login').form({
+    inline: true,
+    on: 'blur',
+    fields: {
+        name: {
+            identifier: 'name',
+            rules: [
+                {
+                    type: 'empty',
+                    prompt: '请输入您的姓名'
+                }
+            ]
+        },
+        id_number: {
+            identifier: 'id_number',
+            rules: [
+                {
+                    type: 'empty',
+                    prompt: '请输入您的证件号码'
+                }
+            ]
         }
-    });
+    }
 });
 </script>
 {% endblock %}

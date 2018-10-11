@@ -7,3 +7,9 @@
     </div>{% endfor %}
 </div>{% endif %}{% endwith %}
 {%- endmacro %}
+
+{% macro close_message_js_snippet() -%}
+$('.message .close').click(function () {
+    $(this).closest('.message').transition('fade');
+});
+{%- endmacro %}

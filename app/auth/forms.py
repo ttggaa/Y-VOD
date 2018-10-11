@@ -9,5 +9,5 @@ from wtforms.validators import InputRequired, Length
 
 class LoginForm(FlaskForm):
     name = StringField('姓名', validators=[InputRequired(), Length(1, 64)])
-    id_number = StringField('证件号', validators=[InputRequired()])
+    id_number = StringField('证件号码', validators=[InputRequired()])
     submit = SubmitField('登录')
