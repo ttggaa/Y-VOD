@@ -28,6 +28,9 @@ class Config:
     # SSL
     SSL_DISABLE = True
 
+    # Security
+    AUTH_TOKEN_SECRET_KEY = os.getenv('YVOD_AUTH_TOKEN_SECRET_KEY')
+
     # SQLAlchemy
     SQLALCHEMY_RECORD_QUERIES = True
     SQLALCHEMY_TRACK_MODIFICATIONS = False

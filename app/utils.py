@@ -4,11 +4,19 @@
 
 import os
 import io
-from datetime import timedelta
+from datetime import datetime, timedelta
 import csv
 import yaml
 from pymediainfo import MediaInfo
 from pypinyin import slug, Style
+
+
+def datetime_now(utc_offset=0):
+    return datetime.utcnow() + timedelta(hours=utc_offset)
+
+
+def date_now(utc_offset=0):
+    return datetime_now(utc_offset=utc_offset).date()
 
 
 class CSVReader:

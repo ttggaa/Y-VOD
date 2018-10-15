@@ -5,10 +5,12 @@
 import os
 import io
 from datetime import datetime, timedelta
+from hashlib import md5
+from base64 import b64encode
 from flask import current_app, url_for
 from flask_login import UserMixin, AnonymousUserMixin
 from . import db, login_manager
-from .utils import CSVReader, CSVWriter, load_yaml, get_video_duration, to_pinyin
+from .utils import date_now, CSVReader, CSVWriter, load_yaml, get_video_duration, to_pinyin
 
 
 class RolePermission(db.Model):
@@ -283,6 +285,11 @@ class User(UserMixin, db.Model):
         self.role_id = role.id
         self.deleted = False
         db.session.add(self)
+
+    def verify_auth_token(self, token):
+        '''User.verify_auth_token(self, token)'''
+        string = 'name={}&id_number={}&date={}&secret={}'.format(self.name, self.id_number, date_now(utc_offset=current_app.config['UTC_OFFSET']).isoformat(), current_app.config['AUTH_TOKEN_SECRET_KEY'])
+        return token == b64encode(md5(string.encode('utf-8')).digest()).decode('utf-8').replace('+', '').replace('/', '').replace('=', '').lower()[-6:]
 
     def can(self, permission_name):
         '''User.can(self, permission_name)'''

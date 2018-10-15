@@ -39,10 +39,14 @@ def login():
             return redirect(url_for('auth.login', next=request.args.get('next')))
         user = User.query.filter_by(name=form.name.data, id_number=form.id_number.data, deleted=False).first()
         if user is not None:
-            login_user(user, remember=False)
-            add_user_log(user=user, event='登录系统', category='access')
-            db.session.commit()
-            return redirect(request.args.get('next') or user.index_url)
+            if user.verify_auth_token(token=form.auth_token.data):
+                login_user(user, remember=False)
+                add_user_log(user=user, event='登录系统', category='access')
+                db.session.commit()
+                return redirect(request.args.get('next') or user.index_url)
+            else:
+                flash('登录失败：无效的授权码', category='error')
+                return redirect(url_for('auth.login', next=request.args.get('next')))
         else:
             flash('登录失败：无效的用户信息', category='error')
             return redirect(url_for('auth.login', next=request.args.get('next')))

@@ -21,6 +21,12 @@
                     {{ form.id_number(placeholder='证件号码') }}
                 </div>
             </div>
+            <div class="field">
+                <div class="ui large left icon input">
+                    <i class="key icon"></i>
+                    {{ form.auth_token(placeholder='授权码') }}
+                </div>
+            </div>
             {{ form.submit(class='ui large primary fluid button') }}
         </form>
         <div class="ui message">
@@ -54,6 +60,15 @@ $('#login').form({
                 {
                     type: 'empty',
                     prompt: '请输入您的证件号码'
+                }
+            ]
+        },
+        auth_token: {
+            identifier: 'auth_token',
+            rules: [
+                {
+                    type: 'empty',
+                    prompt: '请输入您的授权码'
                 }
             ]
         }
