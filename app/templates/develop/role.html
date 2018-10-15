@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% import "_macros.html" as macros %}
+
+{% block title %}用户角色{% endblock %}
+
+{% block content %}
+<div class="ui masthead vertical segment">
+    <div class="ui container">
+        {{ macros.message_widget() }}
+        <h1 class="ui center aligned header"><i class="users cog icon"></i>用户角色</h1>
+    </div>
+</div>
+<div class="ui main vertical segment">
+    <div class="ui container">
+        <h3 class="ui header"><i class="users cog icon"></i>角色列表</h3>
+        <table class="ui sortable selectable celled table">
+            <thead>
+                <tr>
+                    <th>角色名称</th>
+                    <th>角色级别</th>
+                    <th>用户数量</th>
+                    <th>研修权限</th>
+                    <th>管理权限</th>
+                    <th>开发权限</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for role in roles %}
+                <tr{% if role.permissions_num(category='study') > 1 or role.permissions_num(category='manage') > 1 or role.permissions_num(category='develop') > 1 %} class="top aligned"{% endif %}>
+                    <td>{{ role.name }}</td>
+                    <td>{{ role.level }} 级</td>
+                    <td>{{ role.users.count() }}</td>
+                    <td>
+                        {% with permissions = role.permissions_alias(category='study', formatted=False) %}{% if permissions.count() %}<div class="ui ordered list">
+                            {% for permission in permissions %}<div class="item">{{ permission.name }}</div>{% endfor %}
+                        </div>{% else %}无{% endif %}{% endwith %}
+                    </td>
+                    <td>
+                        {% with permissions = role.permissions_alias(category='manage', formatted=False) %}{% if permissions.count() %}<div class="ui ordered list">
+                            {% for permission in permissions %}<div class="item">{{ permission.name }}</div>{% endfor %}
+                        </div>{% else %}无{% endif %}{% endwith %}
+                     </td>
+                    <td>
+                        {% with permissions = role.permissions_alias(category='develop', formatted=False) %}{% if permissions.count() %}<div class="ui ordered list">
+                            {% for permission in permissions %}<div class="item">{{ permission.name }}</div>{% endfor %}
+                        </div>{% else %}无{% endif %}{% endwith %}
+                     </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% if pagination %}{{ macros.pagination_widget(pagination, 'develop.role') }}{% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script type="text/javascript" src="{{ url_for('static', filename='assets/library/ui/tablesort.min.js') }}"></script>
+<script type="text/javascript">
+{{ macros.close_message_js_snippet() }}
+
+$('.ui.sortable.table').tablesort();
+</script>
+{% endblock %}

@@ -8,13 +8,27 @@
     {% if current_user.is_authenticated %}
     <a class="item" href="{{ current_user.url }}"><i class="id card icon"></i>个人档案</a>
     {% if current_user.is_staff %}<a class="item" href="{{ url_for('status.home') }}" ><i class="tachometer alternate icon"></i>系统实况</a>{% endif %}
-    <a class="item" href="{{ url_for('study.home') }}" ><i class="chalkboard teacher icon"></i>视频研修</a>
+    {% if current_user.can('研修') %}<div class="item">
+        <div class="header">研修</div>
+        <div class="menu">
+            {% if current_user.can('研修VB') %}<a class="item"  href="{{ url_for('study.vb') }}"><i class="chalkboard teacher icon"></i>VB研修</a>{% endif %}
+            {% if current_user.can('研修Y-GRE') %}<a class="item"  href="{{ url_for('study.y_gre') }}"><i class="chalkboard teacher icon"></i>Y-GRE研修</a>{% endif %}
+        </div>
+    </div>{% endif %}
+    {% if current_user.can('管理') %}<div class="item">
+        <div class="header">管理</div>
+        <div class="menu">
+            {% if current_user.can('管理学生') %}<a class="item" href="{{ url_for('main.home') }}"><i class="user graduate icon"></i>学生管理</a>{% endif %}
+            {% if current_user.can('管理员工') %}<a class="item" href="{{ url_for('main.home') }}"><i class="user tie icon"></i>员工管理</a>{% endif %}
+            {% if current_user.can('管理设备') %}<a class="item" href="{{ url_for('main.home') }}"><i class="tablet alternate icon"></i>设备管理</a>{% endif %}
+        </div>
+    </div>{% endif %}
     {% if current_user.is_developer %}<div class="item">
         <div class="header">开发</div>
         <div class="menu">
-            <a class="item" href="{{ url_for('main.home') }}"><i class="users cog icon"></i>用户角色</a>
-            <a class="item" href="{{ url_for('main.home') }}"><i class="user shield icon"></i>用户权限</a>
-            <a class="item" href="{{ url_for('main.home') }}"><i class="history icon"></i>用户日志</a>
+            <a class="item" href="{{ url_for('develop.role') }}"><i class="users cog icon"></i>用户角色</a>
+            <a class="item" href="{{ url_for('develop.permission') }}"><i class="user shield icon"></i>用户权限</a>
+            <a class="item" href="{{ url_for('develop.log') }}"><i class="history icon"></i>用户日志</a>
             <a class="item" href="{{ url_for('develop.configuration') }}"><i class="cog icon"></i>系统配置</a>
         </div>
     </div>

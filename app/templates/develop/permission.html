@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% import "_macros.html" as macros %}
+
+{% block title %}用户权限{% endblock %}
+
+{% block content %}
+<div class="ui masthead vertical segment">
+    <div class="ui container">
+        {{ macros.message_widget() }}
+        <h1 class="ui center aligned header"><i class="user shield icon"></i>用户权限</h1>
+    </div>
+</div>
+<div class="ui main vertical segment">
+    <div class="ui container">
+        <h3 class="ui header"><i class="user shield icon"></i>权限列表</h3>
+        <table class="ui sortable selectable celled table">
+            <thead>
+                <tr>
+                    <th>权限名称</th>
+                    <th>赋予角色数量</th>
+                    <th>赋予角色</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for permission in permissions %}
+                <tr{% if permission.roles.count() > 1 %} class="top aligned"{% endif %}>
+                    <td>{{ permission.name }}</td>
+                    <td>{{ permission.roles.count() }}</td>
+                    <td>
+                        {% if permission.roles.count() %}<div class="ui ordered list">
+                            {% for role_permission in permission.roles %}<div class="item">{{ role_permission.role.name }}</div>{% endfor %}
+                        </div>{% else %}无{% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% if pagination %}{{ macros.pagination_widget(pagination, 'develop.permission') }}{% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script type="text/javascript" src="{{ url_for('static', filename='assets/library/ui/tablesort.min.js') }}"></script>
+<script type="text/javascript">
+{{ macros.close_message_js_snippet() }}
+
+$('.ui.sortable.table').tablesort();
+</script>
+{% endblock %}

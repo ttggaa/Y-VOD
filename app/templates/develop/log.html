@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% import "_macros.html" as macros %}
+
+{% block title %}用户日志{% endblock %}
+
+{% block content %}
+<div class="ui masthead vertical segment">
+    <div class="ui container">
+        {{ macros.message_widget() }}
+        <h1 class="ui center aligned header"><i class="history icon"></i>用户日志</h1>
+    </div>
+</div>
+<div class="ui main vertical segment">
+    <div class="ui container">
+        <h3 class="ui header"><i class="history icon"></i>日志列表</h3>
+        <div class="ui secondary stackable menu">
+            <a class="item {% if show_all_logs %}active {% endif %}loading-trigger" href="{{ url_for('develop.all_logs') }}">全部</a>
+            <a class="item {% if show_study_logs %}active {% endif %}loading-trigger" href="{{ url_for('develop.study_logs') }}">研修</a>
+            <a class="item {% if show_manage_logs %}active {% endif %}loading-trigger" href="{{ url_for('develop.manage_logs') }}">管理</a>
+            <a class="item {% if show_develop_logs %}active {% endif %}loading-trigger" href="{{ url_for('develop.develop_logs') }}">开发</a>
+            <a class="item {% if show_auth_logs %}active {% endif %}loading-trigger" href="{{ url_for('develop.auth_logs') }}">鉴权</a>
+            <a class="item {% if show_access_logs %}active {% endif %}loading-trigger" href="{{ url_for('develop.access_logs') }}">访问</a>
+        </div>
+        <div class="ui feed">
+            {% for log in logs %}
+            <div class="event">
+                <div class="label"><i class="user {% if log.user.is_developer %}secret{% elif log.user.is_student %}graduate{% elif log.user.is_staff %}tie{% else %}circle{% endif %} icon"></i></div>
+                <div class="content">
+                    <div class="summary">
+                        {{ macros.user_log_widget(log, log.user.id == current_user.id, show_role=current_user.is_developer, show_category=show_all_logs) }}
+                        <div class="date">{{ macros.from_now_widget(log.timestamp) }}</div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% if pagination %}{{ macros.pagination_widget(pagination, 'develop.log') }}{% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script type="text/javascript" src="{{ url_for('static', filename='assets/library/ui/tablesort.min.js') }}"></script>
+<script type="text/javascript">
+{{ macros.close_message_js_snippet() }}
+</script>
+{% endblock %}

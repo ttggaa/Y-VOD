@@ -9,8 +9,15 @@ from . import study
 from ..decorators import permission_required
 
 
-@study.route('/')
+@study.route('/vb')
 @login_required
-def home():
-    '''study.home()'''
-    return minify(render_template('study/home.html'))
+def vb():
+    '''study.vb()'''
+    return minify(render_template('study/vb.html'))
+
+
+@study.route('/y-gre')
+@login_required
+def y_gre():
+    '''study.y_gre()'''
+    return minify(render_template('study/y_gre.html'))

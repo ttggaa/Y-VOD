@@ -1,3 +1,24 @@
+{% macro pagination_widget(pagination, endpoint, fragment='') -%}
+<div class="ui mini secondary stackable menu">
+    {% if pagination.has_prev %}<a class="item loading-trigger" href="{{ url_for(endpoint, page=pagination.prev_num, **kwargs) }}{{ fragment }}"><i class="fitted chevron left icon"></i></a>{% else %}<div class="disabled item"><i class="fitted chevron left icon"></i></div>{% endif %}
+    {% for p in pagination.iter_pages(left_edge=2, left_current=2, right_current=3, right_edge=2) %}{% if p %}<a class="{% if p == pagination.page %}active {% endif %}item loading-trigger" href="{{ url_for(endpoint, page=p, **kwargs) }}{{ fragment }}">{{ p }}</a>{% else %}<div class="disabled item"><i class="fitted ellipsis horizontal icon"></i></div>{% endif %}{% endfor %}
+    {% if pagination.has_next %}<a class="item loading-trigger" href="{{ url_for(endpoint, page=pagination.next_num, **kwargs) }}{{ fragment }}"><i class="fitted chevron right icon"></i></a>{% else %}<div class="disabled item"><i class="fitted chevron right icon"></i></div>{% endif %}
+    {% if pagination.pages > 9 %}<div class="right menu">
+        <div class="item">
+            <form id="jump-to-page" action="{{ url_for(endpoint, **kwargs) }}" method="GET" class="ui form">
+                <div class="field">
+                    <div class="ui mini transparent left icon input">
+                        <input id="page" name="page" type="text" placeholder="跳转至某页…">
+                        <i class="arrow right icon"></i>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>{% endif %}
+</div>
+{%- endmacro %}
+
+
 {% macro message_widget() -%}
 {% with messages = get_flashed_messages(with_categories=true) %}{% if messages %}<div id="message-container">
     {% for category, message in messages %}<div class="ui {% if category == 'message' %}info{% else %}{{ category }}{% endif %} message">
@@ -8,8 +29,24 @@
 </div>{% endif %}{% endwith %}
 {%- endmacro %}
 
+
 {% macro close_message_js_snippet() -%}
 $('.message .close').click(function () {
     $(this).closest('.message').transition('fade');
 });
+{%- endmacro %}
+
+
+{% macro user_url_widget(user, is_current_user=False) -%}
+{% if is_current_user %}<i class="yellow star icon"></i>{% endif %}<a href="{{ user.url }}" target="_blank">{{ user.name }}</a>
+{%- endmacro %}
+
+
+{% macro user_log_widget(log, is_current_user=False, show_role=False, show_category=False) -%}
+{% if show_category %}<div class="ui grey horizontal label">{{ log.category }}</div>{% endif %}{% if show_role %}<div class="ui horizontal label">{{ log.user.role.name }}</div>{% endif %}{% if is_current_user %}我{% else %}{{ user_url_widget(log.user) }}{% endif %} {{ log.event }}
+{%- endmacro %}
+
+
+{% macro from_now_widget(timestamp) -%}
+{% if timestamp %}<span class="popup-timestamp" data-timestamp="{{ timestamp.strftime('%Y-%m-%dT%H:%M:%SZ') }}"></span>{% else %}N/A{% endif %}
 {%- endmacro %}
