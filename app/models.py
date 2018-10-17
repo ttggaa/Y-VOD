@@ -207,6 +207,63 @@ class Gender(db.Model):
         return '<Gender {}>'.format(self.name)
 
 
+class UserCreation(db.Model):
+    '''Table: user_creations'''
+    __tablename__ = 'user_creations'
+    creator_id = db.Column(db.Integer, db.ForeignKey('users.id'), primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), primary_key=True)
+
+    def to_csv(self):
+        '''UserCreation.to_csv(self)'''
+        entry_csv = [
+            str(self.creator_id),
+            str(self.user_id),
+        ]
+        return entry_csv
+
+    @staticmethod
+    def insert_entries(data, basedir, verbose=False):
+        '''UserCreation.insert_entries(data, basedir, verbose=False)'''
+        csv_file = os.path.join(basedir, 'data', data, 'user_creations.csv')
+        if os.path.exists(csv_file):
+            print('---> Read: {}'.format(csv_file))
+            with io.open(csv_file, 'rt', newline='') as f:
+                reader = CSVReader(f)
+                line_num = 0
+                for entry in reader:
+                    if line_num >= 1:
+                        user_creation = UserCreation(
+                            creator_id=int(entry[0]),
+                            user_id=int(entry[1])
+                        )
+                        db.session.add(user_creation)
+                        if verbose:
+                            print('导入用户创建人信息', entry[0], entry[1])
+                    line_num += 1
+                db.session.commit()
+        else:
+            print('文件不存在', csv_file)
+
+    @staticmethod
+    def backup_entries(data, basedir):
+        '''UserCreation.backup_entries(data, basedir):'''
+        csv_file = os.path.join(basedir, 'data', data, 'user_creations.csv')
+        if os.path.exists(csv_file):
+            os.remove(csv_file)
+        with io.open(csv_file, 'wt', newline='') as f:
+            writer = CSVWriter(f)
+            writer.writerow([
+                'creator_id',
+                'user_id',
+            ])
+            for entry in UserCreation.query.all():
+                writer.writerow(entry.to_csv())
+            print('---> Write: {}'.format(csv_file))
+
+    def __repr__(self):
+        return '<User Creation {} {}>'.format(self.creator.name, self.user.name)
+
+
 class User(UserMixin, db.Model):
     '''Table: users'''
     __tablename__ = 'users'
@@ -217,13 +274,28 @@ class User(UserMixin, db.Model):
     last_seen_at = db.Column(db.DateTime)
     last_seen_ip = db.Column(db.Unicode(64))
     invalid_login_count = db.Column(db.Integer, default=0)
-    deleted = db.Column(db.Boolean, default=False)
+    suspended = db.Column(db.Boolean, default=False)
     # profile properties
     name = db.Column(db.Unicode(64), index=True)
     name_pinyin = db.Column(db.Unicode(64), index=True)
     id_type_id = db.Column(db.Integer, db.ForeignKey('id_types.id'))
     id_number = db.Column(db.Unicode(64), index=True)
     gender_id = db.Column(db.Integer, db.ForeignKey('genders.id'))
+    # user relationship properties
+    made_user_creations = db.relationship(
+        'UserCreation',
+        foreign_keys=[UserCreation.creator_id],
+        backref=db.backref('creator', lazy='joined'),
+        lazy='dynamic',
+        cascade='all, delete-orphan'
+    )
+    received_user_creations = db.relationship(
+        'UserCreation',
+        foreign_keys=[UserCreation.user_id],
+        backref=db.backref('user', lazy='joined'),
+        lazy='dynamic',
+        cascade='all, delete-orphan'
+    )
     # management properties
     modified_devices = db.relationship('Device', backref='modified_by', lazy='dynamic')
     # user logs
@@ -268,22 +340,14 @@ class User(UserMixin, db.Model):
         '''User.locked(self)'''
         return self.invalid_login_count >= current_app.config['MAX_INVALID_LOGIN_COUNT']
 
-    def delete(self):
-        '''User.delete(self)'''
-        for user_log in self.user_logs:
-            db.session.delete(user_log)
-        db.session.delete(self)
-
-    def safe_delete(self):
-        '''User.safe_delete(self)'''
-        self.role_id = Role.query.filter_by(name='挂起').first().id
-        self.deleted = True
+    def suspend(self):
+        '''User.suspend(self)'''
+        self.suspended = True
         db.session.add(self)
 
-    def restore(self, role):
-        '''User.restore(self, role)'''
-        self.role_id = role.id
-        self.deleted = False
+    def restore(self):
+        '''User.restore(self)'''
+        self.suspended = False
         db.session.add(self)
 
     def verify_auth_token(self, token):
@@ -293,6 +357,8 @@ class User(UserMixin, db.Model):
 
     def can(self, permission_name):
         '''User.can(self, permission_name)'''
+        if self.suspended:
+            return False
         permission = Permission.query.filter_by(name=permission_name).first()
         return permission is not None and \
             self.role is not None and \
@@ -300,44 +366,41 @@ class User(UserMixin, db.Model):
 
     def plays(self, role_name):
         '''User.plays(self, role_name)'''
+        if self.suspended:
+            return False
         role = Role.query.filter_by(name=role_name).first()
         return role is not None and \
             self.role is not None and \
             (self.role.id == role.id or self.role.is_superior_than(role=role))
 
     @property
-    def is_suspended(self):
-        '''User.is_suspended(self)'''
-        return self.role.name == '挂起'
-
-    @property
     def is_student(self):
         '''User.is_student(self)'''
-        return self.role.category == 'student'
+        return not self.suspended and self.role.category == 'student'
 
     @property
     def is_staff(self):
         '''User.is_staff(self)'''
-        return self.role.category == 'staff'
+        return not self.suspended and self.role.category == 'staff'
 
     @property
     def is_moderator(self):
         '''User.is_moderator(self)'''
-        return self.role.name == '协管员'
+        return not self.suspended and self.role.name == '协管员'
 
     @property
     def is_administrator(self):
         '''User.is_administrator(self)'''
-        return self.role.name == '管理员'
+        return not self.suspended and self.role.name == '管理员'
 
     @property
     def is_developer(self):
         '''User.is_developer(self)'''
-        return self.role.name == '开发人员'
+        return not self.suspended and self.role.name == '开发人员'
 
     def is_superior_than(self, user):
         '''User.is_superior_than(self, user)'''
-        return self.role.is_superior_than(role=user.role)
+        return not self.suspended and self.role.is_superior_than(role=user.role)
 
     @staticmethod
     def on_changed_name(target, value, oldvalue, initiator):
@@ -376,6 +439,23 @@ class User(UserMixin, db.Model):
             else:
                 return ''.join(['*' for x in self.id_number])
 
+    def create_user(self, user):
+        if not self.created_user(user=user):
+            user_creation = UserCreation(creator_id=self.id, user_id=user.id)
+            db.session.add(user_creation)
+
+    def uncreate_user(self, user):
+        user_creation = self.made_user_creations.filter_by(user_id=user.id).first()
+        if user_creation is not None:
+            db.session.delete(user_creation)
+
+    def created_user(self, user):
+        return self.made_user_creations.filter_by(user_id=user.id).first() is not None
+
+    @property
+    def created_by(self):
+        return self.received_user_creations.first().creator
+
     def to_csv(self):
         '''User.to_csv(self)'''
         last_seen_at = ''
@@ -391,7 +471,7 @@ class User(UserMixin, db.Model):
             last_seen_at,
             self.last_seen_ip,
             str(self.invalid_login_count),
-            str(int(self.deleted)),
+            str(int(self.suspended)),
             self.name,
             self.id_type.name,
             self.id_number,
@@ -407,9 +487,11 @@ class User(UserMixin, db.Model):
                 role_id=Role.query.filter_by(name='开发人员').first().id,
                 id_type_id=IDType.query.filter_by(name='其它').first().id,
                 id_number=current_app.config['SYSTEM_OPERATOR_TOKEN'],
-                name='SysOp'
+                name=current_app.config['SYSTEM_OPERATOR_NAME']
             )
             db.session.add(system_operator)
+            db.session.commit()
+            system_operator.create_user(user=system_operator)
             db.session.commit()
             if verbose:
                 print('初始化系统管理员信息')
@@ -433,7 +515,7 @@ class User(UserMixin, db.Model):
                                 last_seen_at=entry[3],
                                 last_seen_ip=entry[4],
                                 invalid_login_count=int(entry[5]),
-                                deleted=bool(int(entry[6])),
+                                suspended=bool(int(entry[6])),
                                 name=entry[7],
                                 id_type_id=entry[8],
                                 id_number=entry[9],
@@ -462,7 +544,7 @@ class User(UserMixin, db.Model):
                 'last_seen_at',
                 'last_seen_ip',
                 'invalid_login_count',
-                'deleted',
+                'suspended',
                 'name',
                 'id_type',
                 'id_number',
@@ -488,11 +570,6 @@ class AnonymousUser(AnonymousUserMixin):
 
     def plays(self, role_name):
         '''AnonymousUser.plays(self, role_name)'''
-        return False
-
-    @property
-    def is_suspended(self):
-        '''AnonymousUser.is_suspended(self)'''
         return False
 
     @property

@@ -1,8 +1,8 @@
 """initial
 
-Revision ID: 6b6e03c61834
+Revision ID: 407b2c57c207
 Revises: 
-Create Date: 2018-10-10 01:47:16.316375
+Create Date: 2018-10-18 02:44:50.991569
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '6b6e03c61834'
+revision = '407b2c57c207'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -88,7 +88,7 @@ def upgrade():
     sa.Column('last_seen_at', sa.DateTime(), nullable=True),
     sa.Column('last_seen_ip', sa.Unicode(length=64), nullable=True),
     sa.Column('invalid_login_count', sa.Integer(), nullable=True),
-    sa.Column('deleted', sa.Boolean(), nullable=True),
+    sa.Column('suspended', sa.Boolean(), nullable=True),
     sa.Column('name', sa.Unicode(length=64), nullable=True),
     sa.Column('name_pinyin', sa.Unicode(length=64), nullable=True),
     sa.Column('id_type_id', sa.Integer(), nullable=True),
@@ -120,6 +120,13 @@ def upgrade():
     )
     op.create_index(op.f('ix_devices_category'), 'devices', ['category'], unique=False)
     op.create_index(op.f('ix_devices_serial'), 'devices', ['serial'], unique=True)
+    op.create_table('user_creations',
+    sa.Column('creator_id', sa.Integer(), nullable=False),
+    sa.Column('user_id', sa.Integer(), nullable=False),
+    sa.ForeignKeyConstraint(['creator_id'], ['users.id'], ),
+    sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
+    sa.PrimaryKeyConstraint('creator_id', 'user_id')
+    )
     op.create_table('user_logs',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('user_id', sa.Integer(), nullable=True),
@@ -150,6 +157,7 @@ def downgrade():
     op.drop_table('videos')
     op.drop_index(op.f('ix_user_logs_category'), table_name='user_logs')
     op.drop_table('user_logs')
+    op.drop_table('user_creations')
     op.drop_index(op.f('ix_devices_serial'), table_name='devices')
     op.drop_index(op.f('ix_devices_category'), table_name='devices')
     op.drop_table('devices')

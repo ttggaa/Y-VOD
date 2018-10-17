@@ -33,7 +33,6 @@ manager.add_command('db', MigrateCommand)
 @manager.command
 def create():
     '''Run create tasks'''
-
     db.create_all()
     print('---> All tables are created.')
 
@@ -41,14 +40,13 @@ def create():
 @manager.command
 def cleanup():
     '''Run cleanup tasks'''
-
     if app.debug:
         remove_database_confirm = input('Would you like to remove all database files? [yes/No]: ')
         if remove_database_confirm.lower() in ['y', 'yes']:
             from config import basedir
             from shutil import rmtree
             db_files = [
-                'ysys-dev.sqlite',
+                'yvod-dev.sqlite',
                 'migrations',
             ]
             for db_file in db_files:
@@ -68,7 +66,6 @@ def cleanup():
 @manager.command
 def deploy():
     '''Run deployment tasks'''
-
     # migrate database to latest revision
     from flask_migrate import upgrade
     upgrade()
@@ -110,11 +107,16 @@ def deploy():
     from app.models import Video
     Video.insert_entries(data=data, basedir=basedir, verbose=verbose)
 
-    data = input('Enter data identifier (e.g.: initial or 20180805): ')
+    data = input('Enter data identifier (e.g.: initial or 20180805 or press the enter/return key): ')
+    if data == '':
+        data = 'initial'
     datadir = os.path.join(basedir, 'data', data)
     if os.path.exists(datadir):
         from app.models import User
         User.insert_entries(data=data, basedir=basedir, verbose=verbose)
+
+        from app.models import UserCreation
+        UserCreation.insert_entries(data=data, basedir=basedir, verbose=verbose)
 
         from app.models import Device
         Device.insert_entries(data=data, basedir=basedir, verbose=verbose)
@@ -126,7 +128,6 @@ def deploy():
 @manager.command
 def backup():
     '''Run backup tasks'''
-
     from config import basedir
     data = input('Enter data identifier (e.g.: backup or 20180805 or press the enter/return key): ')
     if data == '':
@@ -138,6 +139,9 @@ def backup():
 
     from app.models import User
     User.backup_entries(data=data, basedir=basedir)
+
+    from app.models import UserCreation
+    UserCreation.backup_entries(data=data, basedir=basedir)
 
     from app.models import Device
     Device.backup_entries(data=data, basedir=basedir)
