@@ -65,7 +65,7 @@ class DevelopmentConfig(Config):
     SECRET_KEY = os.getenv('YVOD_DEV_SECRET_KEY')
 
     # Database
-    SQLALCHEMY_DATABASE_URI = 'sqlite:///{}'.format(os.path.join(basedir, 'y-vod-dev.sqlite'))
+    SQLALCHEMY_DATABASE_URI = 'sqlite:///{}'.format(os.path.join(basedir, 'yvod-dev.sqlite'))
 
     # Development
     SYSTEM_OPERATOR_TOKEN = os.getenv('YVOD_DEV_SYSTEM_OPERATOR_TOKEN')
