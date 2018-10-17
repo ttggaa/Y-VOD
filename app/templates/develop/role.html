@@ -31,17 +31,17 @@
                     <td>{{ role.level }} 级</td>
                     <td>{{ role.users.count() }}</td>
                     <td>
-                        {% with permissions = role.permissions_alias(category='study', formatted=False) %}{% if permissions.count() %}<div class="ui ordered list">
+                        {% with permissions = role.permissions_alias(category='study') %}{% if permissions.count() %}<div class="ui ordered list">
                             {% for permission in permissions %}<div class="item">{{ permission.name }}</div>{% endfor %}
                         </div>{% else %}无{% endif %}{% endwith %}
                     </td>
                     <td>
-                        {% with permissions = role.permissions_alias(category='manage', formatted=False) %}{% if permissions.count() %}<div class="ui ordered list">
+                        {% with permissions = role.permissions_alias(category='manage') %}{% if permissions.count() %}<div class="ui ordered list">
                             {% for permission in permissions %}<div class="item">{{ permission.name }}</div>{% endfor %}
                         </div>{% else %}无{% endif %}{% endwith %}
                      </td>
                     <td>
-                        {% with permissions = role.permissions_alias(category='develop', formatted=False) %}{% if permissions.count() %}<div class="ui ordered list">
+                        {% with permissions = role.permissions_alias(category='develop') %}{% if permissions.count() %}<div class="ui ordered list">
                             {% for permission in permissions %}<div class="item">{{ permission.name }}</div>{% endfor %}
                         </div>{% else %}无{% endif %}{% endwith %}
                      </td>

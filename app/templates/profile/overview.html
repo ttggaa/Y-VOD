@@ -5,7 +5,7 @@
 {% block content %}
 <div class="ui masthead vertical segment">
     <div class="ui center aligned container">
-        <h1 class="ui header"><i class="id card icon"></i>个人档案</h1>
+        <h1 class="ui header"><i class="id card icon"></i>{% if user.id == current_user.id %}个人{% else %}{{ user.name }}的{% endif %}档案</h1>
     </div>
 </div>
 <div class="ui main vertical segment"></div>

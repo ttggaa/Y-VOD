@@ -34,6 +34,31 @@ class Permission(db.Model):
         cascade='all, delete-orphan'
     )
 
+    def roles_alias(self, category=None):
+        '''Permission.roles_alias(self, category=None)'''
+        if category is not None:
+            roles = Role.query\
+                .join(RolePermission, RolePermission.role_id == Role.id)\
+                .filter(RolePermission.permission_id == self.id)\
+                .filter(Role.category == category)\
+                .order_by(Role.id.asc())
+        else:
+            roles = Role.query\
+                .join(RolePermission, RolePermission.role_id == Role.id)\
+                .filter(RolePermission.permission_id == self.id)\
+                .order_by(Role.id.asc())
+        return roles
+
+    def roles_num(self, category=None):
+        '''Permission.roles_num(self, category=None)'''
+        if category is not None:
+            return Role.query\
+                .join(RolePermission, RolePermission.role_id == Role.id)\
+                .filter(RolePermission.permission_id == self.id)\
+                .filter(Role.category == category)\
+                .count()
+        return self.roles.count()
+
     @staticmethod
     def insert_entries(data, basedir, verbose=False):
         '''Permission.insert_entries(data, basedir, verbose=False)'''
@@ -89,8 +114,8 @@ class Role(db.Model):
         '''Role.has_permission(self, permission)'''
         return self.permissions.filter_by(permission_id=permission.id).first() is not None
 
-    def permissions_alias(self, category=None, formatted=False):
-        '''Role.permissions_alias(self, category=None, formatted=False)'''
+    def permissions_alias(self, category=None):
+        '''Role.permissions_alias(self, category=None)'''
         if category is not None:
             permissions = Permission.query\
                 .join(RolePermission, RolePermission.permission_id == Permission.id)\
@@ -102,12 +127,6 @@ class Role(db.Model):
                 .join(RolePermission, RolePermission.permission_id == Permission.id)\
                 .filter(RolePermission.role_id == self.id)\
                 .order_by(Permission.id.asc())
-        if formatted:
-            if permissions.count() == 0:
-                return '无'
-            if permissions.count() == 1:
-                return permissions.first().name
-            return ' · '.join([permission.name for permission in permissions.all()])
         return permissions
 
     def permissions_num(self, category=None):

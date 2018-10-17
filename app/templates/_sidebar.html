@@ -18,9 +18,9 @@
     {% if current_user.can('管理') %}<div class="item">
         <div class="header">管理</div>
         <div class="menu">
-            {% if current_user.can('管理学生') %}<a class="item" href="{{ url_for('main.home') }}"><i class="user graduate icon"></i>学生管理</a>{% endif %}
-            {% if current_user.can('管理员工') %}<a class="item" href="{{ url_for('main.home') }}"><i class="user tie icon"></i>员工管理</a>{% endif %}
-            {% if current_user.can('管理设备') %}<a class="item" href="{{ url_for('main.home') }}"><i class="tablet alternate icon"></i>设备管理</a>{% endif %}
+            {% if current_user.can('管理学生') %}<a class="item" href="{{ url_for('manage.student') }}"><i class="user graduate icon"></i>学生管理</a>{% endif %}
+            {% if current_user.can('管理员工') %}<a class="item" href="{{ url_for('manage.staff') }}"><i class="user tie icon"></i>员工管理</a>{% endif %}
+            {% if current_user.can('管理设备') %}<a class="item" href="{{ url_for('manage.device') }}"><i class="server icon"></i>设备管理</a>{% endif %}
         </div>
     </div>{% endif %}
     {% if current_user.is_developer %}<div class="item">

@@ -18,18 +18,24 @@
                 <tr>
                     <th>权限名称</th>
                     <th>赋予角色数量</th>
-                    <th>赋予角色</th>
+                    <th>赋予学生角色</th>
+                    <th>赋予员工角色</th>
                 </tr>
             </thead>
             <tbody>
                 {% for permission in permissions %}
-                <tr{% if permission.roles.count() > 1 %} class="top aligned"{% endif %}>
+                <tr{% if permission.roles_num(category='student') > 1 or permission.roles_num(category='staff') > 1 %} class="top aligned"{% endif %}>
                     <td>{{ permission.name }}</td>
-                    <td>{{ permission.roles.count() }}</td>
+                    <td>{{ permission.roles.count() }} ({{ permission.roles_num(category='student') }} + {{ permission.roles_num(category='staff') }})</td>
                     <td>
-                        {% if permission.roles.count() %}<div class="ui ordered list">
-                            {% for role_permission in permission.roles %}<div class="item">{{ role_permission.role.name }}</div>{% endfor %}
-                        </div>{% else %}无{% endif %}
+                        {% with roles = permission.roles_alias(category='student') %}{% if roles.count() %}<div class="ui ordered list">
+                            {% for role in roles %}<div class="item">{{ role.name }}</div>{% endfor %}
+                        </div>{% else %}无{% endif %}{% endwith %}
+                    </td>
+                    <td>
+                        {% with roles = permission.roles_alias(category='staff') %}{% if roles.count() %}<div class="ui ordered list">
+                            {% for role in roles %}<div class="item">{{ role.name }}</div>{% endfor %}
+                        </div>{% else %}无{% endif %}{% endwith %}
                     </td>
                 </tr>
                 {% endfor %}
