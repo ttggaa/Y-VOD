@@ -694,6 +694,7 @@ class Device(db.Model):
     room_id = db.Column(db.Integer, db.ForeignKey('rooms.id'))
     ip_address = db.Column(db.Unicode(64))
     category = db.Column(db.Unicode(64), index=True)
+    obsolete = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     modified_at = db.Column(db.DateTime, default=datetime.utcnow)
     modified_by_id = db.Column(db.Integer, db.ForeignKey('users.id'))
@@ -722,6 +723,7 @@ class Device(db.Model):
             room,
             self.ip_address,
             self.category,
+            str(int(self.obsolete)),
             self.created_at.strftime(current_app.config['DATETIME_FORMAT']),
             self.modified_at.strftime(current_app.config['DATETIME_FORMAT']),
             str(self.modified_by_id),
@@ -776,9 +778,10 @@ class Device(db.Model):
                                 room_id=entry[4],
                                 ip_address=entry[5],
                                 category=entry[6],
-                                created_at=datetime.strptime(entry[7], current_app.config['DATETIME_FORMAT']),
-                                modified_at=datetime.strptime(entry[8], current_app.config['DATETIME_FORMAT']),
-                                modified_by_id=int(entry[9])
+                                obsolete=bool(int(entry[7])),
+                                created_at=datetime.strptime(entry[8], current_app.config['DATETIME_FORMAT']),
+                                modified_at=datetime.strptime(entry[9], current_app.config['DATETIME_FORMAT']),
+                                modified_by_id=int(entry[10])
                             )
                             db.session.add(device)
                             if verbose:
@@ -804,6 +807,7 @@ class Device(db.Model):
                 'room',
                 'ip_address',
                 'category',
+                'obsolete',
                 'created_at',
                 'modified_at',
                 'modified_by_id',
