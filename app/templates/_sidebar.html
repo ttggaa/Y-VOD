@@ -15,7 +15,7 @@
             {% if current_user.can('研修Y-GRE') %}<a class="item"  href="{{ url_for('study.y_gre') }}"><i class="chalkboard teacher icon"></i>Y-GRE研修</a>{% endif %}
         </div>
     </div>{% endif %}
-    {% if current_user.can('管理') %}<div class="item">
+    {% if current_user.is_staff %}<div class="item">
         <div class="header">管理</div>
         <div class="menu">
             {% if current_user.can('管理学生') %}<a class="item" href="{{ url_for('manage.student') }}"><i class="user graduate icon"></i>学生管理</a>{% endif %}

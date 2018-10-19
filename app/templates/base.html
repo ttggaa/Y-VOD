@@ -28,6 +28,34 @@
     <script type="text/javascript" src="{{ url_for('static', filename='assets/library/day/relativeTime.js') }}"></script>
     <script type="text/javascript" src="{{ url_for('static', filename='assets/library/day/zh-cn.js') }}"></script>
     <script type="text/javascript" src="{{ url_for('static', filename='assets/js/common.js') }}"></script>
+    {% if current_user.is_staff %}<script type="text/javascript">
+        $('.ui.profile.search').search({
+            apiSettings: {
+                url: "{{ url_for('search.profile') }}?keyword={query}{% if profile_tab %}&tab={{ profile_tab }}{% endif %}"
+            },
+            cache: false,
+            showNoResults: false
+        });
+    </script>{% endif %}
+    {% if pagination %}<script type="text/javascript">
+        $('#jump-to-page').form({
+            fields: {
+                page: {
+                    identifier: 'page',
+                    rules: [
+                        {
+                            type: 'empty',
+                            prompt: '请输入页码'
+                        },
+                        {
+                            type: 'integer[1..{{ pagination.pages }}]',
+                            prompt: '请输入有效的页码'
+                        }
+                    ]
+                }
+            }
+        });
+    </script>{% endif %}
     {% block js %}{% endblock %}
 </body>
 </html>

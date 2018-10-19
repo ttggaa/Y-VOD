@@ -7,6 +7,7 @@ import io
 from datetime import datetime, timedelta
 from hashlib import md5
 from base64 import b64encode
+from werkzeug.routing import BuildError
 from flask import current_app, url_for
 from flask_login import UserMixin, AnonymousUserMixin
 from . import db, login_manager
@@ -436,18 +437,31 @@ class User(UserMixin, db.Model):
     @property
     def index_url(self):
         '''User.index_url(self)'''
-        if self.can('管理'):
+        if self.is_staff:
             return url_for('status.home')
         return self.url
 
     def profile_url(self, tab=None):
         '''User.profile_url(self, tab=None)'''
+        # return url_for('profile.{}'.format(tab), id=self.id)
         if tab is not None:
             try:
                 return url_for('profile.{}'.format(tab), id=self.id)
-            except:
+            except BuildError:
                 return self.url
         return self.url
+
+    def profile_json(self, url_tab=None):
+        '''User.profile_json(self, url_tab=None)'''
+        entry_json = {
+            'title': self.name,
+            'url': self.profile_url(tab=url_tab),
+        }
+        if self.suspended:
+            entry_json['description'] = '[挂起] {}'.format(self.role.name)
+        else:
+            entry_json['description'] = self.role.name
+        return entry_json
 
     @property
     def id_number_censored(self):

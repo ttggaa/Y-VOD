@@ -7,6 +7,13 @@
         </div>
         <div class="toc link header item" data-tooltip="菜单" data-position="bottom center" data-inverted=""><i class="sidebar icon"></i>云英语 &middot; Y-VOD</div>
         {% if current_user.is_authenticated %}<div class="right menu">
+            {% if current_user.is_staff %}<div class="ui profile search item">
+                <div class="ui transparent inverted left icon input">
+                    <input class="prompt" type="text" placeholder="查询用户…">
+                    <i class="search icon"></i>
+                </div>
+                <div class="results"></div>
+            </div>{% endif %}
             <a class="item" href="{{ current_user.url }}" data-tooltip="个人档案" data-position="bottom center" data-inverted=""><i class="user {% if current_user.is_developer %}secret{% elif current_user.is_student %}graduate{% elif current_user.is_staff %}tie{% else %}circle{% endif %} icon"></i>{{ current_user.name }}</a>
         </div>{% endif %}
     </div>

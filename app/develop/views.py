@@ -3,10 +3,9 @@
 '''app/develop/views.py'''
 
 from htmlmin import minify
-from flask import render_template, redirect, request, make_response, url_for, abort, current_app
+from flask import render_template, redirect, request, make_response, url_for, current_app
 from flask_login import login_required, current_user
 from . import develop
-from .. import db
 from ..models import Role
 from ..models import Permission
 from ..models import UserLog
@@ -17,6 +16,7 @@ from ..decorators import role_required
 @login_required
 @role_required('开发人员')
 def role():
+    '''develop.role()'''
     query = Role.query.order_by(Role.id.asc())
     page = request.args.get('page', 1, type=int)
     pagination = query.paginate(page, per_page=current_app.config['RECORD_PER_PAGE'], error_out=False)
@@ -32,6 +32,7 @@ def role():
 @login_required
 @role_required('开发人员')
 def permission():
+    '''develop.permission()'''
     query = Permission.query.order_by(Permission.id.asc())
     page = request.args.get('page', 1, type=int)
     pagination = query.paginate(page, per_page=current_app.config['RECORD_PER_PAGE'], error_out=False)
@@ -47,6 +48,7 @@ def permission():
 @login_required
 @role_required('开发人员')
 def log():
+    '''develop.log()'''
     show_all_logs = True
     show_study_logs = False
     show_manage_logs = False
@@ -86,7 +88,7 @@ def log():
     page = request.args.get('page', 1, type=int)
     try:
         pagination = query.paginate(page, per_page=current_app.config['RECORD_PER_PAGE'], error_out=False)
-    except:
+    except NameError:
         return redirect(url_for('develop.all_logs'))
     logs = pagination.items
     return minify(render_template(
@@ -106,6 +108,7 @@ def log():
 @login_required
 @role_required('开发人员')
 def all_logs():
+    '''develop.all_logs()'''
     resp = make_response(redirect(url_for('develop.log')))
     resp.set_cookie('show_all_logs', '1', max_age=current_app.config['COOKIE_MAX_AGE'])
     resp.set_cookie('show_study_logs', '', max_age=current_app.config['COOKIE_MAX_AGE'])
@@ -120,6 +123,7 @@ def all_logs():
 @login_required
 @role_required('开发人员')
 def study_logs():
+    '''develop.study_logs()'''
     resp = make_response(redirect(url_for('develop.log')))
     resp.set_cookie('show_all_logs', '', max_age=current_app.config['COOKIE_MAX_AGE'])
     resp.set_cookie('show_study_logs', '1', max_age=current_app.config['COOKIE_MAX_AGE'])
@@ -134,6 +138,7 @@ def study_logs():
 @login_required
 @role_required('开发人员')
 def manage_logs():
+    '''develop.manage_logs()'''
     resp = make_response(redirect(url_for('develop.log')))
     resp.set_cookie('show_all_logs', '', max_age=current_app.config['COOKIE_MAX_AGE'])
     resp.set_cookie('show_study_logs', '', max_age=current_app.config['COOKIE_MAX_AGE'])
@@ -148,6 +153,7 @@ def manage_logs():
 @login_required
 @role_required('开发人员')
 def develop_logs():
+    '''develop.develop_logs()'''
     resp = make_response(redirect(url_for('develop.log')))
     resp.set_cookie('show_all_logs', '', max_age=current_app.config['COOKIE_MAX_AGE'])
     resp.set_cookie('show_study_logs', '', max_age=current_app.config['COOKIE_MAX_AGE'])
@@ -162,6 +168,7 @@ def develop_logs():
 @login_required
 @role_required('开发人员')
 def auth_logs():
+    '''develop.auth_logs()'''
     resp = make_response(redirect(url_for('develop.log')))
     resp.set_cookie('show_all_logs', '', max_age=current_app.config['COOKIE_MAX_AGE'])
     resp.set_cookie('show_study_logs', '', max_age=current_app.config['COOKIE_MAX_AGE'])
@@ -176,6 +183,7 @@ def auth_logs():
 @login_required
 @role_required('开发人员')
 def access_logs():
+    '''develop.access_logs()'''
     resp = make_response(redirect(url_for('develop.log')))
     resp.set_cookie('show_all_logs', '', max_age=current_app.config['COOKIE_MAX_AGE'])
     resp.set_cookie('show_study_logs', '', max_age=current_app.config['COOKIE_MAX_AGE'])
@@ -190,4 +198,5 @@ def access_logs():
 @login_required
 @role_required('开发人员')
 def configuration():
+    '''develop.configuration()'''
     return minify(render_template('develop/configuration.html'))

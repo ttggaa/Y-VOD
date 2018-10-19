@@ -16,7 +16,7 @@ def overview(id):
     '''profile.overview(id)'''
     tab = 'overview'
     user = User.query.get_or_404(id)
-    if (user.id != current_user.id and not current_user.can('管理')) or user.is_superior_than(user=current_user._get_current_object()):
+    if (user.id != current_user.id and not current_user.is_staff) or user.is_superior_than(user=current_user._get_current_object()):
         abort(403)
     return minify(render_template(
         'profile/overview.html',

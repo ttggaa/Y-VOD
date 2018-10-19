@@ -47,7 +47,7 @@ def student():
     page = request.args.get('page', 1, type=int)
     try:
         pagination = query.paginate(page, per_page=current_app.config['RECORD_PER_PAGE'], error_out=False)
-    except:
+    except NameError:
         return redirect(url_for('manage.vb_students'))
     users = pagination.items
     return minify(render_template(
@@ -185,7 +185,7 @@ def staff():
     page = request.args.get('page', 1, type=int)
     try:
         pagination = query.paginate(page, per_page=current_app.config['RECORD_PER_PAGE'], error_out=False)
-    except:
+    except NameError:
         return redirect(url_for('manage.clerks'))
     users = pagination.items
     return minify(render_template(
@@ -403,7 +403,7 @@ def device():
     page = request.args.get('page', 1, type=int)
     try:
         pagination = query.paginate(page, per_page=current_app.config['RECORD_PER_PAGE'], error_out=False)
-    except:
+    except NameError:
         return redirect(url_for('manage.tablet_devices'))
     devices = pagination.items
     return minify(render_template(
@@ -417,7 +417,6 @@ def device():
         pagination=pagination,
         devices=devices
     ))
-    return minify(render_template('manage/device.html'))
 
 
 @manage.route('/device/tablet')

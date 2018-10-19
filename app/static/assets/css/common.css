@@ -35,7 +35,7 @@
 
 @media only screen and (max-width: 767px) {
     .ui.borderless.menu .logo.item,
-    .ui.borderless.menu .right.menu {
+    .ui.borderless.menu .right.menu .item:not(.search) {
         display: none;
     }
     .ui.vertical.segment {
