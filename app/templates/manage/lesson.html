@@ -25,6 +25,7 @@
                 <tr>
                     <th>课程名称</th>
                     <th>课程时长</th>
+                    <th>前序课程</th>
                     <th>课程视频</th>
                 </tr>
             </thead>
@@ -33,6 +34,7 @@
                 <tr>
                     <td><div class="ui {{ lesson.type.color }} horizontal label">{{ lesson.type.name }}</div>{{ lesson.abbr }}</td>
                     <td><code>{{ lesson.duration_format }}</code></td>
+                    <td>{{ lesson.dependencies_format }}</td>
                     <td><a href="{{ url_for('manage.video', lesson_id=lesson.id) }}" data-tooltip="查看" data-position="top center" data-inverted="">{{ lesson.videos.count() }} 个</a></td>
                 </tr>
                 {% endfor %}

@@ -10,6 +10,7 @@ from hashlib import md5
 from base64 import b64encode
 from functools import reduce
 from werkzeug.routing import BuildError
+from sqlalchemy import and_
 from flask import current_app, url_for
 from flask_login import UserMixin, AnonymousUserMixin
 from . import db, login_manager
@@ -959,6 +960,23 @@ class Lesson(db.Model):
     def duration_format(self):
         '''Lesson.duration_format(self)'''
         return format_duration(duration=self.duration)
+
+    @property
+    def dependencies(self):
+        return Lesson.query\
+            .filter(Lesson.type_id == self.type_id)\
+            .filter(and_(
+                Lesson.order > 0,
+                Lesson.order < self.order
+            ))\
+            .order_by(Lesson.order.asc())
+
+    @property
+    def dependencies_format(self):
+        if self.dependencies.count():
+            return '、'.join([lesson.abbr for lesson in self.dependencies.all()])
+        else:
+            return '无'
 
     @staticmethod
     def insert_entries(data, basedir, verbose=False):
