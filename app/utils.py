@@ -63,6 +63,13 @@ def get_video_duration(video_file):
     return '{} does not exist.'.format(video_file)
 
 
+def format_duration(duration):
+    '''format_duration(duration)'''
+    hours, duration = divmod(duration, timedelta(hours=1))
+    minutes, duration = divmod(duration, timedelta(minutes=1))
+    return '{:02.0f}:{:02.0f}:{:02.0f}'.format(hours, minutes, duration.total_seconds())
+
+
 def to_pinyin(hans, initials=False):
     '''to_pinyin(hans, initials=False)'''
     if initials:

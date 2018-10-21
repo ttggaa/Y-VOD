@@ -118,6 +118,9 @@ def deploy():
         from app.models import UserCreation
         UserCreation.insert_entries(data=data, basedir=basedir, verbose=verbose)
 
+        from app.models import Punch
+        Punch.insert_entries(data=data, basedir=basedir, verbose=verbose)
+
         from app.models import Device
         Device.insert_entries(data=data, basedir=basedir, verbose=verbose)
 
@@ -142,6 +145,9 @@ def backup():
 
     from app.models import UserCreation
     UserCreation.backup_entries(data=data, basedir=basedir)
+
+    from app.models import Punch
+    Punch.backup_entries(data=data, basedir=basedir)
 
     from app.models import Device
     Device.backup_entries(data=data, basedir=basedir)

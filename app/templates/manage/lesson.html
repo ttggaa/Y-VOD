@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% import "_macros.html" as macros %}
+
+{% block title %}研修课程{% endblock %}
+
+{% block content %}
+<div class="ui masthead vertical segment">
+    <div class="ui center aligned container">
+        {{ macros.message_widget() }}
+        <h1 class="ui header"><i class="book icon"></i>研修课程</h1>
+    </div>
+</div>
+<div class="ui main vertical segment">
+    <div class="ui container">
+        <h3 class="ui header">
+            <i class="book icon"></i>
+            <div class="content">研修课程列表{% if pagination %}<div class="sub header">{{ header }}：共 {{ pagination.total }} 课</div>{% endif %}</div>
+        </h3>
+        <div class="ui secondary stackable menu">
+            <a class="item {% if show_vb_lessons %}active {% endif %}loading-trigger" href="{{ url_for('manage.vb_lessons') }}">VB研修课程</a>
+            <a class="item {% if show_y_gre_lessons %}active {% endif %}loading-trigger" href="{{ url_for('manage.y_gre_lessons') }}">Y-GRE研修课程</a>
+        </div>
+        <table class="ui sortable selectable celled table">
+            <thead>
+                <tr>
+                    <th>课程名称</th>
+                    <th>课程时长</th>
+                    <th>课程视频</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for lesson in lessons %}
+                <tr>
+                    <td><div class="ui {{ lesson.type.color }} horizontal label">{{ lesson.type.name }}</div>{{ lesson.abbr }}</td>
+                    <td><code>{{ lesson.duration_format }}</code></td>
+                    <td><a href="{{ url_for('manage.video', lesson_id=lesson.id) }}" data-tooltip="查看" data-position="top center" data-inverted="">{{ lesson.videos.count() }} 个</a></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% if pagination %}{{ macros.pagination_widget(pagination, 'manage.lesson') }}{% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script type="text/javascript" src="{{ url_for('static', filename='assets/library/ui/tablesort.min.js') }}"></script>
+<script type="text/javascript">
+{{ macros.close_message_js_snippet() }}
+
+$('.ui.sortable.table').tablesort();
+</script>
+{% endblock %}

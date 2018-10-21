@@ -37,7 +37,7 @@
             showNoResults: false
         });
     </script>{% endif %}
-    {% if pagination %}<script type="text/javascript">
+    {% if pagination and pagination.pages > 9 %}<script type="text/javascript">
         $('#jump-to-page').form({
             fields: {
                 page: {

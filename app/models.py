@@ -4,14 +4,16 @@
 
 import os
 import io
+import operator
 from datetime import datetime, timedelta
 from hashlib import md5
 from base64 import b64encode
+from functools import reduce
 from werkzeug.routing import BuildError
 from flask import current_app, url_for
 from flask_login import UserMixin, AnonymousUserMixin
 from . import db, login_manager
-from .utils import date_now, CSVReader, CSVWriter, load_yaml, get_video_duration, to_pinyin
+from .utils import date_now, CSVReader, CSVWriter, load_yaml, get_video_duration, format_duration, to_pinyin
 
 
 class RolePermission(db.Model):
@@ -227,6 +229,71 @@ class Gender(db.Model):
         return '<Gender {}>'.format(self.name)
 
 
+class Punch(db.Model):
+    """Table: punches"""
+    __tablename__ = 'punches'
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), primary_key=True)
+    video_id = db.Column(db.Integer, db.ForeignKey('videos.id'), primary_key=True)
+    play_time = db.Column(db.Interval, default=timedelta())
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def to_csv(self):
+        '''Punch.to_csv(self)'''
+        entry_csv = [
+            str(self.user_id),
+            str(self.video_id),
+            str(self.play_time.total_seconds()),
+            self.timestamp.strftime(current_app.config['DATETIME_FORMAT']),
+        ]
+        return entry_csv
+
+    @staticmethod
+    def insert_entries(data, basedir, verbose=False):
+        '''Punch.insert_entries(data, basedir, verbose=False)'''
+        csv_file = os.path.join(basedir, 'data', data, 'punches.csv')
+        if os.path.exists(csv_file):
+            print('---> Read: {}'.format(csv_file))
+            with io.open(csv_file, 'rt', newline='') as f:
+                reader = CSVReader(f)
+                line_num = 0
+                for entry in reader:
+                    if line_num >= 1:
+                        punch = Punch(
+                            user_id=int(entry[0]),
+                            video_id=int(entry[1]),
+                            play_time=timedelta(seconds=float(entry[2])),
+                            timestamp=datetime.strptime(entry[3], current_app.config['DATETIME_FORMAT'])
+                        )
+                        db.session.add(punch)
+                        if verbose:
+                            print('导入用户视频播放信息', entry[0], entry[1], entry[2])
+                    line_num += 1
+                db.session.commit()
+        else:
+            print('文件不存在', csv_file)
+
+    @staticmethod
+    def backup_entries(data, basedir):
+        '''Punch.backup_entries(data, basedir):'''
+        csv_file = os.path.join(basedir, 'data', data, 'punches.csv')
+        if os.path.exists(csv_file):
+            os.remove(csv_file)
+        with io.open(csv_file, 'wt', newline='') as f:
+            writer = CSVWriter(f)
+            writer.writerow([
+                'user_id',
+                'video_id',
+                'play_time',
+                'timestamp',
+            ])
+            for entry in Punch.query.all():
+                writer.writerow(entry.to_csv())
+            print('---> Write: {}'.format(csv_file))
+
+    def __repr__(self):
+        return '<Punch {} {}>'.format(self.user.name, self.video.name, self.play_time)
+
+
 class UserCreation(db.Model):
     '''Table: user_creations'''
     __tablename__ = 'user_creations'
@@ -301,6 +368,14 @@ class User(UserMixin, db.Model):
     id_type_id = db.Column(db.Integer, db.ForeignKey('id_types.id'))
     id_number = db.Column(db.Unicode(64), index=True)
     gender_id = db.Column(db.Integer, db.ForeignKey('genders.id'))
+    # study properties
+    punches = db.relationship(
+        'Punch',
+        foreign_keys=[Punch.user_id],
+        backref=db.backref('user', lazy='joined'),
+        lazy='dynamic',
+        cascade='all, delete-orphan'
+    )
     # user relationship properties
     made_user_creations = db.relationship(
         'UserCreation',
@@ -839,6 +914,7 @@ class LessonType(db.Model):
     __tablename__ = 'lesson_types'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.Unicode(64), unique=True, index=True)
+    color = db.Column(db.Unicode(64))
     lessons = db.relationship('Lesson', backref='type', lazy='dynamic')
 
     @staticmethod
@@ -849,10 +925,13 @@ class LessonType(db.Model):
         if entries is not None:
             print('---> Read: {}'.format(yaml_file))
             for entry in entries:
-                lesson_type = LessonType(name=entry['name'])
+                lesson_type = LessonType(
+                    name=entry['name'],
+                    color=entry['color']
+                )
                 db.session.add(lesson_type)
                 if verbose:
-                    print('导入课程类型信息', entry['name'])
+                    print('导入课程类型信息', entry['name'], entry['color'])
             db.session.commit()
         else:
             print('文件不存在', yaml_file)
@@ -868,7 +947,18 @@ class Lesson(db.Model):
     name = db.Column(db.Unicode(64), unique=True, index=True)
     abbr = db.Column(db.Unicode(64))
     type_id = db.Column(db.Integer, db.ForeignKey('lesson_types.id'))
+    order = db.Column(db.Integer, default=0)
     videos = db.relationship('Video', backref='lesson', lazy='dynamic')
+
+    @property
+    def duration(self):
+        '''Lesson.duration(self)'''
+        return reduce(operator.add, [video.duration for video in self.videos], timedelta())
+
+    @property
+    def duration_format(self):
+        '''Lesson.duration_format(self)'''
+        return format_duration(duration=self.duration)
 
     @staticmethod
     def insert_entries(data, basedir, verbose=False):
@@ -879,13 +969,14 @@ class Lesson(db.Model):
             print('---> Read: {}'.format(yaml_file))
             for entry in entries:
                 lesson = Lesson(
-                    name=entry['name'],
+                    name='{} {}'.format(entry['lesson_type_name'], entry['abbr']),
                     abbr=entry['abbr'],
-                    type_id=LessonType.query.filter_by(name=entry['lesson_type_name']).first().id
+                    type_id=LessonType.query.filter_by(name=entry['lesson_type_name']).first().id,
+                    order=entry['order']
                 )
                 db.session.add(lesson)
                 if verbose:
-                    print('导入课程信息', entry['name'])
+                    print('导入课程信息', entry['lesson_type_name'], entry['abbr'])
             db.session.commit()
         else:
             print('文件不存在', yaml_file)
@@ -899,10 +990,23 @@ class Video(db.Model):
     __tablename__ = 'videos'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.Unicode(64), index=True)
+    abbr = db.Column(db.Unicode(64))
     description = db.Column(db.Unicode(64))
     lesson_id = db.Column(db.Integer, db.ForeignKey('lessons.id'))
-    duration = db.Column(db.Interval, default=timedelta(milliseconds=0))
+    duration = db.Column(db.Interval, default=timedelta())
     file_name = db.Column(db.Unicode(64))
+    punches = db.relationship(
+        'Punch',
+        foreign_keys=[Punch.video_id],
+        backref=db.backref('video', lazy='joined'),
+        lazy='dynamic',
+        cascade='all, delete-orphan'
+    )
+
+    @property
+    def duration_format(self):
+        '''Video.duration_format(self)'''
+        return format_duration(duration=self.duration)
 
     @staticmethod
     def insert_entries(data, basedir, verbose=False):
@@ -915,7 +1019,8 @@ class Video(db.Model):
                 video_file = os.path.join(basedir, 'data', 'videos', entry['file_name'])
                 if os.path.exists(video_file):
                     video = Video(
-                        name=entry['name'],
+                        name='{} {}'.format(entry['lesson_name'], entry['abbr']),
+                        abbr=entry['abbr'],
                         description=entry['description'],
                         lesson_id=Lesson.query.filter_by(name=entry['lesson_name']).first().id,
                         duration=get_video_duration(video_file),
@@ -923,10 +1028,10 @@ class Video(db.Model):
                     )
                     db.session.add(video)
                     if verbose:
-                        print('导入视频信息', entry['name'], entry['file_name'])
+                        print('导入视频信息', entry['lesson_name'], entry['abbr'], entry['file_name'])
                 else:
                     if verbose:
-                        print('视频文件不存在', entry['name'], entry['file_name'])
+                        print('视频文件不存在', entry['lesson_name'], entry['abbr'], entry['file_name'])
             db.session.commit()
         else:
             print('文件不存在', yaml_file)

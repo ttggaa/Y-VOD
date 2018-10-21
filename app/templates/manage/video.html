@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% import "_macros.html" as macros %}
+
+{% block title %}{{ lesson.name }} &middot; 研修视频{% endblock %}
+
+{% block content %}
+<div class="ui masthead vertical segment">
+    <div class="ui center aligned container">
+        {{ macros.message_widget() }}
+        <h1 class="ui header"><i class="file video icon"></i>研修视频：{{ lesson.name }}</h1>
+    </div>
+</div>
+<div class="ui main vertical segment">
+    <div class="ui container">
+        <div class="ui breadcrumb">
+            <a class="section" href="{{ url_for('manage.lesson') }}">研修课程</a>
+            <i class="chevron right icon divider"></i>
+            <div class="section">研修视频</div>
+            <i class="chevron right icon divider"></i>
+            <div class="active section">{{ lesson.name }}</div>
+        </div>
+        <h3 class="ui header">
+            <i class="file video icon"></i>
+            <div class="content">研修视频列表{% if pagination %}<div class="sub header">{{ lesson.name }}：共 {{ pagination.total }} 个视频</div>{% endif %}</div>
+        </h3>
+        <table class="ui sortable selectable celled table">
+            <thead>
+                <tr>
+                    <th>视频名称</th>
+                    <th>视频时长</th>
+                    {% if current_user.is_developer %}<th>视频文件</th>{% endif %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for video in videos %}
+                <tr>
+                    <td><div class="ui {{ video.lesson.type.color }} horizontal label">{{ video.lesson.type.name }}<div class="detail">{{ video.lesson.abbr }}</div></div>{{ video.abbr }}{% if video.description %} <span class="text-grey">{{ video.description }}</span>{% endif %}</td>
+                    <td><code>{{ video.duration_format }}</code></td>
+                    {% if current_user.is_developer %}<td><code>{{ video.file_name }}</code></td>{% endif %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% if pagination %}{{ macros.pagination_widget(pagination, 'manage.video', lesson_id=lesson.id) }}{% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script type="text/javascript" src="{{ url_for('static', filename='assets/library/ui/tablesort.min.js') }}"></script>
+<script type="text/javascript">
+{{ macros.close_message_js_snippet() }}
+
+$('.ui.sortable.table').tablesort();
+</script>
+{% endblock %}

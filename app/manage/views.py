@@ -8,6 +8,7 @@ from flask_login import login_required, current_user
 from . import manage
 from ..models import Role, User
 from ..models import DeviceType, Device
+from ..models import LessonType, Lesson, Video
 from ..decorators import permission_required, role_required
 
 
@@ -487,3 +488,83 @@ def obsolete_devices():
     resp.set_cookie('show_development_devices', '', max_age=current_app.config['COOKIE_MAX_AGE'])
     resp.set_cookie('show_obsolete_devices', '1', max_age=current_app.config['COOKIE_MAX_AGE'])
     return resp
+
+
+@manage.route('/lesson')
+@login_required
+@permission_required('管理')
+def lesson():
+    '''manage.lesson()'''
+    show_vb_lessons = True
+    show_y_gre_lessons = False
+    if current_user.is_authenticated:
+        show_vb_lessons = bool(request.cookies.get('show_vb_lessons', '1'))
+        show_y_gre_lessons = bool(request.cookies.get('show_y_gre_lessons', ''))
+    if show_vb_lessons:
+        header = 'VB研修课程'
+        query = Lesson.query\
+            .join(LessonType, LessonType.id == Lesson.type_id)\
+            .filter(LessonType.name == 'VB')\
+            .order_by(Lesson.id.asc())
+    if show_y_gre_lessons:
+        header = 'Y-GRE研修课程'
+        query = Lesson.query\
+            .join(LessonType, LessonType.id == Lesson.type_id)\
+            .filter(LessonType.name == 'Y-GRE')\
+            .order_by(Lesson.id.asc())
+    page = request.args.get('page', 1, type=int)
+    try:
+        pagination = query.paginate(page, per_page=current_app.config['RECORD_PER_PAGE'], error_out=False)
+    except NameError:
+        return redirect(url_for('manage.vb_lessons'))
+    lessons = pagination.items
+    return minify(render_template(
+        'manage/lesson.html',
+        header=header,
+        show_vb_lessons=show_vb_lessons,
+        show_y_gre_lessons=show_y_gre_lessons,
+        pagination=pagination,
+        lessons=lessons
+    ))
+
+
+@manage.route('/lesson/vb')
+@login_required
+@permission_required('管理')
+def vb_lessons():
+    '''manage.vb_lessons()'''
+    resp = make_response(redirect(url_for('manage.lesson')))
+    resp.set_cookie('show_vb_lessons', '1', max_age=current_app.config['COOKIE_MAX_AGE'])
+    resp.set_cookie('show_y_gre_lessons', '', max_age=current_app.config['COOKIE_MAX_AGE'])
+    return resp
+
+
+@manage.route('/lesson/y-gre')
+@login_required
+@permission_required('管理')
+def y_gre_lessons():
+    '''manage.y_gre_lessons()'''
+    resp = make_response(redirect(url_for('manage.lesson')))
+    resp.set_cookie('show_vb_lessons', '', max_age=current_app.config['COOKIE_MAX_AGE'])
+    resp.set_cookie('show_y_gre_lessons', '1', max_age=current_app.config['COOKIE_MAX_AGE'])
+    return resp
+
+
+@manage.route('/lesson/<int:lesson_id>/video')
+@login_required
+@permission_required('管理')
+def video(lesson_id):
+    '''manage.video(lesson_id)'''
+    lesson = Lesson.query.get_or_404(lesson_id)
+    query = Video.query\
+        .filter(Video.lesson_id == lesson.id)\
+        .order_by(Video.id.asc())
+    page = request.args.get('page', 1, type=int)
+    pagination = query.paginate(page, per_page=current_app.config['RECORD_PER_PAGE'], error_out=False)
+    videos = pagination.items
+    return minify(render_template(
+        'manage/video.html',
+        lesson=lesson,
+        pagination=pagination,
+        videos=videos
+    ))

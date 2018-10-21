@@ -6,11 +6,9 @@
     {% if pagination.pages > 9 %}<div class="right menu">
         <div class="item">
             <form id="jump-to-page" action="{{ url_for(endpoint, **kwargs) }}" method="GET" class="ui form">
-                <div class="field">
-                    <div class="ui mini transparent left icon input">
-                        <input id="page" name="page" type="text" placeholder="跳转至某页…">
-                        <i class="arrow right icon"></i>
-                    </div>
+                <div class="ui mini transparent left icon input field">
+                    <input id="page" name="page" type="text" placeholder="跳转至某页…">
+                    <i class="arrow right icon"></i>
                 </div>
             </form>
         </div>
