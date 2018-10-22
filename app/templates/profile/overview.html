@@ -39,17 +39,13 @@
             <div class="twelve wide column">
                 {% if user.is_student or user.is_developer %}<div id="progress" class="ui vertical segment loading">
                     <div id="vb-progress" class="ui header disabled">VB研修进度：<span id="vb-progress-data">0</span>%</div>
-                    <div id="vb-progress-bar" class="ui progress disabled">
-                        <div class="bar">
-                            <div class="progress"></div>
-                        </div>
+                    <div id="vb-progress-bar" class="ui tiny progress disabled">
+                        <div class="bar"></div>
                         <div id="vb-progress-label" class="label">N/A</div>
                     </div>
                     <div id="y-gre-progress" class="ui header disabled">Y-GRE研修进度：<span id="y-gre-progress-data">0</span>%</div>
-                    <div id="y-gre-progress-bar" class="ui progress disabled">
-                        <div class="bar">
-                            <div class="progress"></div>
-                        </div>
+                    <div id="y-gre-progress-bar" class="ui tiny progress disabled">
+                        <div class="bar"></div>
                         <div id="y-gre-progress-label" class="label">N/A</div>
                     </div>
                 </div>{% endif %}
