@@ -238,6 +238,19 @@ class Punch(db.Model):
     play_time = db.Column(db.Interval, default=timedelta())
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
 
+    @property
+    def progress(self):
+        '''Punch.progress(self):'''
+        return self.play_time / self.video.duration
+
+    @property
+    def play_time_trim(self):
+        '''Punch.play_time_trim(self)'''
+        if self.progress > 1.0:
+            return self.video.duration
+        else:
+            return self.play_time
+
     def to_json(self):
         '''Punch.to_json(self)'''
         entry_json = {
@@ -585,20 +598,42 @@ class User(UserMixin, db.Model):
     @property
     def last_vb_punch(self):
         '''User.last_vb_punch(self)'''
-        return
+        return Punch.query\
+            .join(Video, Video.id == Punch.video_id)\
+            .join(Lesson, Lesson.id == Video.lesson_id)\
+            .join(LessonType, LessonType.id == Lesson.type_id)\
+            .filter(LessonType.name == 'VB')\
+            .filter(Lesson.order > 0)\
+            .order_by(Video.id.desc())\
+            .first()
 
     @property
     def last_y_gre_punch(self):
         '''User.last_y_gre_punch(self)'''
-        return
+        return Punch.query\
+            .join(Video, Video.id == Punch.video_id)\
+            .join(Lesson, Lesson.id == Video.lesson_id)\
+            .join(LessonType, LessonType.id == Lesson.type_id)\
+            .filter(LessonType.name == 'Y-GRE')\
+            .filter(Lesson.order > 0)\
+            .order_by(Video.id.desc())\
+            .first()
 
     @property
     def vb_progress_json(self):
         '''User.vb_progress_json(self)'''
         entry_json = {
-            'value': 0,
-            'total': 0,
-            'percent': 0,
+            'total': reduce(operator.add, [video.duration for video in Video.query\
+                .join(Lesson, Lesson.id == Video.lesson_id)\
+                .join(LessonType, LessonType.id == Lesson.type_id)\
+                .filter(LessonType.name == 'VB')\
+                .all()], timedelta()).total_seconds(),
+            'value': reduce(operator.add, [punch.play_time_trim for punch in Punch.query\
+                .join(Video, Video.id == Punch.video_id)\
+                .join(Lesson, Lesson.id == Video.lesson_id)\
+                .join(LessonType, LessonType.id == Lesson.type_id)\
+                .filter(LessonType.name == 'VB')\
+                .all()], timedelta()).total_seconds(),
         }
         if self.last_vb_punch is not None:
             entry_json['last_punch'] = self.last_vb_punch.to_json()
@@ -610,9 +645,17 @@ class User(UserMixin, db.Model):
     def y_gre_progress_json(self):
         '''User.y_gre_progress_json(self)'''
         entry_json = {
-            'value': 0,
-            'total': 0,
-            'percent': 0,
+            'total': reduce(operator.add, [video.duration for video in Video.query\
+                .join(Lesson, Lesson.id == Video.lesson_id)\
+                .join(LessonType, LessonType.id == Lesson.type_id)\
+                .filter(LessonType.name == 'Y-GRE')\
+                .all()], timedelta()).total_seconds(),
+            'value': reduce(operator.add, [punch.play_time_trim for punch in Punch.query\
+                .join(Video, Video.id == Punch.video_id)\
+                .join(Lesson, Lesson.id == Video.lesson_id)\
+                .join(LessonType, LessonType.id == Lesson.type_id)\
+                .filter(LessonType.name == 'Y-GRE')\
+                .all()], timedelta()).total_seconds(),
         }
         if self.last_y_gre_punch is not None:
             entry_json['last_punch'] = self.last_y_gre_punch.to_json()
