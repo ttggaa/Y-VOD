@@ -8,6 +8,7 @@ from flask_login import login_required, current_user
 from . import profile
 from ..models import User
 from ..models import UserLog
+from ..models import LessonType, Lesson
 from ..decorators import permission_required
 
 
@@ -19,6 +20,7 @@ def overview(id):
     user = User.query.get_or_404(id)
     if (user.id != current_user.id and not current_user.is_staff) or user.is_superior_than(user=current_user._get_current_object()):
         abort(403)
+    lessons = Lesson.query.order_by(Lesson.id.asc())
     if current_user.is_developer:
         query = UserLog.query\
             .filter(UserLog.user_id == user.id)\
@@ -35,6 +37,7 @@ def overview(id):
         'profile/overview.html',
         profile_tab=tab,
         user=user,
+        lessons=lessons,
         pagination=pagination,
         logs=logs
     ))

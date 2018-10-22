@@ -48,6 +48,25 @@
                         <div class="bar"></div>
                         <div id="y-gre-progress-label" class="label">N/A</div>
                     </div>
+                    <div class="ui header">课程研修进度</div>
+                    <table class="ui unstackable selectable celled table">
+                        <thead>
+                            <tr>
+                                <th>研修课程</th>
+                                <th>研修进度</th>
+                                <th>上次研修时间</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for lesson in lessons %}
+                            <tr>
+                                <td><div class="ui {{ lesson.type.color }} horizontal label">{{ lesson.type.name }}</div>{{ lesson.abbr }}</td>
+                                <td>{{ user.lesson_progress_percentage(lesson=lesson) }}</td>
+                                <td>{% if user.lesson_punch(lesson=lesson) %}{{ macros.from_now_widget(user.lesson_punched(lesson=lesson).timestamp) }}{% else %}N/A{% endif %}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
                 </div>{% endif %}
                 <div class="ui vertical segment">
                     <div class="ui header">时间线</div>

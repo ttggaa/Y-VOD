@@ -663,6 +663,25 @@ class User(UserMixin, db.Model):
             entry_json['last_punch'] = None
         return entry_json
 
+    def lesson_progress(self, lesson):
+        '''User.lesson_progress(self, lesson)'''
+        return reduce(operator.add, [punch.play_time_trim for punch in Punch.query\
+            .join(Video, Video.id == Punch.video_id)\
+            .filter(Video.lesson_id == lesson.id)\
+            .all()], timedelta()) / lesson.duration
+
+    def lesson_progress_percentage(self, lesson):
+        '''User.lesson_progress_percentage(self, lesson)'''
+        return '{:.0%}'.format(self.lesson_progress(lesson=lesson))
+
+    def lesson_punch(self, lesson):
+        '''User.lesson_punch(self, lesson)'''
+        return Punch.query\
+            .join(Video, Video.id == Punch.video_id)\
+            .filter(Video.lesson_id == lesson.id)\
+            .order_by(Punch.timestamp.desc())\
+            .first()
+
     def to_csv(self):
         '''User.to_csv(self)'''
         last_seen_at = ''
