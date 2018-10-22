@@ -238,6 +238,19 @@ class Punch(db.Model):
     play_time = db.Column(db.Interval, default=timedelta())
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
 
+    def to_json(self):
+        '''Punch.to_json(self)'''
+        entry_json = {
+            'user': self.user.name,
+            'video': self.video.to_json(),
+            'play_time': {
+                'format': format_duration(duration=self.play_time),
+                'seconds': self.play_time.total_seconds,
+            },
+            'punched_at': self.timestamp.strftime('%Y-%m-%dT%H:%M:%SZ'),
+        }
+        return entry_json
+
     def to_csv(self):
         '''Punch.to_csv(self)'''
         entry_csv = [
@@ -549,21 +562,63 @@ class User(UserMixin, db.Model):
                 return ''.join(['*' for x in self.id_number])
 
     def create_user(self, user):
+        '''User.create_user(self, user)'''
         if not self.created_user(user=user):
             user_creation = UserCreation(creator_id=self.id, user_id=user.id)
             db.session.add(user_creation)
 
     def uncreate_user(self, user):
+        '''User.uncreate_user(self, user)'''
         user_creation = self.made_user_creations.filter_by(user_id=user.id).first()
         if user_creation is not None:
             db.session.delete(user_creation)
 
     def created_user(self, user):
+        '''User.created_user(self, user)'''
         return self.made_user_creations.filter_by(user_id=user.id).first() is not None
 
     @property
     def created_by(self):
+        '''User.created_by(self)'''
         return self.received_user_creations.first().creator
+
+    @property
+    def last_vb_punch(self):
+        '''User.last_vb_punch(self)'''
+        return
+
+    @property
+    def last_y_gre_punch(self):
+        '''User.last_y_gre_punch(self)'''
+        return
+
+    @property
+    def vb_progress_json(self):
+        '''User.vb_progress_json(self)'''
+        entry_json = {
+            'value': 0,
+            'total': 0,
+            'percent': 0,
+        }
+        if self.last_vb_punch is not None:
+            entry_json['last_punch'] = self.last_vb_punch.to_json()
+        else:
+            entry_json['last_punch'] = None
+        return entry_json
+
+    @property
+    def y_gre_progress_json(self):
+        '''User.y_gre_progress_json(self)'''
+        entry_json = {
+            'value': 0,
+            'total': 0,
+            'percent': 0,
+        }
+        if self.last_y_gre_punch is not None:
+            entry_json['last_punch'] = self.last_y_gre_punch.to_json()
+        else:
+            entry_json['last_punch'] = None
+        return entry_json
 
     def to_csv(self):
         '''User.to_csv(self)'''
@@ -967,6 +1022,7 @@ class Lesson(db.Model):
 
     @property
     def dependencies(self):
+        '''Lesson.dependencies(self)'''
         return Lesson.query\
             .filter(Lesson.type_id == self.type_id)\
             .filter(and_(
@@ -977,10 +1033,20 @@ class Lesson(db.Model):
 
     @property
     def dependencies_format(self):
+        '''Lesson.dependencies_format(self)'''
         if self.dependencies.count():
             return '、'.join([lesson.abbr for lesson in self.dependencies.all()])
         else:
             return '无'
+
+    def to_json(self):
+        '''Lesson.to_json(self)'''
+        entry_json = {
+            'name': self.name,
+            'abbr': self.abbr,
+            'type': self.type.name,
+        }
+        return entry_json
 
     @staticmethod
     def insert_entries(data, basedir, verbose=False):
@@ -1029,6 +1095,20 @@ class Video(db.Model):
     def duration_format(self):
         '''Video.duration_format(self)'''
         return format_duration(duration=self.duration)
+
+    def to_json(self):
+        '''Video.to_json(self)'''
+        entry_json = {
+            'name': self.name,
+            'abbr': self.abbr,
+            'description': self.description,
+            'lesson': self.lesson.to_json(),
+            'duration': {
+                'format': format_duration(duration=self.duration),
+                'seconds': self.duration.total_seconds,
+            },
+        }
+        return entry_json
 
     @staticmethod
     def insert_entries(data, basedir, verbose=False):

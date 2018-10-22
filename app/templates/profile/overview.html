@@ -10,31 +10,49 @@
     </div>
 </div>
 <div class="ui main vertical segment">
+    <div id="page-loading-progress" class="ui top attached blue inverted progress">
+        <div class="bar"></div>
+    </div>
     <div class="ui internally celled stackable grid container">
         <div class="row">
             <div class="four wide column">
-                <div class="ui vertical segment">
-                    <h1 class="ui header">
-                        <div class="content">
-                            {{ macros.user_gender_widget(user) }}
-                            <div class="sub header">{% if user.suspended %}[挂起] {% endif %}{{ user.role.name }}</div>
-                        </div>
-                    </h1>
+                <div class="ui sticky">
+                    <div class="ui vertical segment">
+                        <h1 class="ui header">
+                            <div class="content">
+                                {{ macros.user_gender_widget(user) }}
+                                <div class="sub header">{% if user.suspended %}[挂起] {% endif %}{{ user.role.name }}</div>
+                            </div>
+                        </h1>
+                    </div>
+                    <div class="ui vertical segment">
+                        <div>上次登录：{{ macros.from_now_widget(user.last_seen_at) }}</div>
+                        {% if current_user.is_staff %}<div>登录设备：{{ user.last_login_device.alias }}</div>{% endif %}
+                        {% if current_user.is_developer %}<div>设备IP：{{ current_user.last_seen_ip }}</div>{% endif %}
+                    </div>
+                    {% if current_user.is_staff %}<div class="ui vertical segment">
+                        <div>创建时间：{{ macros.from_now_widget(user.created_at) }}</div>
+                        <div>创建人：{{ macros.user_url_widget(user.created_by, user.created_by.id == current_user.id) }}</div>
+                    </div>{% endif %}
                 </div>
-                <div class="ui vertical segment">
-                    <div>上次登录：{{ macros.from_now_widget(user.last_seen_at) }}</div>
-                    {% if current_user.is_staff %}<div>登录设备：{{ user.last_login_device.alias }}</div>{% endif %}
-                    {% if current_user.is_developer %}<div>设备IP：{{ current_user.last_seen_ip }}</div>{% endif %}
-                </div>
-                {% if current_user.is_staff %}<div class="ui vertical segment">
-                    <div>创建时间：{{ macros.from_now_widget(user.created_at) }}</div>
-                    <div>创建人：{{ macros.user_url_widget(user.created_by, user.created_by.id == current_user.id) }}</div>
-                </div>{% endif %}
             </div>
             <div class="twelve wide column">
-                <div class="ui vertical segment">
-                    <div class="ui header">研修进度</div>
-                </div>
+                {% if user.is_student or user.is_developer %}<div id="progress" class="ui vertical segment loading">
+                    <div id="vb-progress" class="ui header disabled">VB研修进度：<span id="vb-progress-data">0</span>%</div>
+                    <div id="vb-progress-bar" class="ui progress disabled">
+                        <div class="bar">
+                            <div class="progress"></div>
+                        </div>
+                        <div id="vb-progress-label" class="label">N/A</div>
+                    </div>
+                    <div id="y-gre-progress" class="ui header disabled">Y-GRE研修进度：<span id="y-gre-progress-data">0</span>%</div>
+                    <div id="y-gre-progress-bar" class="ui progress disabled">
+                        <div class="bar">
+                            <div class="progress"></div>
+                        </div>
+                        <div id="y-gre-progress-label" class="label">N/A</div>
+                    </div>
+                </div>{% endif %}
                 <div class="ui vertical segment">
                     <div class="ui header">时间线</div>
                     <div class="ui feed">
@@ -58,7 +76,70 @@
 {% endblock %}
 
 {% block js %}
+{% if user.is_student or user.is_developer %}<script type="text/javascript" src="{{ url_for('static', filename='assets/library/count/countUp.min.js') }}"></script>{% endif %}
 <script type="text/javascript">
 {{ macros.close_message_js_snippet() }}
+
+if ($(window).width() >= 768) {
+    $('.ui.sticky').sticky({
+        offset: 60
+    });
+};
+
+{% if user.is_student or user.is_developer %}
+$('#page-loading-progress').progress({
+    total: 1,
+    onSuccess: function () {
+        $('#page-loading-progress').fadeOut(1000, function () {
+            $('#page-loading-progress').remove();
+        });
+    }
+});
+
+var countUpOptions = {
+    useEasing: true,
+    useGrouping: true,
+    separator: ',',
+    decimal: '.',
+    prefix: '',
+    suffix: ''
+};
+var VBProgressCountUp = new CountUp('vb-progress-data', 0, 0, 0, 2.5, countUpOptions);
+var YGREProgressCountUp = new CountUp('y-gre-progress-data', 0, 0, 0, 2.5, countUpOptions);
+$.getJSON("{{ url_for('profile.overview_data', id=user.id) }}", function (data) {
+    $('#progress').removeClass('loading');
+    $('#vb-progress').removeClass('disabled');
+    $('#vb-progress-label').text(function () {
+        if (data.progress.vb.last_punch) {
+            return data.progress.vb.last_punch.video.name;
+        } else {
+            return 'N/A';
+        };
+    });
+    $('#vb-progress-bar').removeClass('disabled').addClass('blue').progress({
+        total: data.progress.vb.total,
+        value: data.progress.vb.value,
+        onChange: function(percent) {
+            VBProgressCountUp.update(percent);
+        }
+    });
+    $('#y-gre-progress').removeClass('disabled');
+    $('#y-gre-progress-label').text(function () {
+        if (data.progress.y_gre.last_punch) {
+            return data.progress.y_gre.last_punch.video.name;
+        } else {
+            return 'N/A';
+        };
+    });
+    $('#y-gre-progress-bar').removeClass('disabled').addClass('teal').progress({
+        total: data.progress.y_gre.total,
+        value: data.progress.y_gre.value,
+        onChange: function(percent) {
+            YGREProgressCountUp.update(percent);
+        }
+    });
+    $('#page-loading-progress').progress('increment');
+});
+{% endif %}
 </script>
 {% endblock %}
