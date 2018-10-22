@@ -752,6 +752,7 @@ class DeviceType(db.Model):
     __tablename__ = 'device_types'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.Unicode(64), unique=True, index=True)
+    icon = db.Column(db.Unicode(64))
     devices = db.relationship('Device', backref='type', lazy='dynamic')
 
     @staticmethod
@@ -762,10 +763,13 @@ class DeviceType(db.Model):
         if entries is not None:
             print('---> Read: {}'.format(yaml_file))
             for entry in entries:
-                device_type = DeviceType(name=entry['name'])
+                device_type = DeviceType(
+                    name=entry['name'],
+                    icon=entry['icon']
+                )
                 db.session.add(device_type)
                 if verbose:
-                    print('导入设备类型信息', entry['name'])
+                    print('导入设备类型信息', entry['name'], entry['icon'])
             db.session.commit()
         else:
             print('文件不存在', yaml_file)

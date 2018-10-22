@@ -35,9 +35,15 @@ $('.message .close').click(function () {
 {%- endmacro %}
 
 
+{% macro user_gender_widget(user, is_current_user=False) -%}
+{% if is_current_user %}<i class="yellow star icon"></i>{% endif %}{{ user.name }}{% if user.gender %}<i class="{% if user.gender.name == '男' %}blue mars{% elif user.gender.name == '女' %}pink venus{% endif %} icon"></i>{% endif %}
+{%- endmacro %}
+
+
 {% macro user_url_widget(user, is_current_user=False) -%}
 {% if is_current_user %}<i class="yellow star icon"></i>{% endif %}<a href="{{ user.url }}" target="_blank">{{ user.name }}</a>
 {%- endmacro %}
+
 
 {% macro user_url_gender_widget(user, is_current_user=False) -%}
 {% if is_current_user %}<i class="yellow star icon"></i>{% endif %}<a href="{{ user.url }}" target="_blank">{{ user.name }}</a>{% if user.gender %}<i class="{% if user.gender.name == '男' %}blue mars{% elif user.gender.name == '女' %}pink venus{% endif %} icon"></i>{% endif %}

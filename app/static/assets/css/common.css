@@ -11,22 +11,19 @@
     vertical-align: middle;
 }
 
-.ui.vertical.segment {
+.ui.masthead.vertical.segment {
+    padding-top: 11em;
+    padding-bottom: 6em;
+}
+
+.ui.main.vertical.segment,
+.ui.footer.vertical.segment {
     padding-top: 6em;
     padding-bottom: 6em;
 }
 
-.ui.vertical.segment .ui.narrow.container {
+.ui.masthead.vertical.segment .ui.narrow.container {
     max-width: 450px!important;
-}
-
-.ui.masthead.vertical.segment,
-.ui.main.vertical.segment {
-    padding-top: 11em;
-}
-
-.ui.masthead.vertical.segment+.ui.main.vertical.segment {
-    padding-top: 6em;
 }
 
 .ui.error.header {
@@ -38,16 +35,14 @@
     .ui.borderless.menu .right.menu .item:not(.search) {
         display: none;
     }
-    .ui.vertical.segment {
-        padding-top: 4em;
+    .ui.masthead.vertical.segment {
+        padding-top: 7em;
         padding-bottom: 4em;
     }
-    .ui.masthead.vertical.segment,
-    .ui.main.vertical.segment {
-        padding-top: 7em;
-    }
-    .ui.masthead.vertical.segment+.ui.main.vertical.segment {
+    .ui.main.vertical.segment,
+    .ui.footer.vertical.segment {
         padding-top: 4em;
+        padding-bottom: 4em;
     }
     .ui.error.header {
         font-size: 4em;

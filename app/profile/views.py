@@ -7,6 +7,7 @@ from flask import render_template, redirect, request, url_for, abort, current_ap
 from flask_login import login_required, current_user
 from . import profile
 from ..models import User
+from ..models import UserLog
 from ..decorators import permission_required
 
 
@@ -18,8 +19,22 @@ def overview(id):
     user = User.query.get_or_404(id)
     if (user.id != current_user.id and not current_user.is_staff) or user.is_superior_than(user=current_user._get_current_object()):
         abort(403)
+    if current_user.is_developer:
+        query = UserLog.query\
+            .filter(UserLog.user_id == user.id)\
+            .order_by(UserLog.timestamp.desc())
+    else:
+        query = UserLog.query\
+            .filter(UserLog.user_id == user.id)\
+            .filter(UserLog.category != 'access')\
+            .order_by(UserLog.timestamp.desc())
+    page = request.args.get('page', 1, type=int)
+    pagination = query.paginate(page, per_page=current_app.config['RECORD_PER_PAGE'], error_out=False)
+    logs = pagination.items
     return minify(render_template(
         'profile/overview.html',
         profile_tab=tab,
-        user=user
+        user=user,
+        pagination=pagination,
+        logs=logs
     ))
