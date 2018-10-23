@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% import "_macros.html" as macros %}
+
+{% block title %}{{ header }}{% endblock %}
+
+{% block content %}
+<div class="ui masthead vertical segment">
+    <div class="ui center aligned container">
+        <h1 class="ui header"><i class="chalkboard teacher icon"></i>{{ header }}</h1>
+    </div>
+</div>
+<div class="ui main vertical segment">
+    <div class="ui container">
+        <h3 class="ui header">
+            <i class="book icon"></i>
+            <div class="content">研修课程列表<div class="sub header">{{ header }}：共 {{ lessons.count() }} 课</div></div>
+        </h3>
+        <table class="ui selectable celled table">
+            <thead>
+                <tr>
+                    <th>课程名称</th>
+                    <th>课程时长</th>
+                    <th>课程视频</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for lesson in lessons %}
+                <tr>
+                    <td><div class="ui {{ lesson.type.color }} horizontal label">{{ lesson.type.name }}</div>{{ lesson.abbr }}</td>
+                    <td><code>{{ lesson.duration_format }}</code></td>
+                    <td>{{ lesson.videos.count() }} 个</td>
+                    <td>{% if lesson.videos.count() %}<a class="ui mini {{ lesson.type.color }} left labeled icon button" href="{{ url_for('study.video', id=lesson.videos.first().id) }}"><i class="play circle icon"></i>研修</a>{% else %}<div class="ui mini left labeled icon button disabled"><i class="ban icon"></i>无</div>{% endif %}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script type="text/javascript">
+{{ macros.close_message_js_snippet() }}
+</script>
+{% endblock %}

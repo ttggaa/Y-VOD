@@ -682,6 +682,10 @@ class User(UserMixin, db.Model):
             .order_by(Punch.timestamp.desc())\
             .first()
 
+    def can_study(self, lesson):
+        '''User.can_study(self, lesson)'''
+        return False
+
     def to_csv(self):
         '''User.to_csv(self)'''
         last_seen_at = ''

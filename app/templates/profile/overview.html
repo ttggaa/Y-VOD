@@ -95,11 +95,7 @@
 <script type="text/javascript">
 {{ macros.close_message_js_snippet() }}
 
-if ($(window).width() >= 768) {
-    $('.ui.sticky').sticky({
-        offset: 60
-    });
-};
+{{ macros.sticky_js_snippet() }}
 
 {% if user.is_student or user.is_developer %}
 $('#page-loading-progress').progress({

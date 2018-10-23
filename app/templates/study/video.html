@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% import "_macros.html" as macros %}
+
+{% block title %}{{ video.abbr }} &middot; {{ video.lesson.name }}{% endblock %}
+
+{% block css %}
+<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='assets/library/player/player.min.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="ui masthead vertical segment">
+    <div class="ui center aligned container">
+        <h1 class="ui header"><i class="chalkboard teacher icon"></i>{{ video.lesson.name }}</h1>
+    </div>
+</div>
+<div class="ui main vertical segment">
+    <div class="ui internally celled stackable grid container">
+        <div class="row">
+            <div class="four wide column">
+                <div class="ui vertical segment">
+                    <div class="ui header">研修视频列表</div>
+                    <div class="ui bulleted selection link list">
+                        {% for item in video.lesson.videos %}<a class="{% if item.id == video.id %}active {% endif %}item" href="{{ url_for('study.video', id=item.id) }}"><i class="{{ item.lesson.type.color }} file video icon"></i>{{ item.abbr }}</a>{% endfor %}
+                    </div>
+                </div>
+            </div>
+            <div class="twelve wide column">
+                <div class="ui sticky">
+                    <div class="ui vertical segment">
+                        <div class="ui header">{{ video.name }}{% if video.description %}<div class="ui {{ video.lesson.type.color }} horizontal label">{{ video.description }}</div>{% endif %}</div>
+                        <div id="player"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script type="text/javascript" src="{{ url_for('static', filename='assets/library/player/player.min.js') }}"></script>
+<script type="text/javascript">
+{{ macros.close_message_js_snippet() }}
+
+{{ macros.sticky_js_snippet() }}
+
+{{ macros.player_js_snippet(player_id='player', video_url='https://player.y-english.org/video/demo.mp4') }}
+</script>
+{% endblock %}
