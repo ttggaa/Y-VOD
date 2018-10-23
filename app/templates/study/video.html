@@ -9,8 +9,9 @@
 
 {% block content %}
 <div class="ui masthead vertical segment">
-    <div class="ui center aligned container">
-        <h1 class="ui header"><i class="chalkboard teacher icon"></i>{{ video.lesson.name }}</h1>
+    <div class="ui container">
+        {{ macros.message_widget() }}
+        <h1 class="ui center aligned header"><i class="chalkboard teacher icon"></i>{{ video.lesson.name }}</h1>
     </div>
 </div>
 <div class="ui main vertical segment">
@@ -45,6 +46,6 @@
 
 {{ macros.sticky_js_snippet() }}
 
-{{ macros.player_js_snippet(player_id='player', video_url='https://player.y-english.org/video/demo.mp4') }}
+{{ macros.player_js_snippet(player_id='player', video_url=url_for('resource.video', id=video.id)) }}
 </script>
 {% endblock %}

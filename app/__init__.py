@@ -48,6 +48,9 @@ def create_app(config_name):
     from .manage import manage as manage_blueprint
     app.register_blueprint(manage_blueprint, url_prefix='/manage')
 
+    from .resource import resource as resource_blueprint
+    app.register_blueprint(resource_blueprint, url_prefix='/resource')
+
     from .develop import develop as develop_blueprint
     app.register_blueprint(develop_blueprint, url_prefix='/develop')
 

@@ -5,8 +5,9 @@
 
 {% block content %}
 <div class="ui masthead vertical segment">
-    <div class="ui center aligned container">
-        <h1 class="ui header"><i class="tachometer alternate icon"></i>系统实况</h1>
+    <div class="ui container">
+        {{ macros.message_widget() }}
+        <h1 class="ui center aligned header"><i class="tachometer alternate icon"></i>系统实况</h1>
     </div>
 </div>
 <div class="ui main vertical segment"></div>

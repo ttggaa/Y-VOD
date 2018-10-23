@@ -684,7 +684,11 @@ class User(UserMixin, db.Model):
 
     def can_study(self, lesson):
         '''User.can_study(self, lesson)'''
-        return False
+        return True
+
+    def can_play(self, video):
+        '''User.can_play(self, video)'''
+        return True
 
     def to_csv(self):
         '''User.to_csv(self)'''
