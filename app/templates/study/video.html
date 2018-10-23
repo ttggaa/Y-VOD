@@ -21,6 +21,7 @@
                     <div class="ui header">研修视频列表</div>
                     <div class="ui bulleted selection link list">
                         {% for item in video.lesson.videos %}<a class="{% if item.id == video.id %}active {% endif %}item" href="{{ url_for('study.video', id=item.id) }}"><i class="{{ item.lesson.type.color }} file video icon"></i>{{ item.abbr }}</a>{% endfor %}
+                        <a class="item" href="{{ url_for('study.{}'.format(video.lesson.type.snake_case)) }}"><i class="arrow left icon"></i>返回{{ video.lesson.type.name }}研修课程列表</a>
                     </div>
                 </div>
             </div>

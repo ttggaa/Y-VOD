@@ -1043,6 +1043,11 @@ class LessonType(db.Model):
     color = db.Column(db.Unicode(64))
     lessons = db.relationship('Lesson', backref='type', lazy='dynamic')
 
+    @property
+    def snake_case(self):
+        '''LessonType.snake_case(self)'''
+        return self.name.lower().replace('-', '_')
+
     @staticmethod
     def insert_entries(data, basedir, verbose=False):
         '''LessonType.insert_entries(data, basedir, verbose=False)'''
