@@ -1,4 +1,5 @@
 python
 media-info
+supervisor
 nginx
 dnsmasq
