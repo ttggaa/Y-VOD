@@ -39,13 +39,21 @@ def login():
             return redirect(url_for('auth.login', next=request.args.get('next')))
         user = User.query.filter_by(name=form.name.data, id_number=form.id_number.data).first()
         if user is not None:
-            if user.verify_auth_token(token=form.auth_token.data):
-                login_user(user, remember=False)
-                add_user_log(user=user, event='登录系统', category='access')
-                db.session.commit()
-                return redirect(request.args.get('next') or user.index_url)
+            if not user.locked:
+                if user.verify_auth_token(token=form.auth_token.data):
+                    user.reset_invalid_login_count()
+                    login_user(user, remember=False)
+                    add_user_log(user=user, event='登录系统', category='access')
+                    db.session.commit()
+                    return redirect(request.args.get('next') or user.index_url)
+                else:
+                    user.increase_invalid_login_count()
+                    flash('登录失败：授权码错误（第{}次）'.format(user.invalid_login_count), category='error')
+                    add_user_log(user=user, event='登录失败：授权码错误（第{}次，来源：{}）'.format(user.invalid_login_count, get_device_info(ip_address=ip_address, show_ip=True)), category='access')
+                    db.session.commit()
+                    return redirect(url_for('auth.login', next=request.args.get('next')))
             else:
-                flash('登录失败：无效的授权码', category='error')
+                flash('登录失败：您的账户已被锁定', category='error')
                 return redirect(url_for('auth.login', next=request.args.get('next')))
         else:
             flash('登录失败：无效的用户信息', category='error')
