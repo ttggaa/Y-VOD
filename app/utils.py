@@ -8,6 +8,7 @@ from datetime import datetime, timedelta
 import csv
 import yaml
 from pymediainfo import MediaInfo
+from flask import stream_with_context, Response
 from pypinyin import slug, Style
 
 
@@ -61,6 +62,19 @@ def get_video_duration(video_file):
         media_info = MediaInfo.parse(video_file)
         return timedelta(milliseconds=media_info.tracks[0].duration)
     return '{} does not exist.'.format(video_file)
+
+
+def stream_video(video_file, mimetype='video/mp4', chunk_size=1024*1024):
+    '''stream_video(video_file, mimetype='video/mp4', chunk_size=1024*1024)'''
+    def generator():
+        with io.open(video_file, 'rb') as f:
+            while True:
+                chunk = f.read(chunk_size)
+                if chunk:
+                    yield chunk
+                else:
+                    break
+    return Response(stream_with_context(generator()), mimetype=mimetype, direct_passthrough=True)
 
 
 def format_duration(duration):
