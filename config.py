@@ -74,8 +74,29 @@ class DevelopmentConfig(Config):
     DEVELOPMENT_MACHINE_IP_ADDRESS = os.getenv('YVOD_DEV_DEVELOPMENT_MACHINE_IP_ADDRESS')
 
 
+class TestingConfig(Config):
+    '''TestingConfig(Config)'''
+
+    ENV = 'testing'
+    TESTING = True
+
+    # Security
+    SECRET_KEY = os.getenv('YVOD_TEST_SECRET_KEY')
+
+    # Database
+    SQLALCHEMY_DATABASE_URI = 'sqlite:///{}'.format(os.path.join(basedir, 'yvod-test.sqlite'))
+
+    # Development
+    SYSTEM_OPERATOR_NAME = os.getenv('YVOD_TEST_SYSTEM_OPERATOR_NAME')
+    SYSTEM_OPERATOR_TOKEN = os.getenv('YVOD_TEST_SYSTEM_OPERATOR_TOKEN')
+    DEVELOPMENT_MACHINE_SERIAL = os.getenv('YVOD_TEST_DEVELOPMENT_MACHINE_SERIAL')
+    DEVELOPMENT_MACHINE_IP_ADDRESS = os.getenv('YVOD_TEST_DEVELOPMENT_MACHINE_IP_ADDRESS')
+
+
 class ProductionConfig(Config):
     '''ProductionConfig(Config)'''
+
+    ENV = 'production'
 
     # Security
     SECRET_KEY = os.getenv('YVOD_PROD_SECRET_KEY')
@@ -92,6 +113,7 @@ class ProductionConfig(Config):
 
 config = {
     'development': DevelopmentConfig,
+    'testing': TestingConfig,
     'production': ProductionConfig,
 
     'default': DevelopmentConfig,

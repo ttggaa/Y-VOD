@@ -6,6 +6,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0">
     <title>{% block title %}{% endblock %} &middot;{% if current_user.is_authenticated %} {{ current_user.name }} &middot;{% endif %} Y-VOD &middot; 云英语</title>
     <meta name="version" content="Y-VOD v{{ config.VERSION }} (Python {{ config.PYTHON_VERSION }})">
+    <meta name="established_at" content="{{ config.ESTABLISHED_AT }}">
+    <meta name="updated_at" content="{{ config.UPDATED_AT }}">
+    <meta name="rendered_at" content="{{ config.RENDERED_AT().strftime('%Y-%m-%dT%H:%M:%SZ') }}">
     <meta name="author" content="iROCKBUNNY">
     <meta name="description" content="Y-VOD: Y-English Intranet Video-On-Demand Solution">
     <meta name="keywords" content="Y-English, Y-VOD, VOD, English, Education">
