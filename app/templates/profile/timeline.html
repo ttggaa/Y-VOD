@@ -1,0 +1,22 @@
+{% extends "profile/base.html" %}
+
+{% block profile_title %}时间线{% endblock %}
+
+{% block profile_content %}
+<div class="ui vertical segment">
+    <div class="ui header">时间线</div>
+    <div class="ui feed">
+        {% for log in logs %}
+        <div class="event">
+            <div class="content">
+                <div class="summary">
+                    {{ macros.user_log_widget(log, log.user_id == current_user.id, show_category=current_user.is_developer) }}
+                    <div class="date">{{ macros.from_now_widget(log.timestamp) }}</div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% if pagination %}{{ macros.pagination_widget(pagination, 'profile.timeline', id=user.id) }}{% endif %}
+</div>
+{% endblock %}

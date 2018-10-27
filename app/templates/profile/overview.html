@@ -1,103 +1,52 @@
-{% extends "base.html" %}
-{% import "_macros.html" as macros %}
+{% extends "profile/base.html" %}
 
-{% block title %}概览 &middot; {% if user.id == current_user.id %}个人{% else %}{{ user.name }}的{% endif %}档案{% endblock %}
+{% block profile_title %}概览{% endblock %}
 
-{% block content %}
-<div class="ui masthead vertical segment">
-    <div class="ui container">
-        {{ macros.message_widget() }}
-        <h1 class="ui center aligned header"><i class="id card icon"></i>{% if user.id == current_user.id %}个人{% else %}{{ user.name }}的{% endif %}档案</h1>
-    </div>
-</div>
-<div class="ui main vertical segment">
-    <div id="page-loading-progress" class="ui top attached blue inverted progress">
-        <div class="bar"></div>
-    </div>
-    <div class="ui internally celled stackable grid container">
-        <div class="row">
-            <div class="four wide column">
-                <div class="ui sticky">
-                    <div class="ui vertical segment">
-                        <h1 class="ui header">
-                            <div class="content">
-                                {{ macros.user_gender_widget(user) }}
-                                <div class="sub header">{% if user.suspended %}[挂起] {% endif %}{{ user.role.name }}</div>
-                            </div>
-                        </h1>
-                    </div>
-                    <div class="ui vertical segment">
-                        <div>上次登录：{{ macros.from_now_widget(user.last_seen_at) }}</div>
-                        {% if current_user.is_staff %}<div>登录设备：{{ user.last_login_device.alias }}</div>{% endif %}
-                        {% if current_user.is_developer %}<div>设备IP：{{ current_user.last_seen_ip }}</div>{% endif %}
-                    </div>
-                    {% if current_user.is_staff %}<div class="ui vertical segment">
-                        <div>创建时间：{{ macros.from_now_widget(user.created_at) }}</div>
-                        <div>创建人：{{ macros.user_url_widget(user.created_by, user.created_by.id == current_user.id) }}</div>
-                    </div>{% endif %}
-                </div>
-            </div>
-            <div class="twelve wide column">
-                {% if user.is_student or user.is_developer %}<div id="progress" class="ui vertical segment loading">
-                    <div id="vb-progress" class="ui header disabled">VB研修进度：<span id="vb-progress-data">0</span>%</div>
-                    <div id="vb-progress-bar" class="ui tiny progress disabled">
-                        <div class="bar"></div>
-                        <div id="vb-progress-label" class="label">N/A</div>
-                    </div>
-                    <div id="y-gre-progress" class="ui header disabled">Y-GRE研修进度：<span id="y-gre-progress-data">0</span>%</div>
-                    <div id="y-gre-progress-bar" class="ui tiny progress disabled">
-                        <div class="bar"></div>
-                        <div id="y-gre-progress-label" class="label">N/A</div>
-                    </div>
-                    <div class="ui header">课程研修进度</div>
-                    <table class="ui unstackable selectable celled table">
-                        <thead>
-                            <tr>
-                                <th>研修课程</th>
-                                <th>研修进度</th>
-                                <th>上次研修时间</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for lesson in lessons %}
-                            <tr>
-                                <td><div class="ui {{ lesson.type.color }} horizontal label">{{ lesson.type.name }}</div>{{ lesson.abbr }}</td>
-                                <td>{{ user.lesson_progress_percentage(lesson=lesson) }}</td>
-                                <td>{% if user.lesson_punch(lesson=lesson) %}{{ macros.from_now_widget(user.lesson_punch(lesson=lesson).timestamp) }}{% else %}N/A{% endif %}</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>{% endif %}
-                <div class="ui vertical segment">
-                    <div class="ui header">时间线</div>
-                    <div class="ui feed">
-                        {% for log in logs %}
-                        <div class="event">
-                            <div class="content">
-                                <div class="summary">
-                                    {{ macros.user_log_widget(log, log.user_id == current_user.id, show_category=current_user.is_developer) }}
-                                    <div class="date">{{ macros.from_now_widget(log.timestamp) }}</div>
-                                </div>
-                            </div>
-                        </div>
-                        {% endfor %}
-                    </div>
-                    {% if pagination %}{{ macros.pagination_widget(pagination, 'profile.overview', id=user.id) }}{% endif %}
-                </div>
-            </div>
-        </div>
-    </div>
+{% block profile_prgress_bar %}
+<div id="page-loading-progress" class="ui top attached blue inverted progress">
+    <div class="bar"></div>
 </div>
 {% endblock %}
 
-{% block js %}
+{% block profile_content %}
+{% if user.is_student or user.is_developer %}<div id="progress" class="ui vertical segment loading">
+    <div id="vb-progress" class="ui header disabled">VB研修进度：<span id="vb-progress-data">0</span>%</div>
+    <div id="vb-progress-bar" class="ui tiny progress disabled">
+        <div class="bar"></div>
+        <div id="vb-progress-label" class="label">N/A</div>
+    </div>
+    <div id="y-gre-progress" class="ui header disabled">Y-GRE研修进度：<span id="y-gre-progress-data">0</span>%</div>
+    <div id="y-gre-progress-bar" class="ui tiny progress disabled">
+        <div class="bar"></div>
+        <div id="y-gre-progress-label" class="label">N/A</div>
+    </div>
+    <div class="ui header">课程研修进度</div>
+    <table class="ui unstackable selectable celled table">
+        <thead>
+            <tr>
+                <th>研修课程</th>
+                <th>研修进度</th>
+                <th>上次研修时间</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for lesson in lessons %}
+            <tr>
+                <td><div class="ui {{ lesson.type.color }} horizontal label">{{ lesson.type.name }}</div>{{ lesson.abbr }}</td>
+                <td>{{ user.lesson_progress_percentage(lesson=lesson) }}</td>
+                <td>{% if user.lesson_punch(lesson=lesson) %}{{ macros.from_now_widget(user.lesson_punch(lesson=lesson).timestamp) }}{% else %}N/A{% endif %}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>{% endif %}
+{% endblock %}
+
+{% block profile_js_lib %}
 {% if user.is_student or user.is_developer %}<script type="text/javascript" src="{{ url_for('static', filename='assets/library/count/countUp.min.js') }}"></script>{% endif %}
+{% endblock %}
+{% block profile_js %}
 <script type="text/javascript">
-{{ macros.close_message_js_snippet() }}
-
-{{ macros.sticky_js_snippet() }}
-
 {% if user.is_student or user.is_developer %}
 $('#page-loading-progress').progress({
     total: 1,

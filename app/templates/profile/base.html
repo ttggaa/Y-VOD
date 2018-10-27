@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% import "_macros.html" as macros %}
+
+{% block title %}{% block profile_title %}{% endblock %} &middot; {% if user.id == current_user.id %}个人{% else %}{{ user.name }}的{% endif %}档案{% endblock %}
+
+{% block content %}
+<div class="ui masthead vertical segment">
+    <div class="ui container">
+        {{ macros.message_widget() }}
+        <h1 class="ui center aligned header"><i class="id card icon"></i>{% if user.id == current_user.id %}个人{% else %}{{ user.name }}的{% endif %}档案</h1>
+        <div class="ui center aligned container">
+            <div class="ui labels">
+                <a class="ui {% if profile_tab == 'overview' %}black {% endif %}label" href="{{ url_for('profile.overview', id=user.id) }}">概览</a>
+                <a class="ui {% if profile_tab == 'timeline' %}black {% endif %}label" href="{{ url_for('profile.timeline', id=user.id) }}">时间线</a>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="ui main vertical segment">
+    {% block profile_prgress_bar %}{% endblock %}
+    <div class="ui internally celled stackable grid container">
+        <div class="row">
+            <div class="four wide column">
+                <div class="ui sticky">
+                    <div class="ui vertical segment">
+                        <h1 class="ui header">
+                            <div class="content">
+                                {{ macros.user_gender_widget(user) }}
+                                <div class="sub header">{% if user.suspended %}[挂起] {% endif %}{{ user.role.name }}</div>
+                            </div>
+                        </h1>
+                    </div>
+                    <div class="ui vertical segment">
+                        <div>上次登录：{{ macros.from_now_widget(user.last_seen_at) }}</div>
+                        {% if current_user.is_staff %}<div>登录设备：{{ user.last_login_device.alias }}</div>{% endif %}
+                        {% if current_user.is_developer %}<div>设备IP：{{ current_user.last_seen_ip }}</div>{% endif %}
+                    </div>
+                    {% if current_user.is_staff %}<div class="ui vertical segment">
+                        <div>创建时间：{{ macros.from_now_widget(user.created_at) }}</div>
+                        <div>创建人：{{ macros.user_url_widget(user.created_by, user.created_by.id == current_user.id) }}</div>
+                    </div>{% endif %}
+                </div>
+            </div>
+            <div class="twelve wide column">
+                {% block profile_content %}{% endblock %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+{% block profile_js_lib %}{% endblock %}
+<script type="text/javascript">
+{{ macros.close_message_js_snippet() }}
+
+{{ macros.sticky_js_snippet() }}
+</script>
+{% block profile_js %}{% endblock %}
+{% endblock %}
