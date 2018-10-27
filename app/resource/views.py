@@ -9,7 +9,6 @@ from flask_login import login_required, current_user
 from . import resource
 from ..models import Video
 from ..decorators import permission_required
-from ..utils import stream_video
 
 
 @resource.route('/video/<int:id>')
@@ -23,7 +22,7 @@ def video(id):
     video_file = os.path.join(current_app.config['VIDEO_DIR'], video.file_name)
     if not os.path.exists(video_file):
         abort(404)
-    return stream_video(video_file, mimetype='video/mp4')
+    return send_file(video_file, mimetype='video/mp4')
 
 
 @resource.route('/video/forbidden')
@@ -34,4 +33,4 @@ def video_forbidden():
     video_file = os.path.join(current_app.config['VIDEO_DIR'], 'forbidden.mp4')
     if not os.path.exists(video_file):
         abort(404)
-    return stream_video(video_file, mimetype='video/mp4')
+    return send_file(video_file, mimetype='video/mp4')

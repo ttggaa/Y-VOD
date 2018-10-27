@@ -240,13 +240,13 @@ class Punch(db.Model):
 
     @property
     def progress(self):
-        '''Punch.progress(self):'''
+        '''Punch.progress(self)'''
         return self.play_time / self.video.duration
 
     @property
     def play_time_trim(self):
         '''Punch.play_time_trim(self)'''
-        if self.progress > 1.0:
+        if self.complete:
             return self.video.duration
         else:
             return self.play_time
@@ -301,7 +301,7 @@ class Punch(db.Model):
 
     @staticmethod
     def backup_entries(data, basedir):
-        '''Punch.backup_entries(data, basedir):'''
+        '''Punch.backup_entries(data, basedir)'''
         csv_file = os.path.join(basedir, 'data', data, 'punches.csv')
         if os.path.exists(csv_file):
             os.remove(csv_file)
@@ -360,7 +360,7 @@ class UserCreation(db.Model):
 
     @staticmethod
     def backup_entries(data, basedir):
-        '''UserCreation.backup_entries(data, basedir):'''
+        '''UserCreation.backup_entries(data, basedir)'''
         csv_file = os.path.join(basedir, 'data', data, 'user_creations.csv')
         if os.path.exists(csv_file):
             os.remove(csv_file)
@@ -682,13 +682,26 @@ class User(UserMixin, db.Model):
             .order_by(Punch.timestamp.desc())\
             .first()
 
+    def complete_video(self, video):
+        '''User.complete_video(self, video)'''
+        punch = self.punches.filter_by(video_id=video.id).first()
+        return punch is not None and punch.complete
+
     def can_study(self, lesson):
         '''User.can_study(self, lesson)'''
-        return True
+        return reduce(operator.and_, [self.complete_video(video=video) for video in Video.query\
+            .join(Lesson, Lesson.id == Video.lesson_id)\
+            .join(LessonType, LessonType.id == Lesson.type_id)\
+            .filter(Lesson.type_id == lesson.type_id)\
+            .filter(and_(
+                Lesson.order > 0,
+                Lesson.order < lesson.order
+            ))\
+            .all()], True)
 
     def can_play(self, video):
         '''User.can_play(self, video)'''
-        return True
+        return self.can_study(lesson=video.lesson)
 
     def to_csv(self):
         '''User.to_csv(self)'''
