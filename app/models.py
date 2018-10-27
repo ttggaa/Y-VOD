@@ -9,8 +9,9 @@ from datetime import datetime, timedelta
 from hashlib import md5
 from base64 import b64encode
 from functools import reduce
-from werkzeug.routing import BuildError
 from sqlalchemy import and_
+from werkzeug.routing import BuildError
+from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 from flask import current_app, url_for
 from flask_login import UserMixin, AnonymousUserMixin
 from . import db, login_manager
@@ -485,6 +486,16 @@ class User(UserMixin, db.Model):
         self.suspended = False
         db.session.add(self)
 
+    @staticmethod
+    def import_user(token):
+        '''User.import_user(self, token)'''
+        serial = Serializer(current_app.config['AUTH_TOKEN_SECRET_KEY'])
+        try:
+            data = serial.loads(token)
+        except:
+            return None
+        return data
+
     def verify_auth_token(self, token):
         '''User.verify_auth_token(self, token)'''
         string = 'name={}&id_number={}&date={}&secret={}'.format(self.name, self.id_number, date_now(utc_offset=current_app.config['UTC_OFFSET']).isoformat(), current_app.config['AUTH_TOKEN_SECRET_KEY'])
@@ -629,6 +640,7 @@ class User(UserMixin, db.Model):
             .join(LessonType, LessonType.id == Lesson.type_id)\
             .filter(LessonType.name == 'VB')\
             .filter(Lesson.order > 0)\
+            .filter(Punch.user_id == self.id)\
             .order_by(Video.id.desc())\
             .first()
 
@@ -641,6 +653,7 @@ class User(UserMixin, db.Model):
             .join(LessonType, LessonType.id == Lesson.type_id)\
             .filter(LessonType.name == 'Y-GRE')\
             .filter(Lesson.order > 0)\
+            .filter(Punch.user_id == self.id)\
             .order_by(Video.id.desc())\
             .first()
 
@@ -658,6 +671,7 @@ class User(UserMixin, db.Model):
                 .join(Lesson, Lesson.id == Video.lesson_id)\
                 .join(LessonType, LessonType.id == Lesson.type_id)\
                 .filter(LessonType.name == 'VB')\
+                .filter(Punch.user_id == self.id)\
                 .all()], timedelta()).total_seconds(),
         }
         if self.last_vb_punch is not None:
@@ -680,6 +694,7 @@ class User(UserMixin, db.Model):
                 .join(Lesson, Lesson.id == Video.lesson_id)\
                 .join(LessonType, LessonType.id == Lesson.type_id)\
                 .filter(LessonType.name == 'Y-GRE')\
+                .filter(Punch.user_id == self.id)\
                 .all()], timedelta()).total_seconds(),
         }
         if self.last_y_gre_punch is not None:
@@ -693,6 +708,7 @@ class User(UserMixin, db.Model):
         return reduce(operator.add, [punch.play_time_trim for punch in Punch.query\
             .join(Video, Video.id == Punch.video_id)\
             .filter(Video.lesson_id == lesson.id)\
+            .filter(Punch.user_id == self.id)\
             .all()], timedelta()) / lesson.duration
 
     def lesson_progress_percentage(self, lesson):
@@ -704,6 +720,7 @@ class User(UserMixin, db.Model):
         return Punch.query\
             .join(Video, Video.id == Punch.video_id)\
             .filter(Video.lesson_id == lesson.id)\
+            .filter(Punch.user_id == self.id)\
             .order_by(Punch.timestamp.desc())\
             .first()
 
@@ -726,7 +743,7 @@ class User(UserMixin, db.Model):
 
     def can_study(self, lesson):
         '''User.can_study(self, lesson)'''
-        return reduce(operator.and_, [self.complete_video(video=video) for video in Video.query\
+        return self.plays(role_name='协调员') or reduce(operator.and_, [self.complete_video(video=video) for video in Video.query\
             .join(Lesson, Lesson.id == Video.lesson_id)\
             .join(LessonType, LessonType.id == Lesson.type_id)\
             .filter(Lesson.type_id == lesson.type_id)\
@@ -769,9 +786,9 @@ class User(UserMixin, db.Model):
         if data == 'initial':
             system_operator = User(
                 role_id=Role.query.filter_by(name='开发人员').first().id,
+                name=current_app.config['SYSTEM_OPERATOR_NAME'],
                 id_type_id=IDType.query.filter_by(name='其它').first().id,
-                id_number=current_app.config['SYSTEM_OPERATOR_TOKEN'],
-                name=current_app.config['SYSTEM_OPERATOR_NAME']
+                id_number=current_app.config['SYSTEM_OPERATOR_TOKEN']
             )
             db.session.add(system_operator)
             db.session.commit()

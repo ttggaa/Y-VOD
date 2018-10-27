@@ -17,9 +17,12 @@
             <div class="content">学生列表{% if pagination %}<div class="sub header">{{ header }}：共 {{ pagination.total }} 人</div>{% endif %}</div>
         </h3>
         <div class="ui secondary stackable menu">
-            <a class="item {% if show_vb_students %}active {% endif %}loading-trigger" href="{{ url_for('manage.vb_students') }}">VB研修</a>
-            <a class="item {% if show_y_gre_students %}active {% endif %}loading-trigger" href="{{ url_for('manage.y_gre_students') }}">Y-GRE研修</a>
-            <a class="item {% if show_suspended_students %}active {% endif %}loading-trigger" href="{{ url_for('manage.suspended_students') }}">挂起</a>
+            <a class="item {% if show_vb_students %}active {% endif %}" href="{{ url_for('manage.vb_students') }}">VB研修</a>
+            <a class="item {% if show_y_gre_students %}active {% endif %}" href="{{ url_for('manage.y_gre_students') }}">Y-GRE研修</a>
+            <a class="item {% if show_suspended_students %}active {% endif %}" href="{{ url_for('manage.suspended_students') }}">挂起</a>
+            <div class="right menu">
+                <a class="item" href="{{ url_for('manage.import_user', next=url_for('manage.student')) }}"><i class="file import icon"></i>导入</a>
+            </div>
         </div>
         {% if pagination.total > 0 %}
         <table class="ui sortable selectable celled table">

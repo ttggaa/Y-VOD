@@ -1,8 +1,8 @@
 {% macro pagination_widget(pagination, endpoint, fragment='') -%}
 <div class="ui mini secondary stackable menu">
-    {% if pagination.has_prev %}<a class="item loading-trigger" href="{{ url_for(endpoint, page=pagination.prev_num, **kwargs) }}{{ fragment }}"><i class="fitted chevron left icon"></i></a>{% else %}<div class="disabled item"><i class="fitted chevron left icon"></i></div>{% endif %}
-    {% for p in pagination.iter_pages(left_edge=2, left_current=2, right_current=3, right_edge=2) %}{% if p %}<a class="{% if p == pagination.page %}active {% endif %}item loading-trigger" href="{{ url_for(endpoint, page=p, **kwargs) }}{{ fragment }}">{{ p }}</a>{% else %}<div class="disabled item"><i class="fitted ellipsis horizontal icon"></i></div>{% endif %}{% endfor %}
-    {% if pagination.has_next %}<a class="item loading-trigger" href="{{ url_for(endpoint, page=pagination.next_num, **kwargs) }}{{ fragment }}"><i class="fitted chevron right icon"></i></a>{% else %}<div class="disabled item"><i class="fitted chevron right icon"></i></div>{% endif %}
+    {% if pagination.has_prev %}<a class="item" href="{{ url_for(endpoint, page=pagination.prev_num, **kwargs) }}{{ fragment }}"><i class="fitted chevron left icon"></i></a>{% else %}<div class="disabled item"><i class="fitted chevron left icon"></i></div>{% endif %}
+    {% for p in pagination.iter_pages(left_edge=2, left_current=2, right_current=3, right_edge=2) %}{% if p %}<a class="{% if p == pagination.page %}active {% endif %}item" href="{{ url_for(endpoint, page=p, **kwargs) }}{{ fragment }}">{{ p }}</a>{% else %}<div class="disabled item"><i class="fitted ellipsis horizontal icon"></i></div>{% endif %}{% endfor %}
+    {% if pagination.has_next %}<a class="item" href="{{ url_for(endpoint, page=pagination.next_num, **kwargs) }}{{ fragment }}"><i class="fitted chevron right icon"></i></a>{% else %}<div class="disabled item"><i class="fitted chevron right icon"></i></div>{% endif %}
     {% if pagination.pages > 9 %}<div class="right menu">
         <div class="item">
             <form id="jump-to-page" action="{{ url_for(endpoint, **kwargs) }}" method="GET" class="ui form">

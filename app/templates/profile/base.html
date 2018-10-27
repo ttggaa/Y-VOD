@@ -10,8 +10,8 @@
         <h1 class="ui center aligned header"><i class="id card icon"></i>{% if user.id == current_user.id %}个人{% else %}{{ user.name }}的{% endif %}档案</h1>
         <div class="ui center aligned container">
             <div class="ui labels">
-                <a class="ui {% if profile_tab == 'overview' %}black {% endif %}label" href="{{ url_for('profile.overview', id=user.id) }}">概览</a>
-                <a class="ui {% if profile_tab == 'timeline' %}black {% endif %}label" href="{{ url_for('profile.timeline', id=user.id) }}">时间线</a>
+                <a class="ui {% if profile_tab == 'overview' %}black {% endif %}label" href="{{ url_for('profile.overview', id=user.id) }}"><i class="stream icon"></i>概览</a>
+                <a class="ui {% if profile_tab == 'timeline' %}black {% endif %}label" href="{{ url_for('profile.timeline', id=user.id) }}"><i class="spinner icon"></i>时间线</a>
             </div>
         </div>
     </div>

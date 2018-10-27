@@ -17,12 +17,12 @@
             <div class="content">设备列表{% if pagination %}<div class="sub header">{{ header }}：共 {{ pagination.total }} 台</div>{% endif %}</div>
         </h3>
         <div class="ui secondary stackable menu">
-            <a class="item {% if show_tablet_devices %}active {% endif %}loading-trigger" href="{{ url_for('manage.tablet_devices') }}">平板设备</a>
-            <a class="item {% if show_desktop_devices %}active {% endif %}loading-trigger" href="{{ url_for('manage.desktop_devices') }}">桌面设备</a>
-            <a class="item {% if show_mobile_devices %}active {% endif %}loading-trigger" href="{{ url_for('manage.mobile_devices') }}">移动设备</a>
-            {% if current_user.is_developer %}<a class="item {% if show_development_devices %}active {% endif %}loading-trigger" href="{{ url_for('manage.development_devices') }}">开发设备</a>
+            <a class="item {% if show_tablet_devices %}active {% endif %}" href="{{ url_for('manage.tablet_devices') }}">平板设备</a>
+            <a class="item {% if show_desktop_devices %}active {% endif %}" href="{{ url_for('manage.desktop_devices') }}">桌面设备</a>
+            <a class="item {% if show_mobile_devices %}active {% endif %}" href="{{ url_for('manage.mobile_devices') }}">移动设备</a>
+            {% if current_user.is_developer %}<a class="item {% if show_development_devices %}active {% endif %}" href="{{ url_for('manage.development_devices') }}">开发设备</a>
             {% endif %}
-            <a class="item {% if show_obsolete_devices %}active {% endif %}loading-trigger" href="{{ url_for('manage.obsolete_devices') }}">报废设备</a>
+            <a class="item {% if show_obsolete_devices %}active {% endif %}" href="{{ url_for('manage.obsolete_devices') }}">报废设备</a>
         </div>
         {% if pagination.total > 0 %}
         <table class="ui sortable selectable celled table">
