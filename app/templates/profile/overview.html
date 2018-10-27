@@ -63,7 +63,7 @@
                             <tr>
                                 <td><div class="ui {{ lesson.type.color }} horizontal label">{{ lesson.type.name }}</div>{{ lesson.abbr }}</td>
                                 <td>{{ user.lesson_progress_percentage(lesson=lesson) }}</td>
-                                <td>{% if user.lesson_punch(lesson=lesson) %}{{ macros.from_now_widget(user.lesson_punched(lesson=lesson).timestamp) }}{% else %}N/A{% endif %}</td>
+                                <td>{% if user.lesson_punch(lesson=lesson) %}{{ macros.from_now_widget(user.lesson_punch(lesson=lesson).timestamp) }}{% else %}N/A{% endif %}</td>
                             </tr>
                             {% endfor %}
                         </tbody>

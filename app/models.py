@@ -239,9 +239,9 @@ class Punch(db.Model):
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
 
     @property
-    def progress(self):
-        '''Punch.progress(self)'''
-        return self.play_time / self.video.duration
+    def complete(self):
+        '''Punch.complete(self)'''
+        return self.play_time >= self.video.duration
 
     @property
     def play_time_trim(self):
@@ -251,6 +251,19 @@ class Punch(db.Model):
         else:
             return self.play_time
 
+    @property
+    def progress(self):
+        '''Punch.progress(self)'''
+        return self.play_time / self.video.duration
+
+    @property
+    def progress_trim(self):
+        '''Punch.progress_trim(self)'''
+        if self.complete:
+            return 1.0
+        else:
+            return self.progress
+
     def to_json(self):
         '''Punch.to_json(self)'''
         entry_json = {
@@ -258,7 +271,7 @@ class Punch(db.Model):
             'video': self.video.to_json(),
             'play_time': {
                 'format': format_duration(duration=self.play_time),
-                'seconds': self.play_time.total_seconds,
+                'seconds': self.play_time.total_seconds(),
             },
             'punched_at': self.timestamp.strftime('%Y-%m-%dT%H:%M:%SZ'),
         }
@@ -595,6 +608,18 @@ class User(UserMixin, db.Model):
         '''User.created_by(self)'''
         return self.received_user_creations.first().creator
 
+    def punch(self, video):
+        '''User.punch(self, video)'''
+        punch = self.punches.filter_by(video_id=video.id).first()
+        if punch is not None:
+            punch.timestamp = datetime.utcnow()
+        else:
+            punch = Punch(
+                user_id=self.id,
+                video_id=video.id
+            )
+        db.session.add(punch)
+
     @property
     def last_vb_punch(self):
         '''User.last_vb_punch(self)'''
@@ -681,6 +706,18 @@ class User(UserMixin, db.Model):
             .filter(Video.lesson_id == lesson.id)\
             .order_by(Punch.timestamp.desc())\
             .first()
+
+    def video_progress(self, video):
+        '''User.video_progress(self, video)'''
+        punch = self.punches.filter_by(video_id=video.id).first()
+        if punch is not None:
+            return punch.progress_trim
+        else:
+            return 0.0
+
+    def video_progress_percentage(self, video):
+        '''User.video_progress_percentage(self, video)'''
+        return '{:.0%}'.format(self.video_progress(video=video))
 
     def complete_video(self, video):
         '''User.complete_video(self, video)'''
@@ -1193,7 +1230,7 @@ class Video(db.Model):
             'lesson': self.lesson.to_json(),
             'duration': {
                 'format': format_duration(duration=self.duration),
-                'seconds': self.duration.total_seconds,
+                'seconds': self.duration.total_seconds(),
             },
         }
         return entry_json

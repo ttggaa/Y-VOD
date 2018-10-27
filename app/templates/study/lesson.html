@@ -22,6 +22,7 @@
                     <th>课程名称</th>
                     <th>课程时长</th>
                     <th>视频数量</th>
+                    <th>研修进度</th>
                     <th>操作</th>
                 </tr>
             </thead>
@@ -31,6 +32,7 @@
                     <td><div class="ui {{ lesson.type.color }} horizontal label">{{ lesson.type.name }}</div>{{ lesson.abbr }}</td>
                     <td><code>{{ lesson.duration_format }}</code></td>
                     <td>{{ lesson.videos.count() }} 个</td>
+                    <td>{{ current_user.lesson_progress_percentage(lesson=lesson) }}</td>
                     <td>{% if lesson.videos.count() %}{% if current_user.can_study(lesson=lesson) %}<a class="ui mini {{ lesson.type.color }} left labeled icon button" href="{{ url_for('study.video', id=lesson.videos.first().id) }}"><i class="play circle icon"></i>研修</a>{% else %}<div class="ui mini {{ lesson.type.color }} left labeled icon button disabled"><i class="lock icon"></i>研修</div>{% endif %}{% else %}<div class="ui mini left labeled icon button disabled"><i class="ban icon"></i>无</div>{% endif %}</td>
                 </tr>
                 {% endfor %}
