@@ -3,13 +3,13 @@
 {% block profile_title %}概览{% endblock %}
 
 {% block profile_prgress_bar %}
-<div id="page-loading-progress" class="ui top attached blue inverted progress">
+{% if user.is_student %}<div id="page-loading-progress" class="ui top attached blue inverted progress">
     <div class="bar"></div>
-</div>
+</div>{% endif %}
 {% endblock %}
 
 {% block profile_content %}
-{% if user.is_student or user.is_developer %}<div id="progress" class="ui vertical segment loading">
+{% if user.is_student %}<div id="progress" class="ui vertical segment loading">
     <div id="vb-progress" class="ui header disabled">VB研修进度：<span id="vb-progress-data">0</span>%</div>
     <div id="vb-progress-bar" class="ui tiny progress disabled">
         <div class="bar"></div>
@@ -40,14 +40,19 @@
         </tbody>
     </table>
 </div>{% endif %}
+{% if user.is_staff %}<div class="ui vertical segment">
+    <div class="ui placeholder segment">
+        <div class="ui icon header"><i class="user tie icon"></i>概览</div>
+    </div>
+</div>{% endif %}
 {% endblock %}
 
 {% block profile_js_lib %}
-{% if user.is_student or user.is_developer %}<script type="text/javascript" src="{{ url_for('static', filename='assets/library/count/countUp.min.js') }}"></script>{% endif %}
+{% if user.is_student %}<script type="text/javascript" src="{{ url_for('static', filename='assets/library/count/countUp.min.js') }}"></script>{% endif %}
 {% endblock %}
 {% block profile_js %}
 <script type="text/javascript">
-{% if user.is_student or user.is_developer %}
+{% if user.is_student %}
 $('#page-loading-progress').progress({
     total: 1,
     onSuccess: function () {
