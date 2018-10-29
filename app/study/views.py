@@ -3,11 +3,12 @@
 '''app/study/views.py'''
 
 from htmlmin import minify
-from flask import render_template, redirect, request, url_for, abort, flash, current_app
+from flask import render_template, jsonify, redirect, request, url_for, abort, flash, current_app
 from flask_login import login_required, current_user
 from . import study
 from .. import db
 from ..models import LessonType, Lesson, Video
+from ..models import Punch
 from ..decorators import permission_required
 from ..utils2 import add_user_log
 
@@ -57,10 +58,26 @@ def video(id):
     if not current_user.can_study(lesson=video.lesson):
         flash('请先完成本课程的前序内容！', category='warning')
         return redirect(url_for('study.{}'.format(video.lesson.type.snake_case)))
+    if not current_user.punched(video=video):
+        add_user_log(user=current_user._get_current_object(), event='视频研修：{}'.format(video.name), category='study')
     current_user.punch(video=video)
-    add_user_log(user=current_user._get_current_object(), event='视频研修：{}'.format(video.name), category='study')
     db.session.commit()
     return minify(render_template(
         'study/video.html',
         video=video
     ))
+
+
+@study.route('/punch/<int:id>', methods=['POST'])
+@login_required
+@permission_required('研修')
+def punch(id):
+    '''study.punch(id)'''
+    video = Video.query.get_or_404(id)
+    if not current_user.can('研修{}'.format(video.lesson.type.name)) or not current_user.can_study(lesson=video.lesson):
+        abort(403)
+    if request.json is None:
+        abort(500)
+    current_user.punch(video=video, play_time=request.json.get('play_time'))
+    db.session.commit()
+    return jsonify(current_user.video_punch(video=video).to_json())

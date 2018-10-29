@@ -274,6 +274,7 @@ class Punch(db.Model):
                 'format': format_duration(duration=self.play_time),
                 'seconds': self.play_time.total_seconds(),
             },
+            'progress': self.progress_trim,
             'punched_at': self.timestamp.strftime('%Y-%m-%dT%H:%M:%SZ'),
         }
         return entry_json
@@ -619,7 +620,7 @@ class User(UserMixin, db.Model):
         '''User.created_by(self)'''
         return self.received_user_creations.first().creator
 
-    def punch(self, video):
+    def punch(self, video, play_time=None):
         '''User.punch(self, video)'''
         punch = self.punches.filter_by(video_id=video.id).first()
         if punch is not None:
@@ -629,7 +630,13 @@ class User(UserMixin, db.Model):
                 user_id=self.id,
                 video_id=video.id
             )
+        if play_time is not None:
+            punch.play_time = timedelta(seconds=play_time)
         db.session.add(punch)
+
+    def punched(self, video):
+        '''User.punched(self, video)'''
+        return self.punches.filter_by(video_id=video.id).first() is not None
 
     @property
     def last_vb_punch(self):
@@ -723,6 +730,18 @@ class User(UserMixin, db.Model):
             .filter(Punch.user_id == self.id)\
             .order_by(Punch.timestamp.desc())\
             .first()
+
+    def video_punch(self, video):
+        '''User.video_punch(self, video)'''
+        return self.punches.filter_by(video_id=video.id).first()
+
+    def video_play_time(self, video):
+        '''User.video_play_time(self, video)'''
+        punch = self.punches.filter_by(video_id=video.id).first()
+        if punch is not None:
+            return punch.play_time
+        else:
+            return timedelta()
 
     def video_progress(self, video):
         '''User.video_progress(self, video)'''

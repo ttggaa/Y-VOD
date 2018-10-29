@@ -29,7 +29,7 @@
             <div class="twelve wide column">
                 <div class="ui sticky">
                     <div class="ui vertical segment">
-                        <div class="ui header">{{ video.name }}{% if video.description %}<div class="ui {{ video.lesson.type.color }} horizontal label">{{ video.description }}</div>{% endif %}<div class="ui {% if current_user.complete_video(video=video) %}green{% else %}orange{% endif %} horizontal label">{{ current_user.video_progress_percentage(video=video) }}</div></div>
+                        <div class="ui header">{{ video.name }}{% if video.description %}<div class="ui {{ video.lesson.type.color }} horizontal label">{{ video.description }}</div>{% endif %}<div id="video-progress" class="ui {% if current_user.complete_video(video=video) %}green{% else %}orange{% endif %} horizontal label">{{ current_user.video_progress_percentage(video=video) }}</div></div>
                         <div id="player"></div>
                     </div>
                 </div>
@@ -47,5 +47,44 @@
 {{ macros.sticky_js_snippet() }}
 
 {{ macros.player_js_snippet(player_id='player', video_url=url_for('resource.video', id=video.id)) }}
+
+var granularity = {{ config.VIDEO_ANALYTICS_GRANULARITY }};
+var updateInterval = {{ config.VIDEO_ANALYTICS_UPDATE_INTERVAL }};
+var elapsedTime = 0;
+var playTimeGranularity = granularity / 1000 * player.video.playbackRate;
+var playTime = {{ current_user.video_play_time(video=video).total_seconds() }};
+
+function tick() {
+    elapsedTime += granularity;
+};
+
+function updatePlayTime() {
+    $.ajax({
+        method: 'POST',
+        url: "{{ url_for('study.punch', id=video.id) }}",
+        data: JSON.stringify({
+            'play_time': playTime
+        }),
+        dataType: 'json',
+        contentType: 'application/json',
+        success: function (data) {
+            playTime = data.play_time.seconds;
+            $('#video-progress').text(`${(data.progress * 100).toFixed(0)}%`);
+            if (data.progress >= 1) {
+                $('#video-progress').addClass('green').removeClass('orange');
+            };
+        }
+    });
+};
+
+setInterval(function () {
+    tick();
+    if (!player.video.paused) {
+        playTime += playTimeGranularity;
+    };
+    if (elapsedTime % updateInterval === 0) {
+        updatePlayTime();
+    };
+}, granularity);
 </script>
 {% endblock %}
