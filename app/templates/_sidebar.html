@@ -6,7 +6,7 @@
         <div class="logo-text">云英语 &middot; Y-VOD</div>
     </div>
     {% if current_user.is_authenticated %}
-    {% if current_user.is_staff %}<a class="item" href="{{ url_for('status.home') }}" ><i class="tachometer alternate icon"></i>系统实况</a>{% endif %}
+    {% if current_user.is_staff %}<a class="item" href="{{ url_for('status.home') }}"><i class="tachometer alternate icon"></i>系统实况</a>{% endif %}
     <a class="item" href="{{ current_user.url }}"><i class="id card icon"></i>个人档案</a>
     {% if current_user.can('研修') %}<div class="item">
         <div class="header">研修</div>
@@ -42,7 +42,7 @@
             <div class="item"><i class="globe icon"></i>{{ current_user.last_seen_ip }}</div>
         </div>
     </div>{% endif %}
-    <a class="item" href="{{ url_for('auth.logout') }}" ><i class="door open icon"></i>登出</a>
+    <a class="item" href="{{ url_for('auth.logout') }}"><i class="door open icon"></i>登出</a>
     {% else %}
     <a class="item" href="{{ url_for('auth.login') }}"><i class="user circle icon"></i>登录</a>
     {% endif %}
