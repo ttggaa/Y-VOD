@@ -43,13 +43,13 @@ def login():
                 if user.verify_auth_token(token=form.auth_token.data):
                     user.reset_invalid_login_count()
                     login_user(user, remember=False)
-                    add_user_log(user=user, event='登录系统', category='access')
+                    add_user_log(user=user, event='登录系统', category='auth')
                     db.session.commit()
                     return redirect(request.args.get('next') or user.index_url)
                 else:
                     user.increase_invalid_login_count()
                     flash('登录失败：授权码错误（第{}次）'.format(user.invalid_login_count), category='error')
-                    add_user_log(user=user, event='登录失败：授权码错误（第{}次，来源：{}）'.format(user.invalid_login_count, get_device_info(ip_address=ip_address, show_ip=True)), category='access')
+                    add_user_log(user=user, event='登录失败：授权码错误（第{}次，来源：{}）'.format(user.invalid_login_count, get_device_info(ip_address=ip_address, show_ip=True)), category='auth')
                     db.session.commit()
                     return redirect(url_for('auth.login', next=request.args.get('next')))
             else:
@@ -65,7 +65,7 @@ def login():
 @login_required
 def logout():
     '''auth.logout()'''
-    add_user_log(user=current_user._get_current_object(), event='登出系统', category='access')
+    add_user_log(user=current_user._get_current_object(), event='登出系统', category='auth')
     db.session.commit()
     logout_user()
     return redirect(url_for('auth.login'))
