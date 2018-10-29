@@ -621,7 +621,7 @@ class User(UserMixin, db.Model):
         return self.received_user_creations.first().creator
 
     def punch(self, video, play_time=None):
-        '''User.punch(self, video)'''
+        '''User.punch(self, video, play_time=None)'''
         punch = self.punches.filter_by(video_id=video.id).first()
         if punch is not None:
             punch.timestamp = datetime.utcnow()

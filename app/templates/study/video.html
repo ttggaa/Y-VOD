@@ -48,6 +48,7 @@
 
 {{ macros.player_js_snippet(player_id='player', video_url=url_for('resource.video', id=video.id)) }}
 
+// var isPlaying = true;
 var granularity = {{ config.VIDEO_ANALYTICS_GRANULARITY }};
 var updateInterval = {{ config.VIDEO_ANALYTICS_UPDATE_INTERVAL }};
 var elapsedTime = 0;
