@@ -46,14 +46,54 @@
 
 {{ macros.sticky_js_snippet() }}
 
-{{ macros.player_js_snippet(player_id='player', video_url=url_for('resource.video', id=video.id)) }}
+// player
+const player = new Player({
+    container: document.getElementById('player'),
+    video: {
+        url: "{{ url_for('resource.video', id=video.id) }}"
+    }
+});
 
+// video analytics
 var granularity = {{ config.VIDEO_ANALYTICS_GRANULARITY }};
 var updateInterval = {{ config.VIDEO_ANALYTICS_UPDATE_INTERVAL }};
 var elapsedTime = 0;
 var playTimeGranularity = granularity / 1000 * player.video.playbackRate;
 var playTime = {{ current_user.video_play_time(video=video).total_seconds() }};
 var lastVideoCurrentTime = null;
+
+function updatePunch() {
+    var csrf_token = '{{ csrf_token() }}';
+
+    $.ajaxSetup({
+        beforeSend: function(xhr, settings) {
+            if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type) && !this.crossDomain) {
+                xhr.setRequestHeader('X-CSRFToken', csrf_token);
+            }
+        }
+    });
+
+    $.ajax({
+        method: 'POST',
+        url: "{{ url_for('study.punch', id=video.id) }}",
+        data: JSON.stringify({
+            'play_time': playTime
+        }),
+        dataType: 'json',
+        contentType: 'application/json',
+        success: function (data) {
+            playTime = data.play_time.seconds;
+            $('#video-progress').text(`${(data.progress * 100).toFixed(0)}%`);
+            if (data.progress >= 1) {
+                $('#video-progress').addClass('green').removeClass('orange');
+            };
+        }
+    });
+};
+
+player.on('ended', function () {
+    updatePunch();
+});
 
 setInterval(function () {
     if (!player.video.paused && player.video.currentTime !== lastVideoCurrentTime) {
@@ -62,22 +102,7 @@ setInterval(function () {
     };
     elapsedTime += granularity;
     if (elapsedTime % updateInterval === 0) {
-        $.ajax({
-            method: 'POST',
-            url: "{{ url_for('study.punch', id=video.id) }}",
-            data: JSON.stringify({
-                'play_time': playTime
-            }),
-            dataType: 'json',
-            contentType: 'application/json',
-            success: function (data) {
-                playTime = data.play_time.seconds;
-                $('#video-progress').text(`${(data.progress * 100).toFixed(0)}%`);
-                if (data.progress >= 1) {
-                    $('#video-progress').addClass('green').removeClass('orange');
-                };
-            }
-        });
+        updatePunch();
     };
 }, granularity);
 </script>

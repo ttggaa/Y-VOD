@@ -4,6 +4,7 @@
 
 from htmlmin import minify
 from flask import render_template, request, jsonify
+from flask_wtf.csrf import CSRFError
 from . import main
 
 
@@ -35,3 +36,13 @@ def internal_server_error(e):
         response.status_code = 500
         return response
     return minify(render_template('error/500.html')), 500
+
+
+@main.app_errorhandler(CSRFError)
+def csrf_error(e):
+    '''csrf_error(e)'''
+    if request.accept_mimetypes.accept_json and not request.accept_mimetypes.accept_html:
+        response = jsonify({'error': 'csrf error'})
+        response.status_code = 400
+        return response
+    return render_template('error/csrf.html'), 400

@@ -67,13 +67,3 @@ if ($(window).width() >= 768) {
 {% macro from_now_widget(timestamp) -%}
 {% if timestamp %}<span class="popup-timestamp" data-timestamp="{{ timestamp.strftime('%Y-%m-%dT%H:%M:%SZ') }}"></span>{% else %}N/A{% endif %}
 {%- endmacro %}
-
-
-{% macro player_js_snippet(player_id, video_url) -%}
-const player = new Player({
-    container: document.getElementById('{{ player_id }}'),
-    video: {
-        url: '{{ video_url }}'
-    }
-});
-{%- endmacro %}
