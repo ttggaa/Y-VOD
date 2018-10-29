@@ -570,7 +570,6 @@ class User(UserMixin, db.Model):
 
     def profile_url(self, tab=None):
         '''User.profile_url(self, tab=None)'''
-        # return url_for('profile.{}'.format(tab), id=self.id)
         if tab is not None:
             try:
                 return url_for('profile.{}'.format(tab), id=self.id)

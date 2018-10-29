@@ -48,43 +48,36 @@
 
 {{ macros.player_js_snippet(player_id='player', video_url=url_for('resource.video', id=video.id)) }}
 
-// var isPlaying = true;
 var granularity = {{ config.VIDEO_ANALYTICS_GRANULARITY }};
 var updateInterval = {{ config.VIDEO_ANALYTICS_UPDATE_INTERVAL }};
 var elapsedTime = 0;
 var playTimeGranularity = granularity / 1000 * player.video.playbackRate;
 var playTime = {{ current_user.video_play_time(video=video).total_seconds() }};
-
-function tick() {
-    elapsedTime += granularity;
-};
-
-function updatePlayTime() {
-    $.ajax({
-        method: 'POST',
-        url: "{{ url_for('study.punch', id=video.id) }}",
-        data: JSON.stringify({
-            'play_time': playTime
-        }),
-        dataType: 'json',
-        contentType: 'application/json',
-        success: function (data) {
-            playTime = data.play_time.seconds;
-            $('#video-progress').text(`${(data.progress * 100).toFixed(0)}%`);
-            if (data.progress >= 1) {
-                $('#video-progress').addClass('green').removeClass('orange');
-            };
-        }
-    });
-};
+var lastVideoCurrentTime = null;
 
 setInterval(function () {
-    tick();
-    if (!player.video.paused) {
+    if (!player.video.paused && player.video.currentTime !== lastVideoCurrentTime) {
         playTime += playTimeGranularity;
+        lastVideoCurrentTime = player.video.currentTime;
     };
+    elapsedTime += granularity;
     if (elapsedTime % updateInterval === 0) {
-        updatePlayTime();
+        $.ajax({
+            method: 'POST',
+            url: "{{ url_for('study.punch', id=video.id) }}",
+            data: JSON.stringify({
+                'play_time': playTime
+            }),
+            dataType: 'json',
+            contentType: 'application/json',
+            success: function (data) {
+                playTime = data.play_time.seconds;
+                $('#video-progress').text(`${(data.progress * 100).toFixed(0)}%`);
+                if (data.progress >= 1) {
+                    $('#video-progress').addClass('green').removeClass('orange');
+                };
+            }
+        });
     };
 }, granularity);
 </script>
