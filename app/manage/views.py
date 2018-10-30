@@ -355,8 +355,7 @@ def import_user():
         if data is None:
             flash('用户信息码有误', category='error')
             return redirect(url_for('manage.import_user', next=request.args.get('next')))
-        if User.query.get(data['id']) is not None or \
-            User.query.filter_by(name=data['name'], id_number=data['id_number']).first() is not None:
+        if User.query.get(data['id']) is not None:
             flash('该用户已存在', category='error')
             return redirect(url_for('manage.import_user', next=request.args.get('next')))
         role = Role.query.filter_by(name=data['role']).first()
