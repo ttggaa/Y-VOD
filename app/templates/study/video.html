@@ -29,7 +29,7 @@
             <div class="twelve wide column">
                 <div class="ui sticky">
                     <div class="ui vertical segment">
-                        <div class="ui header">{{ video.name }}{% if video.description %}<div class="ui {{ video.lesson.type.color }} horizontal label">{{ video.description }}</div>{% endif %}<div id="video-progress" class="ui {% if current_user.complete_video(video=video) %}green{% else %}orange{% endif %} horizontal label">{{ current_user.video_progress_percentage(video=video) }}</div></div>
+                        <div class="ui header">{{ video.name }}{% if video.description %}<div class="ui {{ video.lesson.type.color }} horizontal label">{{ video.description }}</div>{% endif %}<div id="video-progress" class="ui {% if current_user.complete_video(video=video) %}green{% else %}orange{% endif %} horizontal label">0</div></div>
                         <div id="player"></div>
                     </div>
                 </div>
@@ -40,11 +40,24 @@
 {% endblock %}
 
 {% block js %}
+<script type="text/javascript" src="{{ url_for('static', filename='assets/library/count/countUp.min.js') }}"></script>
 <script type="text/javascript" src="{{ url_for('static', filename='assets/library/player/player.min.js') }}"></script>
 <script type="text/javascript">
 {{ macros.close_message_js_snippet() }}
 
 {{ macros.sticky_js_snippet() }}
+
+// count
+var countUpOptions = {
+    useEasing: true,
+    useGrouping: true,
+    separator: ',',
+    decimal: '.',
+    prefix: '',
+    suffix: '%'
+};
+var videoProgressCountUp = new CountUp('video-progress', 0, ({{ current_user.video_progress(video=video) }} * 100).toFixed(0), 0, 2.5, countUpOptions);
+videoProgressCountUp.start();
 
 // player
 const player = new Player({
@@ -73,7 +86,7 @@ function updatePunch() {
         contentType: 'application/json',
         success: function (data) {
             playTime = data.play_time.seconds;
-            $('#video-progress').text(`${(data.progress * 100).toFixed(0)}%`);
+            videoProgressCountUp.update((data.progress * 100).toFixed(0));
             if (data.progress >= 1) {
                 $('#video-progress').addClass('green').removeClass('orange');
             };
@@ -81,7 +94,16 @@ function updatePunch() {
     });
 };
 
+player.on('pause', function () {
+    updatePunch();
+});
 player.on('ended', function () {
+    updatePunch();
+});
+player.on('waiting', function () {
+    updatePunch();
+});
+player.on('error', function () {
     updatePunch();
 });
 

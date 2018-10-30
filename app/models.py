@@ -541,6 +541,11 @@ class User(UserMixin, db.Model):
             target.name_pinyin = name_pinyin
 
     @property
+    def alias(self):
+        '''User.alias(self)'''
+        return '[{}] {}'.format(user.role.name, user.name)
+
+    @property
     def url(self):
         '''User.url(self)'''
         return url_for('profile.overview', id=self.id)

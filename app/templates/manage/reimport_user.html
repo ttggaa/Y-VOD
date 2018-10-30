@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% import "_macros.html" as macros %}
+
+{% block title %}重新导入用户：{{ user.alias }}{% endblock %}
+
+{% block content %}
+<div class="ui masthead vertical segment">
+    <div class="ui container">
+        {{ macros.message_widget() }}
+        <h1 class="ui center aligned header"><i class="file import icon"></i>重新导入用户：{{ user.alias }}</h1>
+    </div>
+</div>
+<div class="ui main vertical segment">
+    <div class="ui container">
+        <form id="reimport-user" action="{{ url_for('manage.reimport_user', next=request.args.get('next')) }}" method="POST" class="ui form">
+            {{ form.hidden_tag() }}
+            <div class="required field">
+                {{ form.token.label() }}
+                {{ form.token(placeholder='用户信息码') }}
+            </div>
+            {{ form.submit(class='ui primary button') }}
+            <a class="ui button" href="{{ request.args.get('next') or url_for('manage.student') }}">取消</a>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script type="text/javascript">
+{{ macros.close_message_js_snippet() }}
+
+$('#reimport-user').form({
+    inline: true,
+    on: 'blur',
+    fields: {
+        token: {
+            identifier: 'token',
+            rules: [
+                {
+                    type: 'empty',
+                    prompt: '请输入用户信息码'
+                }
+            ]
+        }
+    }
+});
+</script>
+{% endblock %}

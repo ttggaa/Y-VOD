@@ -386,9 +386,9 @@ def import_user():
         db.session.add(user)
         db.session.commit()
         current_user.create_user(user=user)
-        flash('已导入用户：[{}] {}'.format(user.role.name, user.name), category='success')
+        flash('已导入用户：{}'.format(user.alias), category='success')
         add_user_log(user=user, event='用户信息被导入', category='auth')
-        add_user_log(user=current_user._get_current_object(), event='导入用户：[{}] {}'.format(user.role.name, user.name), category='manage')
+        add_user_log(user=current_user._get_current_object(), event='导入用户：{}'.format(user.alias), category='manage')
         db.session.commit()
         return redirect(request.args.get('next') or url_for('manage.student'))
     return minify(render_template(

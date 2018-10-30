@@ -60,8 +60,7 @@ def video(id):
         return redirect(url_for('study.{}'.format(video.lesson.type.snake_case)))
     if not current_user.punched(video=video):
         add_user_log(user=current_user._get_current_object(), event='视频研修：{}'.format(video.name), category='study')
-    current_user.punch(video=video)
-    db.session.commit()
+        db.session.commit()
     return minify(render_template(
         'study/video.html',
         video=video
