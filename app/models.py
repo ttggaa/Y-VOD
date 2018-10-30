@@ -11,7 +11,7 @@ from base64 import b64encode
 from functools import reduce
 from sqlalchemy import and_
 from werkzeug.routing import BuildError
-from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
+from itsdangerous import TimedJSONWebSignatureSerializer, BadSignature, SignatureExpired
 from flask import current_app, url_for
 from flask_login import UserMixin, AnonymousUserMixin
 from . import db, login_manager
@@ -249,8 +249,7 @@ class Punch(db.Model):
         '''Punch.play_time_trim(self)'''
         if self.complete:
             return self.video.duration
-        else:
-            return self.play_time
+        return self.play_time
 
     @property
     def progress(self):
@@ -262,8 +261,7 @@ class Punch(db.Model):
         '''Punch.progress_trim(self)'''
         if self.complete:
             return 1.0
-        else:
-            return self.progress
+        return self.progress
 
     def to_json(self):
         '''Punch.to_json(self)'''
@@ -402,7 +400,6 @@ class User(UserMixin, db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     last_seen_at = db.Column(db.DateTime)
     last_seen_ip = db.Column(db.Unicode(64))
-    invalid_login_count = db.Column(db.Integer, default=0)
     suspended = db.Column(db.Boolean, default=False)
     # profile properties
     name = db.Column(db.Unicode(64), index=True)
@@ -462,21 +459,6 @@ class User(UserMixin, db.Model):
             device_info = '未授权设备'
         return '{} ({})'.format(device_info, self.last_seen_ip)
 
-    def increase_invalid_login_count(self):
-        '''User.increase_invalid_login_count(self)'''
-        self.invalid_login_count += 1
-        db.session.add(self)
-
-    def reset_invalid_login_count(self):
-        '''User.reset_invalid_login_count(self)'''
-        self.invalid_login_count = 0
-        db.session.add(self)
-
-    @property
-    def locked(self):
-        '''User.locked(self)'''
-        return self.invalid_login_count >= current_app.config['MAX_INVALID_LOGIN_COUNT']
-
     def suspend(self):
         '''User.suspend(self)'''
         self.suspended = True
@@ -490,16 +472,18 @@ class User(UserMixin, db.Model):
     @staticmethod
     def import_user(token):
         '''User.import_user(self, token)'''
-        serial = Serializer(current_app.config['AUTH_TOKEN_SECRET_KEY'])
+        serial = TimedJSONWebSignatureSerializer(current_app.config['AUTH_TOKEN_SECRET_KEY'])
         try:
             data = serial.loads(token)
-        except:
+        except SignatureExpired:
+            return None
+        except BadSignature:
             return None
         return data
 
     def verify_auth_token(self, token):
         '''User.verify_auth_token(self, token)'''
-        string = 'name={}&id_number={}&date={}&secret={}'.format(self.name, self.id_number, date_now(utc_offset=current_app.config['UTC_OFFSET']).isoformat(), current_app.config['AUTH_TOKEN_SECRET_KEY'])
+        string = 'id={}&name={}&id_number={}&date={}&secret={}'.format(self.id, self.name, self.id_number, date_now(utc_offset=current_app.config['UTC_OFFSET']).isoformat(), current_app.config['AUTH_TOKEN_SECRET_KEY'])
         return token == b64encode(md5(string.encode('utf-8')).digest()).decode('utf-8').replace('+', '').replace('/', '').replace('=', '').lower()[-6:]
 
     def can(self, permission_name):
@@ -592,11 +576,9 @@ class User(UserMixin, db.Model):
     @property
     def id_number_censored(self):
         '''User.id_number_censored(self)'''
-        if self.id_number is not None:
-            if len(self.id_number) > 1:
-                return '{}{}{}'.format(self.id_number[:1], ''.join(['*' for x in self.id_number[1:-1]]), self.id_number[-1:])
-            else:
-                return ''.join(['*' for x in self.id_number])
+        if self.id_number is not None and len(self.id_number) >= 8:
+            return '{}{}{}'.format(self.id_number[:1], ''.join(['*' for x in self.id_number[1:-1]]), self.id_number[-1:])
+        return '********'
 
     def create_user(self, user):
         '''User.create_user(self, user)'''
@@ -739,16 +721,14 @@ class User(UserMixin, db.Model):
         punch = self.punches.filter_by(video_id=video.id).first()
         if punch is not None:
             return punch.play_time
-        else:
-            return timedelta()
+        return timedelta()
 
     def video_progress(self, video):
         '''User.video_progress(self, video)'''
         punch = self.punches.filter_by(video_id=video.id).first()
         if punch is not None:
             return punch.progress_trim
-        else:
-            return 0.0
+        return 0.0
 
     def video_progress_percentage(self, video):
         '''User.video_progress_percentage(self, video)'''
@@ -789,7 +769,6 @@ class User(UserMixin, db.Model):
             self.created_at.strftime(current_app.config['DATETIME_FORMAT']),
             last_seen_at,
             self.last_seen_ip,
-            str(self.invalid_login_count),
             str(int(self.suspended)),
             self.name,
             self.id_type.name,
@@ -833,12 +812,11 @@ class User(UserMixin, db.Model):
                                 created_at=datetime.strptime(entry[2], current_app.config['DATETIME_FORMAT']),
                                 last_seen_at=entry[3],
                                 last_seen_ip=entry[4],
-                                invalid_login_count=int(entry[5]),
-                                suspended=bool(int(entry[6])),
-                                name=entry[7],
-                                id_type_id=entry[8],
-                                id_number=entry[9],
-                                gender_id=entry[10]
+                                suspended=bool(int(entry[5])),
+                                name=entry[6],
+                                id_type_id=entry[7],
+                                id_number=entry[8],
+                                gender_id=entry[9]
                             )
                             db.session.add(user)
                             if verbose:
@@ -862,7 +840,6 @@ class User(UserMixin, db.Model):
                 'created_at',
                 'last_seen_at',
                 'last_seen_ip',
-                'invalid_login_count',
                 'suspended',
                 'name',
                 'id_type',
@@ -1196,8 +1173,7 @@ class Lesson(db.Model):
         '''Lesson.dependencies_format(self)'''
         if self.dependencies.count():
             return '、'.join([lesson.abbr for lesson in self.dependencies.all()])
-        else:
-            return '无'
+        return '无'
 
     def to_json(self):
         '''Lesson.to_json(self)'''

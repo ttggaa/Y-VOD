@@ -13,10 +13,12 @@ from pypinyin import slug, Style
 
 
 def datetime_now(utc_offset=0):
+    '''datetime_now(utc_offset=0)'''
     return datetime.utcnow() + timedelta(hours=utc_offset)
 
 
 def date_now(utc_offset=0):
+    '''date_now(utc_offset=0)'''
     return datetime_now(utc_offset=utc_offset).date()
 
 
@@ -64,17 +66,17 @@ def get_video_duration(video_file):
     return '{} does not exist.'.format(video_file)
 
 
-def stream_video(video_file, mimetype='video/mp4', chunk_size=1024*1024):
-    '''stream_video(video_file, mimetype='video/mp4', chunk_size=1024*1024)'''
-    def generator():
-        with io.open(video_file, 'rb') as f:
-            while True:
-                chunk = f.read(chunk_size)
-                if chunk:
-                    yield chunk
-                else:
-                    break
-    return Response(stream_with_context(generator()), mimetype=mimetype, direct_passthrough=True)
+# def stream_video(video_file, mimetype='video/mp4', chunk_size=1024*1024):
+#     '''stream_video(video_file, mimetype='video/mp4', chunk_size=1024*1024)'''
+#     def generator():
+#         with io.open(video_file, 'rb') as f:
+#             while True:
+#                 chunk = f.read(chunk_size)
+#                 if chunk:
+#                     yield chunk
+#                 else:
+#                     break
+#     return Response(stream_with_context(generator()), mimetype=mimetype, direct_passthrough=True)
 
 
 def format_duration(duration):
