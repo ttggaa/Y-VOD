@@ -26,7 +26,7 @@
             {% if current_user.is_developer %}<a class="item {% if show_developers %}active {% endif %}" href="{{ url_for('manage.developers') }}">开发人员</a>{% endif %}
             <a class="item {% if show_suspended_staffs %}active {% endif %}" href="{{ url_for('manage.suspended_staffs') }}">挂起</a>
             <div class="right menu">
-                <a class="item" href="{{ url_for('manage.import_user', next=url_for('manage.staff')) }}"><i class="file import icon"></i>导入</a>
+                <a class="item" href="{{ url_for('manage.import_staff', next=url_for('manage.staff')) }}"><i class="file import icon"></i>导入</a>
             </div>
         </div>
         {% if pagination.total > 0 %}

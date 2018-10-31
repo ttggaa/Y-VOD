@@ -31,6 +31,7 @@
                     <th>设备名</th>
                     <th>序列号</th>
                     <th>设备类型</th>
+                    <th>所属房间</th>
                     <th>绑定IP</th>
                     <th>上次操作</th>
                     <th>操作人</th>
@@ -42,6 +43,7 @@
                     <td>{{ device.alias }}</td>
                     <td><code>{{ device.serial }}</code></td>
                     <td>{{ device.type.name }}</td>
+                    <td>{% if device.room_id %}{{ device.room.name }}{% else %}N/A{% endif %}</td>
                     <td>{{ device.ip_address }}</td>
                     <td>{{ macros.from_now_widget(device.modified_at) }}</td>
                     <td>{{ macros.user_url_widget(device.modified_by, device.modified_by_id == current_user.id) }}</td>

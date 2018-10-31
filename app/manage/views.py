@@ -101,6 +101,61 @@ def suspended_students():
     return resp
 
 
+@manage.route('/student/import', methods=['GET', 'POST'])
+@login_required
+@permission_required('管理学生')
+def import_student():
+    '''manage.import_student()'''
+    form = ImportUserForm(category='学生')
+    if form.validate_on_submit():
+        data = User.import_user(token=form.token.data)
+        if data is None:
+            flash('学生用户信息码有误', category='error')
+            return redirect(url_for('manage.import_student', next=request.args.get('next')))
+        if User.query.get(data['id']) is not None:
+            flash('该学生用户已存在', category='error')
+            return redirect(url_for('manage.import_student', next=request.args.get('next')))
+        role = Role.query.filter_by(name=data['role']).first()
+        if role is None:
+            flash('学生角色信息有误：{}'.format(data['role']), category='error')
+            return redirect(url_for('manage.import_student', next=request.args.get('next')))
+        if role.category != 'student':
+            flash('学生角色信息有误：非学生角色', category='error')
+            return redirect(url_for('manage.import_student', next=request.args.get('next')))
+        id_type = IDType.query.filter_by(name=data['id_type']).first()
+        if id_type is None:
+            flash('证件类型信息有误：{}'.format(data['id_type']), category='error')
+            return redirect(url_for('manage.import_student', next=request.args.get('next')))
+        gender = Gender.query.filter_by(name=data['gender']).first()
+        if gender is None:
+            flash('性别信息有误：{}'.format(data['gender']), category='error')
+            return redirect(url_for('manage.import_student', next=request.args.get('next')))
+        user = User(
+            id=data['id'],
+            role_id=role.id,
+            name=data['name'],
+            id_type_id=id_type.id,
+            id_number=data['id_number'],
+            gender_id=gender.id
+        )
+        db.session.add(user)
+        db.session.commit()
+        current_user.create_user(user=user)
+        flash('已导入学生用户：{}'.format(user.alias), category='success')
+        add_user_log(user=user, event='用户信息被导入', category='auth')
+        add_user_log(user=current_user._get_current_object(), event='导入学生用户：{}'.format(user.alias), category='manage')
+        db.session.commit()
+        return redirect(request.args.get('next') or url_for('manage.student'))
+    return minify(render_template(
+        'manage/import_user.html',
+        category={
+            'name': '学生',
+            'url': 'student',
+        },
+        form=form
+    ))
+
+
 @manage.route('/staff')
 @login_required
 @permission_required('管理员工')
@@ -344,37 +399,39 @@ def suspended_staffs():
     return resp
 
 
-@manage.route('/user/import', methods=['GET', 'POST'])
+@manage.route('/staff/import', methods=['GET', 'POST'])
 @login_required
-@permission_required('管理新学生')
-def import_user():
-    '''manage.import_user()'''
-    form = ImportUserForm()
+@permission_required('管理员工')
+def import_staff():
+    '''manage.import_staff()'''
+    form = ImportUserForm(category='员工')
     if form.validate_on_submit():
         data = User.import_user(token=form.token.data)
         if data is None:
-            flash('用户信息码有误', category='error')
-            return redirect(url_for('manage.import_user', next=request.args.get('next')))
+            flash('员工用户信息码有误', category='error')
+            return redirect(url_for('manage.import_staff', next=request.args.get('next')))
         if User.query.get(data['id']) is not None:
-            flash('该用户已存在', category='error')
-            return redirect(url_for('manage.import_user', next=request.args.get('next')))
+            flash('该员工用户已存在', category='error')
+            return redirect(url_for('manage.import_staff', next=request.args.get('next')))
         role = Role.query.filter_by(name=data['role']).first()
         if role is None:
-            flash('用户角色信息有误：{}'.format(data['role']), category='error')
-            return redirect(url_for('manage.import_user', next=request.args.get('next')))
+            flash('员工角色信息有误：{}'.format(data['role']), category='error')
+            return redirect(url_for('manage.import_staff', next=request.args.get('next')))
+        if role.category != 'staff':
+            flash('员工角色信息有误：非员工角色', category='error')
+            return redirect(url_for('manage.import_staff', next=request.args.get('next')))
         id_type = IDType.query.filter_by(name=data['id_type']).first()
         if id_type is None:
             flash('证件类型信息有误：{}'.format(data['id_type']), category='error')
-            return redirect(url_for('manage.import_user', next=request.args.get('next')))
+            return redirect(url_for('manage.import_staff', next=request.args.get('next')))
         gender = Gender.query.filter_by(name=data['gender']).first()
         if gender is None:
             flash('性别信息有误：{}'.format(data['gender']), category='error')
-            return redirect(url_for('manage.import_user', next=request.args.get('next')))
+            return redirect(url_for('manage.import_staff', next=request.args.get('next')))
         if (current_user.is_administrator and role.is_superior_than(role=current_user.role)) or \
-            (current_user.is_moderator and not current_user.role.is_superior_than(role=role)) or \
-            (not current_user.is_developer and not current_user.is_administrator and not current_user.is_moderator and role.category != 'student'):
-            flash('您无法创建该用户', category='error')
-            return redirect(url_for('manage.import_user', next=request.args.get('next')))
+            (current_user.is_moderator and not current_user.role.is_superior_than(role=role)):
+            flash('您无法创建该员工用户', category='error')
+            return redirect(url_for('manage.import_staff', next=request.args.get('next')))
         user = User(
             id=data['id'],
             role_id=role.id,
@@ -386,15 +443,76 @@ def import_user():
         db.session.add(user)
         db.session.commit()
         current_user.create_user(user=user)
-        flash('已导入用户：{}'.format(user.alias), category='success')
+        flash('已导入员工用户：{}'.format(user.alias), category='success')
         add_user_log(user=user, event='用户信息被导入', category='auth')
-        add_user_log(user=current_user._get_current_object(), event='导入用户：{}'.format(user.alias), category='manage')
+        add_user_log(user=current_user._get_current_object(), event='导入员工用户：{}'.format(user.alias), category='manage')
         db.session.commit()
-        return redirect(request.args.get('next') or url_for('manage.student'))
+        return redirect(request.args.get('next') or url_for('manage.staff'))
     return minify(render_template(
         'manage/import_user.html',
+        category={
+            'name': '员工',
+            'url': 'staff',
+        },
         form=form
     ))
+
+
+# @manage.route('/user/reimport/<int:id>', methods=['GET', 'POST'])
+# @login_required
+# @permission_required('管理新学生')
+# def reimport_user(id):
+#     '''manage.reimport_user(id)'''
+#     user = User.query.get_or_404(id)
+#     if (user.id != current_user.id and not current_user.is_staff) or user.is_superior_than(user=current_user._get_current_object()):
+#         abort(403)
+#     form = ImportUserForm()
+#     if form.validate_on_submit():
+#         data = User.import_user(token=form.token.data)
+#         if data is None:
+#             flash('用户信息码有误', category='error')
+#             return redirect(url_for('manage.reimport_user', next=request.args.get('next')))
+#         if User.query.get(data['id']) is not None:
+#             flash('该用户已存在', category='error')
+#             return redirect(url_for('manage.reimport_user', next=request.args.get('next')))
+#         role = Role.query.filter_by(name=data['role']).first()
+#         if role is None:
+#             flash('用户角色信息有误：{}'.format(data['role']), category='error')
+#             return redirect(url_for('manage.reimport_user', next=request.args.get('next')))
+#         id_type = IDType.query.filter_by(name=data['id_type']).first()
+#         if id_type is None:
+#             flash('证件类型信息有误：{}'.format(data['id_type']), category='error')
+#             return redirect(url_for('manage.reimport_user', next=request.args.get('next')))
+#         gender = Gender.query.filter_by(name=data['gender']).first()
+#         if gender is None:
+#             flash('性别信息有误：{}'.format(data['gender']), category='error')
+#             return redirect(url_for('manage.reimport_user', next=request.args.get('next')))
+#         if (current_user.is_administrator and role.is_superior_than(role=current_user.role)) or \
+#             (current_user.is_moderator and not current_user.role.is_superior_than(role=role)) or \
+#             (not current_user.is_developer and not current_user.is_administrator and not current_user.is_moderator and role.category != 'student'):
+#             flash('您无法创建该用户', category='error')
+#             return redirect(url_for('manage.reimport_user', next=request.args.get('next')))
+#         user = User(
+#             id=data['id'],
+#             role_id=role.id,
+#             name=data['name'],
+#             id_type_id=id_type.id,
+#             id_number=data['id_number'],
+#             gender_id=gender.id
+#         )
+#         db.session.add(user)
+#         db.session.commit()
+#         current_user.create_user(user=user)
+#         flash('已导入用户：{}'.format(user.alias), category='success')
+#         add_user_log(user=user, event='用户信息被导入', category='auth')
+#         add_user_log(user=current_user._get_current_object(), event='导入用户：{}'.format(user.alias), category='manage')
+#         db.session.commit()
+#         return redirect(request.args.get('next') or url_for('manage.student'))
+#     return minify(render_template(
+#         'manage/reimport_user.html',
+#         form=form,
+#         user=user
+#     ))
 
 
 @manage.route('/device')

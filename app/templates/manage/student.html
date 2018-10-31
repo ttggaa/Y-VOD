@@ -21,7 +21,7 @@
             <a class="item {% if show_y_gre_students %}active {% endif %}" href="{{ url_for('manage.y_gre_students') }}">Y-GRE研修</a>
             <a class="item {% if show_suspended_students %}active {% endif %}" href="{{ url_for('manage.suspended_students') }}">挂起</a>
             <div class="right menu">
-                <a class="item" href="{{ url_for('manage.import_user', next=url_for('manage.student')) }}"><i class="file import icon"></i>导入</a>
+                <a class="item" href="{{ url_for('manage.import_student', next=url_for('manage.student')) }}"><i class="file import icon"></i>导入</a>
             </div>
         </div>
         {% if pagination.total > 0 %}

@@ -21,7 +21,7 @@
                 <div class="ui vertical segment">
                     <div class="ui header">研修视频列表</div>
                     <div class="ui bulleted selection link list">
-                        {% for item in video.lesson.videos %}<a class="{% if item.id == video.id %}active {% endif %}item" href="{{ url_for('study.video', id=item.id) }}#main"><i class="{% if current_user.complete_video(video=item) %}green check{% else %}{% if item.id == video.id %}{{ item.lesson.type.color }} play{% else %}file video{% endif %}{% endif %} icon"></i>{{ item.abbr }}</a>{% endfor %}
+                        {% for item in video.lesson.videos %}<a class="{% if item.id == video.id %}active {% endif %}item" href="{{ url_for('study.video', id=item.id) }}#main"><i class="{% if current_user.complete_video(video=item) %}green check{% else %}{% if item.id == video.id %}{{ item.lesson.type.color }} play{% else %}file video{% endif %}{% endif %} icon"></i>{{ item.abbr }} ({{ current_user.video_progress_percentage(video=item) }})</a>{% endfor %}
                         <a class="item" href="{{ url_for('study.{}'.format(video.lesson.type.snake_case)) }}"><i class="arrow left icon"></i>返回{{ video.lesson.type.name }}研修课程列表</a>
                     </div>
                 </div>
@@ -29,7 +29,7 @@
             <div class="twelve wide column">
                 <div class="ui sticky">
                     <div class="ui vertical segment">
-                        <div class="ui header">{{ video.name }}{% if video.description %}<div class="ui {{ video.lesson.type.color }} horizontal label">{{ video.description }}</div>{% endif %}<div id="video-progress" class="ui {% if current_user.complete_video(video=video) %}green{% else %}orange{% endif %} horizontal label">0</div></div>
+                        <div class="ui header">{{ video.name }}{% if video.description %}<div class="ui {{ video.lesson.type.color }} horizontal label">{{ video.description }}</div>{% endif %}<div id="video-progress" class="ui orange horizontal label">0</div></div>
                         <div id="player"></div>
                     </div>
                 </div>
@@ -47,7 +47,6 @@
 
 {{ macros.sticky_js_snippet() }}
 
-// count
 var countUpOptions = {
     useEasing: true,
     useGrouping: true,
@@ -56,44 +55,41 @@ var countUpOptions = {
     prefix: '',
     suffix: '%'
 };
-var videoProgressCountUp = new CountUp('video-progress', 0, ({{ current_user.video_progress(video=video) }} * 100).toFixed(0), 0, 2.5, countUpOptions);
-videoProgressCountUp.start();
-
-// player
+var videoProgressCountUp = new CountUp('video-progress', 0, 0, 0, 2.5, countUpOptions);
+function updateVideoProgress(progress) {
+    videoProgressCountUp.update((progress * 100).toFixed(0));
+    if (progress >= 1) {
+        $('#video-progress').addClass('green').removeClass('orange');
+    };
+};
+updateVideoProgress({{ current_user.video_progress(video=video) }});
 const player = new Player({
     container: document.getElementById('player'),
     video: {
         url: "{{ url_for('resource.video', id=video.id) }}"
     }
 });
-
-// video analytics
 var granularity = {{ config.VIDEO_ANALYTICS_GRANULARITY }};
 var updateInterval = {{ config.VIDEO_ANALYTICS_UPDATE_INTERVAL }};
 var elapsedTime = 0;
 var playTimeGranularity = granularity / 1000 * player.video.playbackRate;
 var playTime = {{ current_user.video_play_time(video=video).total_seconds() }};
 var lastVideoCurrentTime = null;
-
 function updatePunch() {
     $.ajax({
-        method: 'POST',
         url: "{{ url_for('study.punch', id=video.id) }}",
+        method: 'POST',
         data: JSON.stringify({
             'play_time': playTime
         }),
         dataType: 'json',
-        contentType: 'application/json',
+        contentType: 'application/json; charset=utf-8',
         success: function (data) {
             playTime = data.play_time.seconds;
-            videoProgressCountUp.update((data.progress * 100).toFixed(0));
-            if (data.progress >= 1) {
-                $('#video-progress').addClass('green').removeClass('orange');
-            };
+            updateVideoProgress(data.progress);
         }
     });
 };
-
 player.on('pause', function () {
     updatePunch();
 });
@@ -106,7 +102,6 @@ player.on('waiting', function () {
 player.on('error', function () {
     updatePunch();
 });
-
 setInterval(function () {
     if (!player.video.paused && player.video.currentTime !== lastVideoCurrentTime) {
         playTime += playTimeGranularity;
