@@ -14,4 +14,4 @@ class ImportUserForm(FlaskForm):
 
     def __init__(self, category, *args, **kwargs):
         super(ImportUserForm, self).__init__(*args, **kwargs)
-        self.token.label.text = '{}用户信息码'.format(category)
+        self.token.label.text = '{}信息码'.format(category)

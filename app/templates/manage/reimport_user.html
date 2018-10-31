@@ -1,25 +1,25 @@
 {% extends "base.html" %}
 {% import "_macros.html" as macros %}
 
-{% block title %}重新导入用户：{{ user.alias }}{% endblock %}
+{% block title %}重新导入{{ category.get('name') }}：{{ user.alias }}{% endblock %}
 
 {% block content %}
 <div class="ui masthead vertical segment">
     <div class="ui container">
         {{ macros.message_widget() }}
-        <h1 class="ui center aligned header"><i class="file import icon"></i>重新导入用户：{{ user.alias }}</h1>
+        <h1 class="ui center aligned header"><i class="file import icon"></i>重新导入{{ category.get('name') }}：{{ user.alias }}</h1>
     </div>
 </div>
 <div class="ui main vertical segment">
     <div class="ui container">
-        <form id="reimport-user" action="{{ url_for('manage.reimport_user', next=request.args.get('next')) }}" method="POST" class="ui form">
+        <form id="reimport-user" action="{{ url_for('manage.reimport_{}'.format(category.get('url')), id=user.id, next=request.args.get('next')) }}" method="POST" class="ui form">
             {{ form.hidden_tag() }}
             <div class="required field">
                 {{ form.token.label() }}
-                {{ form.token(placeholder='用户信息码') }}
+                {{ form.token(placeholder='{}“{}”信息码'.format(category.get('name'), user.alias)) }}
             </div>
             {{ form.submit(class='ui primary button') }}
-            <a class="ui button" href="{{ request.args.get('next') or url_for('manage.student') }}">取消</a>
+            <a class="ui button" href="{{ request.args.get('next') or url_for('manage.{}'.format(category.get('url'))) }}">取消</a>
         </form>
     </div>
 </div>
@@ -38,7 +38,7 @@ $('#reimport-user').form({
             rules: [
                 {
                     type: 'empty',
-                    prompt: '请输入用户信息码'
+                    prompt: '请输入{{ category.get('name') }}“{{ user.alias }}”信息码'
                 }
             ]
         }

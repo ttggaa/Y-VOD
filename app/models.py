@@ -543,7 +543,7 @@ class User(UserMixin, db.Model):
     @property
     def alias(self):
         '''User.alias(self)'''
-        return '[{}] {}'.format(user.role.name, user.name)
+        return '[{}] {}'.format(self.role.name, self.name)
 
     @property
     def url(self):
@@ -1349,4 +1349,4 @@ class UserLog(db.Model):
             print('---> Write: {}'.format(csv_file))
 
     def __repr__(self):
-        return '<User Log {}, {}, {}, {}>'.format(self.user.name_alias, self.event, self.category, self.timestamp)
+        return '<User Log {}, {}, {}, {}>'.format(self.user.alias, self.event, self.category, self.timestamp)
