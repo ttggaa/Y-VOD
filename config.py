@@ -46,9 +46,10 @@ class Config:
     UTC_OFFSET = 8 # hours
     COOKIE_MAX_AGE = 30 * 24 * 60 * 60 # 30 days
 
-    # Video
+    # Video Analytics
     VIDEO_ANALYTICS_GRANULARITY = 100 # milliseconds (0.1 seconds)
     VIDEO_ANALYTICS_UPDATE_INTERVAL = 60 * 1000 # 1 minute
+    VIDEO_ANALYTICS_STATUS_WINDOW = 300 # seconds (5 minutes)
 
     @staticmethod
     def init_app(app):

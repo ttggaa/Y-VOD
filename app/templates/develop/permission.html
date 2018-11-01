@@ -26,14 +26,14 @@
                 {% for permission in permissions %}
                 <tr{% if permission.roles_num(category='student') > 1 or permission.roles_num(category='staff') > 1 %} class="top aligned"{% endif %}>
                     <td>{{ permission.name }}</td>
-                    <td>{{ permission.roles.count() }} ({{ permission.roles_num(category='student') }} + {{ permission.roles_num(category='staff') }})</td>
+                    <td>{{ permission.roles.count() > 0 }} ({{ permission.roles_num(category='student') }} + {{ permission.roles_num(category='staff') }})</td>
                     <td>
-                        {% with roles = permission.roles_alias(category='student') %}{% if roles.count() %}<div class="ui ordered list">
+                        {% with roles = permission.roles_alias(category='student') %}{% if roles.count() > 0 %}<div class="ui ordered list">
                             {% for role in roles %}<div class="item">{{ role.name }}</div>{% endfor %}
                         </div>{% else %}无{% endif %}{% endwith %}
                     </td>
                     <td>
-                        {% with roles = permission.roles_alias(category='staff') %}{% if roles.count() %}<div class="ui ordered list">
+                        {% with roles = permission.roles_alias(category='staff') %}{% if roles.count() > 0 %}<div class="ui ordered list">
                             {% for role in roles %}<div class="item">{{ role.name }}</div>{% endfor %}
                         </div>{% else %}无{% endif %}{% endwith %}
                     </td>

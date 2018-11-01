@@ -55,7 +55,7 @@ if ($(window).width() >= 768) {
 
 
 {% macro user_url_gender_widget(user, is_current_user=False) -%}
-{% if is_current_user %}<i class="yellow star icon"></i>{% endif %}<a href="{{ user.url }}" target="_blank">{{ user.name }}</a>{% if user.gender %}<i class="{% if user.gender.name == '男' %}blue mars{% elif user.gender.name == '女' %}pink venus{% endif %} icon"></i>{% endif %}
+{{ user_url_widget(user, is_current_user) }}{% if user.gender %}<i class="{% if user.gender.name == '男' %}blue mars{% elif user.gender.name == '女' %}pink venus{% endif %} icon"></i>{% endif %}
 {%- endmacro %}
 
 
@@ -66,4 +66,14 @@ if ($(window).width() >= 768) {
 
 {% macro from_now_widget(timestamp) -%}
 {% if timestamp %}<span class="popup-timestamp" data-timestamp="{{ timestamp.strftime('%Y-%m-%dT%H:%M:%SZ') }}"></span>{% else %}N/A{% endif %}
+{%- endmacro %}
+
+
+{% macro lesson_label_widget(lesson) -%}
+<div class="ui {{ lesson.type.color }} horizontal label">{{ lesson.type.name }}<div class="detail">{{ lesson.abbr }}</div></div>
+{%- endmacro %}
+
+
+{% macro video_label_widget(video) -%}
+{{ lesson_label_widget(lesson=video.lesson) }}{{ video.abbr }}{% if video.description %} <span class="text-grey">{{ video.description }}</span>{% endif %}
 {%- endmacro %}

@@ -12,21 +12,54 @@
 </div>
 <div class="ui main vertical segment">
     <div class="ui container">
-        <div class="ui vertical segment">
-            <h2 class="ui header">
-                <i class="chalkboard teacher icon"></i>
-                <div class="content">视频研修<div class="sub header">共 0 人</div></div>
-            </h2>
-            <div class="ui placeholder segment">
-                <div class="ui icon header"><i class="user slash icon"></i>共 0 人</div>
-            </div>
+        <h2 class="ui header">
+            <i class="chalkboard teacher icon"></i>
+            <div class="content">视频研修<div class="sub header">共 {{ users.count() }} 人</div></div>
+        </h2>
+        {% if users.count() > 0 %}
+        <table class="ui sortable selectable celled table">
+            <thead>
+                <tr>
+                    <th>姓名</th>
+                    <th>研修权限</th>
+                    <th>VB进度</th>
+                    <th>Y-GRE进度</th>
+                    <th>当前研修内容</th>
+                    <th>更新时间</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                <tr>
+                    <td class="single line">{{ macros.user_url_gender_widget(user, user.id == current_user.id) }}</td>
+                    <td>{% if user.suspended %}<div class="ui horizontal label">挂起</div>{% endif %}{{ user.role.name }}</td>
+                    <td>{% with punch = user.last_vb_punch %}{% if punch %}{{ macros.lesson_label_widget(lesson=punch.video.lesson) }}{% else %}N/A{% endif %}{% endwith %}</td>
+                    <td>{% with punch = user.last_y_gre_punch %}{% if punch %}{{ macros.lesson_label_widget(lesson=punch.video.lesson) }}{% else %}N/A{% endif %}{% endwith %}</td>
+                    {% with punch = user.latest_punch %}{% if punch %}
+                    <td>{{ macros.video_label_widget(video=punch.video) }} ({{ punch.progress_percentage }})</td>
+                    <td>{{ macros.from_now_widget(punch.timestamp) }}</td>
+                    {% else %}
+                    <td>N/A</td>
+                    <td>N/A</td>
+                    {% endif %}{% endwith %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="ui placeholder segment">
+            <div class="ui icon header"><i class="user slash icon"></i>共 0 人</div>
         </div>
+        {% endif %}
     </div>
 </div>
 {% endblock %}
 
 {% block js %}
+<script type="text/javascript" src="{{ url_for('static', filename='assets/library/ui/tablesort.min.js') }}"></script>
 <script type="text/javascript">
 {{ macros.close_message_js_snippet() }}
+
+$('.ui.sortable.table').tablesort();
 </script>
 {% endblock %}

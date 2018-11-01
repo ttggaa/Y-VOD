@@ -34,7 +34,7 @@
             <tbody>
                 {% for video in videos %}
                 <tr>
-                    <td><div class="ui {{ video.lesson.type.color }} horizontal label">{{ video.lesson.type.name }}<div class="detail">{{ video.lesson.abbr }}</div></div>{{ video.abbr }}{% if video.description %} <span class="text-grey">{{ video.description }}</span>{% endif %}</td>
+                    <td>{{ macros.video_label_widget(video=video) }}</td>
                     <td><code>{{ video.duration_format }}</code></td>
                     {% if current_user.is_developer %}<td><code>{{ video.file_name }}</code></td>{% endif %}
                 </tr>

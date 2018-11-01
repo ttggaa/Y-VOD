@@ -263,6 +263,11 @@ class Punch(db.Model):
             return 1.0
         return self.progress
 
+    @property
+    def progress_percentage(self):
+        '''Punch.progress_percentage(self)'''
+        return '{:.0%}'.format(self.progress_trim)
+
     def to_json(self):
         '''Punch.to_json(self)'''
         entry_json = {
@@ -623,6 +628,11 @@ class User(UserMixin, db.Model):
     def punched(self, video):
         '''User.punched(self, video)'''
         return self.punches.filter_by(video_id=video.id).first() is not None
+
+    @property
+    def latest_punch(self):
+        '''User.latest_punch(self)'''
+        return self.punches.order_by(Punch.timestamp.desc()).first()
 
     @property
     def last_vb_punch(self):
