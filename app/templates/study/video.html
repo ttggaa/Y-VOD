@@ -59,7 +59,7 @@ var videoProgressCountUp = new CountUp('video-progress', 0, 0, 0, 2.5, countUpOp
 function updateVideoProgress(progress) {
     videoProgressCountUp.update((progress * 100).toFixed(0));
     if (progress >= 1) {
-        $('#video-progress').addClass('green').removeClass('orange');
+        $('#video-progress').attr('class', 'ui green horizontal label');
     };
 };
 updateVideoProgress({{ current_user.video_progress(video=video) }});
@@ -70,7 +70,7 @@ const player = new Player({
     }
 });
 var granularity = {{ config.VIDEO_ANALYTICS_GRANULARITY }};
-var updateInterval = {{ config.VIDEO_ANALYTICS_UPDATE_INTERVAL }};
+var updateInterval = {{ config.VIDEO_ANALYTICS_UPDATE_PUNCH_INTERVAL }};
 var elapsedTime = 0;
 var playTimeGranularity = granularity / 1000 * player.video.playbackRate;
 var playTime = {{ current_user.video_play_time(video=video).total_seconds() }};

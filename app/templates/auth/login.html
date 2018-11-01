@@ -18,19 +18,19 @@
             <div class="field">
                 <div class="ui large left icon input">
                     <i class="id card icon"></i>
-                    {{ form.id_number(placeholder='证件号码') }}
+                    {{ form.id_number(placeholder='证件号码（后6位）') }}
                 </div>
             </div>
             <div class="field">
                 <div class="ui large left icon input">
                     <i class="key icon"></i>
-                    {{ form.auth_token(placeholder='授权码') }}
+                    {{ form.auth_token(placeholder='授权码（6位）') }}
                 </div>
             </div>
             {{ form.submit(class='ui large primary fluid button') }}
         </form>
         <div class="ui message">
-            <i class="info icon"></i>如果证件号码包含字母，请使用大写。</a>
+            <i class="info icon"></i>Y-VOD授权码（6位）在Y-System个人档案页面获取。</a>
         </div>
         {{ macros.message_widget() }}
     </div>
@@ -59,7 +59,11 @@ $('#login').form({
             rules: [
                 {
                     type: 'empty',
-                    prompt: '请输入您的证件号码'
+                    prompt: '请输入您的证件号码（后6位）'
+                },
+                {
+                    type: 'exactLength[6]',
+                    prompt: '证件号码（后6位）位数有误'
                 }
             ]
         },
@@ -68,7 +72,11 @@ $('#login').form({
             rules: [
                 {
                     type: 'empty',
-                    prompt: '请输入您的授权码'
+                    prompt: '请输入您的授权码（6位）'
+                },
+                {
+                    type: 'exactLength[6]',
+                    prompt: '授权码（6位）位数有误'
                 }
             ]
         }

@@ -8,6 +8,9 @@
     <div class="ui container">
         {{ macros.message_widget() }}
         <h1 class="ui center aligned header"><i class="tachometer alternate icon"></i>系统实况</h1>
+        <div class="ui center aligned container">
+            <div id="rendered-at" class="ui orange label">页面呈现<div class="detail">加载中</div></div>
+        </div>
     </div>
 </div>
 <div class="ui main vertical segment">
@@ -61,5 +64,19 @@
 {{ macros.close_message_js_snippet() }}
 
 $('.ui.sortable.table').tablesort();
+
+function updateRenderTime(timestamp) {
+    $('#rendered-at .detail').text(dayjs(timestamp).fromNow());
+    if (dayjs().diff(renderedAt, 'seconds') < {{ config['VIDEO_ANALYTICS_STATUS_EXPIRATION'] }}) {
+        $('#rendered-at').attr('class', 'ui green label');
+    } else {
+        $('#rendered-at').attr('class', 'ui red label');
+    };
+};
+var renderedAt = $('meta[name=rendered_at]').attr('content');
+updateRenderTime(renderedAt);
+setInterval(function () {
+    updateRenderTime(renderedAt);
+}, {{ config['STATUS_EXPIRATION_CHECK_INTERVAL'] }});
 </script>
 {% endblock %}

@@ -45,11 +45,12 @@ class Config:
     DATETIME_FORMAT = '%Y-%m-%dT%H:%M:%S'
     UTC_OFFSET = 8 # hours
     COOKIE_MAX_AGE = 30 * 24 * 60 * 60 # 30 days
+    STATUS_EXPIRATION_CHECK_INTERVAL = 1000 # milliseconds (1 second)
 
     # Video Analytics
     VIDEO_ANALYTICS_GRANULARITY = 100 # milliseconds (0.1 seconds)
-    VIDEO_ANALYTICS_UPDATE_INTERVAL = 60 * 1000 # 1 minute
-    VIDEO_ANALYTICS_STATUS_WINDOW = 300 # seconds (5 minutes)
+    VIDEO_ANALYTICS_UPDATE_PUNCH_INTERVAL = 60 * 1000 # 1 minute
+    VIDEO_ANALYTICS_STATUS_EXPIRATION = 300 # seconds (5 minutes)
 
     @staticmethod
     def init_app(app):

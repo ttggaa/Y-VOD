@@ -82,7 +82,7 @@ $.getJSON("{{ url_for('profile.overview_data', id=user.id) }}", function (data) 
             return 'N/A';
         };
     });
-    $('#vb-progress-bar').removeClass('disabled').addClass('blue').progress({
+    $('#vb-progress-bar').attr('class', 'ui blue tiny progress').progress({
         total: data.progress.vb.total,
         value: data.progress.vb.value,
         onChange: function(percent) {
@@ -97,7 +97,7 @@ $.getJSON("{{ url_for('profile.overview_data', id=user.id) }}", function (data) 
             return 'N/A';
         };
     });
-    $('#y-gre-progress-bar').removeClass('disabled').addClass('teal').progress({
+    $('#y-gre-progress-bar').attr('class', 'ui teal tiny progress').progress({
         total: data.progress.y_gre.total,
         value: data.progress.y_gre.value,
         onChange: function(percent) {

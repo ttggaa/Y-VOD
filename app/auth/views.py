@@ -37,7 +37,9 @@ def login():
         if device is None:
             flash('设备未授权', category='error')
             return redirect(url_for('auth.login', next=request.args.get('next')))
-        users = User.query.filter_by(name=form.name.data, id_number=form.id_number.data)
+        users = User.query\
+            .filter(User.name == form.name.data)\
+            .filter(User.id_number.endswith(form.id_number.data.upper()))
         if users.count():
             for user in users.all():
                 if user.verify_auth_token(token=form.auth_token.data):
