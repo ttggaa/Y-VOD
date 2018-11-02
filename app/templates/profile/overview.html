@@ -52,7 +52,7 @@
 {% endblock %}
 {% block profile_js %}
 <script type="text/javascript">
-{% if user.is_student %}
+{% if user.is_student -%}
 $('#page-loading-progress').progress({
     total: 1,
     onSuccess: function () {
@@ -106,6 +106,6 @@ $.getJSON("{{ url_for('profile.overview_data', id=user.id) }}", function (data) 
     });
     $('#page-loading-progress').progress('increment');
 });
-{% endif %}
+{%- endif %}
 </script>
 {% endblock %}
