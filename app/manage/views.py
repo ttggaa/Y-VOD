@@ -2,6 +2,8 @@
 
 '''app/manage/views.py'''
 
+import operator
+from functools import reduce
 from htmlmin import minify
 from flask import render_template, redirect, request, make_response, url_for, abort, flash, current_app
 from flask_login import login_required, current_user
@@ -109,13 +111,7 @@ def import_student():
     form = ImportUserForm(category='学生用户')
     if form.validate_on_submit():
         data = User.import_user(token=form.token.data)
-        if data is None or \
-            data.get('id') is None or \
-            data.get('role') is None or \
-            data.get('name') is None or \
-            data.get('id_type') is None or \
-            data.get('id_number') is None or \
-            data.get('gender') is None:
+        if data is None or reduce(operator.or_, [data.get(key) is None for key in ['id', 'role', 'name', 'id_type', 'id_number', 'gender']]):
             flash('学生用户信息码有误', category='error')
             return redirect(url_for('manage.import_student', next=request.args.get('next')))
         if User.query.get(data.get('id')) is not None:
@@ -171,13 +167,7 @@ def reimport_student(id):
     form = ImportUserForm(category='学生')
     if form.validate_on_submit():
         data = User.import_user(token=form.token.data)
-        if data is None or \
-            data.get('id') is None or \
-            data.get('role') is None or \
-            data.get('name') is None or \
-            data.get('id_type') is None or \
-            data.get('id_number') is None or \
-            data.get('gender') is None:
+        if data is None or reduce(operator.or_, [data.get(key) is None for key in ['id', 'role', 'name', 'id_type', 'id_number', 'gender']]):
             flash('学生用户信息码有误', category='error')
             return redirect(url_for('manage.import_student', next=request.args.get('next')))
         if data.get('id') != user.id:
@@ -472,13 +462,7 @@ def import_staff():
     form = ImportUserForm(category='员工用户')
     if form.validate_on_submit():
         data = User.import_user(token=form.token.data)
-        if data is None or \
-            data.get('id') is None or \
-            data.get('role') is None or \
-            data.get('name') is None or \
-            data.get('id_type') is None or \
-            data.get('id_number') is None or \
-            data.get('gender') is None:
+        if data is None or reduce(operator.or_, [data.get(key) is None for key in ['id', 'role', 'name', 'id_type', 'id_number', 'gender']]):
             flash('员工用户信息码有误', category='error')
             return redirect(url_for('manage.import_staff', next=request.args.get('next')))
         if User.query.get(data.get('id')) is not None:
@@ -499,8 +483,7 @@ def import_staff():
         if gender is None:
             flash('性别信息有误：{}'.format(data.get('gender')), category='error')
             return redirect(url_for('manage.import_staff', next=request.args.get('next')))
-        if (current_user.is_administrator and role.is_superior_than(role=current_user.role)) or \
-            (current_user.is_moderator and not current_user.role.is_superior_than(role=role)):
+        if not current_user.role.can_manage(role=role):
             flash('您无法创建该员工用户', category='error')
             return redirect(url_for('manage.import_staff', next=request.args.get('next')))
         user = User(
@@ -535,19 +518,12 @@ def import_staff():
 def reimport_staff(id):
     '''manage.reimport_staff(id)'''
     user = User.query.get_or_404(id)
-    if (current_user.is_administrator and user.is_superior_than(user=current_user._get_current_object())) or \
-        (current_user.is_moderator and not current_user.is_superior_than(user=user)):
+    if not current_user.can_manage(user=user):
         abort(403)
     form = ImportUserForm(category='员工用户“{}”'.format(user.alias))
     if form.validate_on_submit():
         data = User.import_user(token=form.token.data)
-        if data is None or \
-            data.get('id') is None or \
-            data.get('role') is None or \
-            data.get('name') is None or \
-            data.get('id_type') is None or \
-            data.get('id_number') is None or \
-            data.get('gender') is None:
+        if data is None or reduce(operator.or_, [data.get(key) is None for key in ['id', 'role', 'name', 'id_type', 'id_number', 'gender']]):
             flash('员工用户信息码有误', category='error')
             return redirect(url_for('manage.reimport_staff', id=user.id, next=request.args.get('next')))
         if data.get('id') != user.id:
@@ -560,8 +536,7 @@ def reimport_staff(id):
         if role.category != 'staff':
             flash('员工角色信息有误：非员工角色', category='error')
             return redirect(url_for('manage.reimport_staff', id=user.id, next=request.args.get('next')))
-        if (current_user.is_administrator and role.is_superior_than(role=current_user.role)) or \
-            (current_user.is_moderator and not current_user.role.is_superior_than(role=role)):
+        if not current_user.role.can_manage(role=role):
             flash('您无法重新导入该员工用户', category='error')
             return redirect(url_for('manage.reimport_staff', id=user.id, next=request.args.get('next')))
         id_type = IDType.query.filter_by(name=data.get('id_type')).first()

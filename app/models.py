@@ -148,6 +148,15 @@ class Role(db.Model):
         '''Role.is_superior_than(self, role)'''
         return self.level > role.level
 
+    def can_manage(self, role):
+        '''Role.can_manage(self, role)'''
+        if self.name == '开发人员' or \
+            (self.name == '管理员' and not role.is_superior_than(role=self)) or \
+            (self.name == '协管员' and self.is_superior_than(role=role)) or \
+            (self.name == '协调员' and role.category == 'student'):
+            return True
+        return False
+
     @staticmethod
     def insert_entries(data, basedir, verbose=False):
         '''Role.insert_entries(data, basedir, verbose=False)'''
@@ -538,6 +547,10 @@ class User(UserMixin, db.Model):
         '''User.is_superior_than(self, user)'''
         return not self.suspended and self.role.is_superior_than(role=user.role)
 
+    def can_manage(self, user):
+        '''User.can_manage(self, user)'''
+        return not self.suspended and self.role.can_manage(role=user.role)
+
     @staticmethod
     def on_changed_name(target, value, oldvalue, initiator):
         '''User.on_changed_name(target, value, oldvalue, initiator)'''
@@ -910,6 +923,10 @@ class AnonymousUser(AnonymousUserMixin):
 
     def is_superior_than(self, user):
         '''AnonymousUser.is_superior_than(self, user)'''
+        return False
+
+    def can_manage(self, user):
+        '''AnonymousUser.can_manage(self, user)'''
         return False
 
 
