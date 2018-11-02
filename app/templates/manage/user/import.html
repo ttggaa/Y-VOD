@@ -1,25 +1,25 @@
 {% extends "base.html" %}
 {% import "_macros.html" as macros %}
 
-{% block title %}导入{{ category.get('name') }}{% endblock %}
+{% block title %}导入用户{% endblock %}
 
 {% block content %}
 <div class="ui masthead vertical segment">
     <div class="ui container">
         {{ macros.message_widget() }}
-        <h1 class="ui center aligned header"><i class="file import icon"></i>导入{{ category.get('name') }}</h1>
+        <h1 class="ui center aligned header"><i class="file import icon"></i>导入用户</h1>
     </div>
 </div>
 <div class="ui main vertical segment">
     <div class="ui container">
-        <form id="import-user" action="{{ url_for('manage.import_{}'.format(category.get('url')), next=request.args.get('next')) }}" method="POST" class="ui form">
+        <form id="import-user" action="{{ url_for('manage.import_user', next=request.args.get('next')) }}" method="POST" class="ui form">
             {{ form.hidden_tag() }}
             <div class="required field">
                 {{ form.token.label() }}
-                {{ form.token(placeholder='{}信息码'.format(category.get('name'))) }}
+                {{ form.token(placeholder='用户信息码') }}
             </div>
             {{ form.submit(class='ui primary button') }}
-            <a class="ui button" href="{{ request.args.get('next') or url_for('manage.{}'.format(category.get('url'))) }}">取消</a>
+            {% with next_url = request.args.get('next') %}{% if next_url %}<a class="ui button" href="{{ next_url }}">取消</a>{% endif %}{% endwith %}
         </form>
     </div>
 </div>
@@ -38,7 +38,7 @@ $('#import-user').form({
             rules: [
                 {
                     type: 'empty',
-                    prompt: '请输入{{ category.get('name') }}信息码'
+                    prompt: '请输入用户信息码'
                 }
             ]
         }

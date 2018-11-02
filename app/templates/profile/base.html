@@ -39,6 +39,17 @@
                         <div>创建时间：{{ macros.from_now_widget(user.created_at) }}</div>
                         <div>创建人：{{ macros.user_url_widget(user.created_by, user.created_by.id == current_user.id) }}</div>
                     </div>{% endif %}
+                    {% if current_user.can_manage(user=user) %}<div class="ui vertical segment">
+                        {% if user.suspended %}<a id="suspension-trigger" class="ui green label"><i class="user check icon"></i>解除挂起</a>{% else %}<a id="suspension-trigger" class="ui orange label"><i class="user lock icon"></i>挂起用户</a>{% endif %}
+                        <div id="suspension-modal" class="ui modal">
+                            <div class="header"><i class="exclamation triangle icon"></i>确定要{% if user.suspended %}恢复{% else %}挂起{% endif %}用户：{{ user.alias }}？</div>
+                            <div class="actions">
+                                <div class="ui basic right pointing label">只需点击一次</div>
+                                {% if user.suspended %}<a class="ui green left labeled icon button" href="{{ url_for('manage.restore_user', id=user.id, next=user.profile_url(tab=profile_tab)) }}"><i class="user check icon"></i>恢复</a>{% else %}<a class="ui orange left labeled icon button" href="{{ url_for('manage.suspend_user', id=user.id, next=user.profile_url(tab=profile_tab)) }}"><i class="user lock icon"></i>挂起</a>{% endif %}
+                                <div id="suspension-hide-trigger" class="ui black button">返回</div>
+                            </div>
+                        </div>
+                    </div>{% endif %}
                 </div>
             </div>
             <div class="twelve wide column">

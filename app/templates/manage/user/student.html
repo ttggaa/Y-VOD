@@ -1,32 +1,27 @@
 {% extends "base.html" %}
 {% import "_macros.html" as macros %}
 
-{% block title %}员工管理{% endblock %}
+{% block title %}学生管理{% endblock %}
 
 {% block content %}
 <div class="ui masthead vertical segment">
     <div class="ui container">
         {{ macros.message_widget() }}
-        <h1 class="ui center aligned header"><i class="user tie icon"></i>员工管理</h1>
+        <h1 class="ui center aligned header"><i class="user graduate icon"></i>学生管理</h1>
     </div>
 </div>
 <div class="ui main vertical segment">
     <div class="ui container">
         <h3 class="ui header">
-            <i class="user tie icon"></i>
-            <div class="content">员工列表{% if pagination %}<div class="sub header">{{ header }}：共 {{ pagination.total }} 人</div>{% endif %}</div>
+            <i class="user graduate icon"></i>
+            <div class="content">学生列表{% if pagination %}<div class="sub header">{{ header }}：共 {{ pagination.total }} 人</div>{% endif %}</div>
         </h3>
         <div class="ui secondary stackable menu">
-            <a class="item {% if show_clerks %}active {% endif %}" href="{{ url_for('manage.clerks') }}">值守</a>
-            <a class="item {% if show_assistants %}active {% endif %}" href="{{ url_for('manage.assistants') }}">行政辅助</a>
-            <a class="item {% if show_consultants %}active {% endif %}" href="{{ url_for('manage.consultants') }}">学术答疑</a>
-            <a class="item {% if show_coordinators %}active {% endif %}" href="{{ url_for('manage.coordinators') }}">协调员</a>
-            <a class="item {% if show_moderators %}active {% endif %}" href="{{ url_for('manage.moderators') }}">协管员</a>
-            {% if current_user.plays('管理员') %}<a class="item {% if show_administrators %}active {% endif %}" href="{{ url_for('manage.administrators') }}">管理员</a>{% endif %}
-            {% if current_user.is_developer %}<a class="item {% if show_developers %}active {% endif %}" href="{{ url_for('manage.developers') }}">开发人员</a>{% endif %}
-            <a class="item {% if show_suspended_staffs %}active {% endif %}" href="{{ url_for('manage.suspended_staffs') }}">挂起</a>
+            <a class="item {% if show_vb_students %}active {% endif %}" href="{{ url_for('manage.vb_students') }}">VB研修</a>
+            <a class="item {% if show_y_gre_students %}active {% endif %}" href="{{ url_for('manage.y_gre_students') }}">Y-GRE研修</a>
+            <a class="item {% if show_suspended_students %}active {% endif %}" href="{{ url_for('manage.suspended_students') }}">挂起</a>
             <div class="right menu">
-                <a class="item" href="{{ url_for('manage.import_staff', next=url_for('manage.staff')) }}"><i class="file import icon"></i>导入</a>
+                <a class="item" href="{{ url_for('manage.import_user', next=url_for('manage.student')) }}"><i class="file import icon"></i>导入</a>
             </div>
         </div>
         {% if pagination.total > 0 %}
