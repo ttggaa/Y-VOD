@@ -93,6 +93,7 @@ class Role(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.Unicode(64), unique=True, index=True)
     category = db.Column(db.Unicode(64), index=True)
+    icon = db.Column(db.Unicode(64))
     level = db.Column(db.Integer, nullable=False)
     permissions = db.relationship(
         'RolePermission',
@@ -168,6 +169,7 @@ class Role(db.Model):
                 role = Role(
                     name=entry['name'],
                     category=entry['category'],
+                    icon=entry['icon'],
                     level=entry['level']
                 )
                 db.session.add(role)
@@ -218,6 +220,7 @@ class Gender(db.Model):
     __tablename__ = 'genders'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.Unicode(64), unique=True, index=True)
+    icon = db.Column(db.Unicode(64))
     users = db.relationship('User', backref='gender', lazy='dynamic')
 
     @staticmethod
@@ -228,7 +231,10 @@ class Gender(db.Model):
         if entries is not None:
             print('---> Read: {}'.format(yaml_file))
             for entry in entries:
-                gender = Gender(name=entry['name'])
+                gender = Gender(
+                    name=entry['name'],
+                    icon=entry['icon']
+                )
                 db.session.add(gender)
                 if verbose:
                     print('导入性别类型信息', entry['name'])
@@ -287,7 +293,7 @@ class Punch(db.Model):
                 'seconds': self.play_time.total_seconds(),
             },
             'progress': self.progress_trim,
-            'punched_at': self.timestamp.strftime('%Y-%m-%dT%H:%M:%SZ'),
+            'punched_at': self.timestamp.strftime(current_app.config['DATETIME_FORMAT_ISO']),
         }
         return entry_json
 

@@ -18,13 +18,6 @@ class Config:
     DATA_DIR = os.path.join(BASE_DIR, 'data')
     VIDEO_DIR = os.path.join(DATA_DIR, 'videos')
 
-    # Version
-    PYTHON_VERSION = '{0.major}.{0.minor}.{0.micro}'.format(sys.version_info)
-    VERSION = '1.0.0'
-    ESTABLISHED_AT = '2018-08-05T00:00+08:00'
-    UPDATED_AT = datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ')
-    RENDERED_AT = datetime.utcnow
-
     # SSL
     SSL_DISABLE = True
 
@@ -43,6 +36,7 @@ class Config:
 
     # Time
     DATETIME_FORMAT = '%Y-%m-%dT%H:%M:%S'
+    DATETIME_FORMAT_ISO = '%Y-%m-%dT%H:%M:%SZ'
     UTC_OFFSET = 8 # hours
     COOKIE_MAX_AGE = 30 * 24 * 60 * 60 # 30 days
     STATUS_EXPIRATION_CHECK_INTERVAL = 1000 # milliseconds (1 second)
@@ -51,6 +45,13 @@ class Config:
     VIDEO_ANALYTICS_GRANULARITY = 100 # milliseconds (0.1 seconds)
     VIDEO_ANALYTICS_UPDATE_PUNCH_INTERVAL = 60 * 1000 # 1 minute
     VIDEO_ANALYTICS_STATUS_EXPIRATION = 300 # seconds (5 minutes)
+
+    # Version
+    PYTHON_VERSION = '{0.major}.{0.minor}.{0.micro}'.format(sys.version_info)
+    VERSION = '1.0.0'
+    ESTABLISHED_AT = '2018-08-05T00:00:00+08:00'
+    UPDATED_AT = datetime.utcnow().strftime(DATETIME_FORMAT_ISO)
+    RENDERED_AT = datetime.utcnow
 
     @staticmethod
     def init_app(app):

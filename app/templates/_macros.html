@@ -45,7 +45,7 @@ if ($(window).width() >= 768) {
 
 
 {% macro user_gender_widget(user, is_current_user=False) -%}
-{% if is_current_user %}<i class="yellow star icon"></i>{% endif %}{{ user.name }}{% if user.gender %}<i class="{% if user.gender.name == '男' %}blue mars{% elif user.gender.name == '女' %}pink venus{% endif %} icon"></i>{% endif %}
+{% if is_current_user %}<i class="yellow star icon"></i>{% endif %}{{ user.name }}{% if user.gender_id %}<i class="{{ user.gender.icon }} icon"></i>{% endif %}
 {%- endmacro %}
 
 
@@ -55,7 +55,7 @@ if ($(window).width() >= 768) {
 
 
 {% macro user_url_gender_widget(user, is_current_user=False) -%}
-{{ user_url_widget(user, is_current_user) }}{% if user.gender %}<i class="{% if user.gender.name == '男' %}blue mars{% elif user.gender.name == '女' %}pink venus{% endif %} icon"></i>{% endif %}
+{{ user_url_widget(user, is_current_user) }}{% if user.gender_id %}<i class="{{ user.gender.icon }} icon"></i>{% endif %}
 {%- endmacro %}
 
 
@@ -65,7 +65,7 @@ if ($(window).width() >= 768) {
 
 
 {% macro from_now_widget(timestamp) -%}
-{% if timestamp %}<span class="popup-timestamp" data-timestamp="{{ timestamp.strftime('%Y-%m-%dT%H:%M:%SZ') }}"></span>{% else %}N/A{% endif %}
+{% if timestamp %}<span class="popup-timestamp" data-timestamp="{{ timestamp.strftime(config.DATETIME_FORMAT_ISO) }}"></span>{% else %}N/A{% endif %}
 {%- endmacro %}
 
 

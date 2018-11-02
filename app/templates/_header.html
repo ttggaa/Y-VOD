@@ -14,7 +14,7 @@
                 </div>
                 <div class="results"></div>
             </div>{% endif %}
-            <a class="item" href="{{ current_user.url }}" data-tooltip="个人档案" data-position="bottom center" data-inverted=""><i class="user {% if current_user.is_developer %}secret{% elif current_user.is_student %}graduate{% elif current_user.is_staff %}tie{% else %}circle{% endif %} icon"></i>{{ current_user.name }}</a>
+            <a class="item" href="{{ current_user.url }}" data-tooltip="个人档案" data-position="bottom center" data-inverted=""><i class="{{ current_user.role.icon }} icon"></i>{{ current_user.name }}</a>
         </div>{% endif %}
     </div>
 </div>

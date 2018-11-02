@@ -73,7 +73,7 @@ function updateRenderTime(timestamp) {
         $('#rendered-at').attr('class', 'ui red label');
     };
 };
-var renderedAt = $('meta[name=rendered_at]').attr('content');
+var renderedAt = "{{ config.RENDERED_AT().strftime(config.DATETIME_FORMAT_ISO) }}";
 updateRenderTime(renderedAt);
 setInterval(function () {
     updateRenderTime(renderedAt);

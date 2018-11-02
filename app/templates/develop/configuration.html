@@ -24,7 +24,7 @@
                 {% for key, value in config|dictsort %}
                 <tr>
                     <td>{{ key }}</td>
-                    <td>{% if value != None %}<code>{% if 'PASSWORD' in key or 'SECRET' in key or 'TOKEN' in key or 'URI' in key or 'SERIAL' in key %}********{% elif key == 'RENDERED_AT' %}{{ value().strftime('%Y-%m-%dT%H:%M:%SZ') }}{% else %}{{ value }}{% endif %}</code>{% endif %}</td>
+                    <td>{% if value != None %}<code>{% if 'PASSWORD' in key or 'SECRET' in key or 'TOKEN' in key or 'URI' in key or 'SERIAL' in key %}********{% elif key == 'RENDERED_AT' %}{{ value().strftime(config.DATETIME_FORMAT_ISO) }}{% else %}{{ value }}{% endif %}</code>{% endif %}</td>
                 </tr>
                 {% endfor %}
             </tbody>
