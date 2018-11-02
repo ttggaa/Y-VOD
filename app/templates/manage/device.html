@@ -23,6 +23,52 @@
             {% if current_user.is_developer %}<a class="item {% if show_development_devices %}active {% endif %}" href="{{ url_for('manage.development_devices') }}">开发设备</a>
             {% endif %}
             <a class="item {% if show_obsolete_devices %}active {% endif %}" href="{{ url_for('manage.obsolete_devices') }}">报废设备</a>
+            <div class="right menu">
+                <a id="new-device-trigger" class="item"><i class="plus circle icon"></i>新建设备</a>
+            </div>
+        </div>
+        <div id="new-device-modal" class="ui modal">
+            <i class="close icon"></i>
+            <div class="header"><i class="plus circle icon"></i>新建设备</div>
+            <div class="content">
+                <form id="new-device" action="{{ url_for('manage.device') }}" method="POST" class="ui form">
+                    {{ form.hidden_tag() }}
+                    <div class="fields">
+                        <div class="eight wide required field">
+                            {{ form.alias.label() }}
+                            {{ form.alias(placeholder='设备名') }}
+                        </div>
+                        <div class="eight wide required field">
+                            {{ form.serial.label() }}
+                            {{ form.serial(placeholder='序列号') }}
+                        </div>
+                    </div>
+                    <div class="fields">
+                        <div class="eight wide required field">
+                            {{ form.device_type.label() }}
+                            {{ form.device_type(class='ui dropdown') }}
+                        </div>
+                        <div class="eight wide required field">
+                            {{ form.room.label() }}
+                            {{ form.room(class='ui dropdown') }}
+                        </div>
+                    </div>
+                    <div class="required field">
+                        {{ form.ip_address.label() }}
+                        {{ form.ip_address(placeholder='绑定IP地址') }}
+                    </div>
+                    {% if current_user.is_developer %}<div class="ui segment">
+                        <div class="inline field">
+                            <div class="ui toggle checkbox">
+                                {{ form.development_machine() }}
+                                {{ form.development_machine.label() }}
+                            </div>
+                        </div>
+                    </div>{% endif %}
+                    {{ form.submit(class='ui primary button') }}
+                    <div class="ui basic left pointing label">只需点击一次</div>
+                </form>
+            </div>
         </div>
         {% if pagination.total > 0 %}
         <table class="ui sortable selectable celled table">
@@ -31,22 +77,30 @@
                     <th>设备名</th>
                     <th>序列号</th>
                     <th>设备类型</th>
-                    <th>所属房间</th>
-                    <th>绑定IP</th>
+                    <th>所属场地</th>
+                    <th>绑定IP地址</th>
                     <th>上次操作</th>
                     <th>操作人</th>
+                    <th>操作</th>
                 </tr>
             </thead>
             <tbody>
                 {% for device in devices %}
                 <tr>
                     <td>{{ device.alias }}</td>
-                    <td><code>{{ device.serial }}</code></td>
+                    <td><div class="ui horizontal label"><code>{{ device.serial }}</code></div></td>
                     <td>{{ device.type.name }}</td>
                     <td>{% if device.room_id %}{{ device.room.name }}{% else %}N/A{% endif %}</td>
                     <td>{{ device.ip_address }}</td>
                     <td>{{ macros.from_now_widget(device.modified_at) }}</td>
                     <td>{{ macros.user_url_widget(device.modified_by, device.modified_by_id == current_user.id) }}</td>
+                    <td>
+                        <div class="ui mini icon buttons">
+                            <a class="ui button" href="{{ url_for('manage.edit_device', id=device.id, next=url_for('manage.device', page=request.args.get('page'))) }}" data-tooltip="编辑" data-position="top center" data-inverted=""><i class="edit icon"></i></a>
+                            {% if device.obsolete %}<a class="ui button" href="{{ url_for('manage.toggle_device_obsolete', id=device.id, next=url_for('manage.device', page=request.args.get('page'))) }}" data-tooltip="恢复使用" data-position="top center" data-inverted=""><i class="redo alternate icon"></i></a>{% else %}<a class="ui positive button" href="{{ url_for('manage.toggle_device_obsolete', id=device.id, next=url_for('manage.device', page=request.args.get('page'))) }}" data-tooltip="标记报废" data-position="top center" data-inverted=""><i class="recycle icon"></i></a>{% endif %}
+                            <a class="ui negative button" href="{{ url_for('manage.delete_device', id=device.id, next=url_for('manage.device', page=request.args.get('page'))) }}" data-tooltip="删除" data-position="top center" data-inverted=""><i class="trash alternate icon"></i></a>
+                        </div>
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -67,5 +121,69 @@
 {{ macros.close_message_js_snippet() }}
 
 $('.ui.sortable.table').tablesort();
+
+$('.ui.dropdown').dropdown();
+
+{% if current_user.is_developer %}$('.ui.checkbox').checkbox();{% endif %}
+
+$('#new-device-trigger').click(function () {
+    $('#new-device-modal').modal({ autofocus: false }).modal('show');
+});
+
+$('#new-device').form({
+    inline: true,
+    on: 'blur',
+    fields: {
+        alias: {
+            identifier: 'alias',
+            rules: [
+                {
+                    type: 'empty',
+                    prompt: '请填写设备名'
+                }
+            ]
+        },
+        serial: {
+            identifier: 'serial',
+            rules: [
+                {
+                    type: 'empty',
+                    prompt: '请填写序列号'
+                }
+            ]
+        },
+        device_type: {
+            identifier: 'device_type',
+            rules: [
+                {
+                    type: 'empty',
+                    prompt: '请选择设备类型'
+                }
+            ]
+        },
+        room: {
+            identifier: 'room',
+            rules: [
+                {
+                    type: 'empty',
+                    prompt: '请选择房间'
+                }
+            ]
+        },
+        ip_address: {
+            identifier: 'ip_address',
+            rules: [
+                {
+                    type: 'empty',
+                    prompt: '请输入绑定IP地址'
+                },
+                {
+                    type: 'regExp[/^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/]',
+                    prompt: '请输入有效的IPv4地址'
+                }
+            ]
+        }
+    }
+});
 </script>
 {% endblock %}

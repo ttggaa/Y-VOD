@@ -1012,7 +1012,7 @@ class Device(db.Model):
     type_id = db.Column(db.Integer, db.ForeignKey('device_types.id'))
     room_id = db.Column(db.Integer, db.ForeignKey('rooms.id'))
     ip_address = db.Column(db.Unicode(64))
-    category = db.Column(db.Unicode(64), index=True)
+    category = db.Column(db.Unicode(64), default='production', index=True)
     obsolete = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     modified_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -1024,10 +1024,16 @@ class Device(db.Model):
         self.modified_by_id = modified_by.id
         db.session.add(self)
 
+    def toggle_obsolete(self, modified_by):
+        '''Device.toggle_obsolete(self, modified_by)'''
+        self.obsolete = not self.obsolete
+        self.ping(modified_by=modified_by)
+        db.session.add(self)
+
     @property
     def alias2(self):
         '''Device.alias2(self)'''
-        return '{}（{}）'.format(self.alias, self.serial)
+        return '{} [{}]'.format(self.alias, self.serial)
 
     def to_csv(self):
         '''Device.to_csv(self)'''
@@ -1080,7 +1086,6 @@ class Device(db.Model):
                                 type_id=DeviceType.query.filter_by(name=entry[2]).first().id,
                                 room_id=Room.query.filter_by(name=entry[3]).first().id,
                                 ip_address=entry[4],
-                                category='production',
                                 modified_by_id=User.query.get(1).id
                             )
                             db.session.add(device)

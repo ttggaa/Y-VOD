@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+{% import "_macros.html" as macros %}
+
+{% block title %}编辑设备信息：{{ device.alias2 }}{% endblock %}
+
+{% block content %}
+<div class="ui masthead vertical segment">
+    <div class="ui container">
+        {{ macros.message_widget() }}
+        <h1 class="ui center aligned header"><i class="edit icon"></i>编辑设备信息：{{ device.alias2 }}</h1>
+    </div>
+</div>
+<div class="ui main vertical segment">
+    <div class="ui container">
+        <form id="edit-device" action="{{ url_for('manage.edit_device', id=device.id, next=request.args.get('next')) }}" method="POST" class="ui form">
+            {{ form.hidden_tag() }}
+            <div class="fields">
+                <div class="eight wide required field">
+                    {{ form.alias.label() }}
+                    {{ form.alias(placeholder='设备名') }}
+                </div>
+                <div class="eight wide required field">
+                    {{ form.serial.label() }}
+                    {{ form.serial(placeholder='序列号') }}
+                </div>
+            </div>
+            <div class="fields">
+                <div class="eight wide required field">
+                    {{ form.device_type.label() }}
+                    {{ form.device_type(class='ui dropdown') }}
+                </div>
+                <div class="eight wide required field">
+                    {{ form.room.label() }}
+                    {{ form.room(class='ui dropdown') }}
+                </div>
+            </div>
+            <div class="required field">
+                {{ form.ip_address.label() }}
+                {{ form.ip_address(placeholder='绑定IP地址') }}
+            </div>
+            {% if current_user.is_developer %}<div class="ui segment">
+                <div class="inline field">
+                    <div class="ui toggle checkbox">
+                        {{ form.development_machine() }}
+                        {{ form.development_machine.label() }}
+                    </div>
+                </div>
+            </div>{% endif %}
+            {{ form.submit(class='ui primary button') }}
+            <a class="ui button" href="{{ request.args.get('next') or url_for('manage.device') }}">取消</a>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script type="text/javascript">
+{{ macros.close_message_js_snippet() }}
+
+$('.ui.dropdown').dropdown();
+
+{% if current_user.is_developer %}$('.ui.checkbox').checkbox();{% endif %}
+
+$('#edit-device').form({
+    inline: true,
+    on: 'blur',
+    fields: {
+        alias: {
+            identifier: 'alias',
+            rules: [
+                {
+                    type: 'empty',
+                    prompt: '请填写设备名'
+                }
+            ]
+        },
+        serial: {
+            identifier: 'serial',
+            rules: [
+                {
+                    type: 'empty',
+                    prompt: '请填写序列号'
+                }
+            ]
+        },
+        device_type: {
+            identifier: 'device_type',
+            rules: [
+                {
+                    type: 'empty',
+                    prompt: '请选择设备类型'
+                }
+            ]
+        },
+        room: {
+            identifier: 'room',
+            rules: [
+                {
+                    type: 'empty',
+                    prompt: '请选择房间'
+                }
+            ]
+        },
+        ip_address: {
+            identifier: 'ip_address',
+            rules: [
+                {
+                    type: 'empty',
+                    prompt: '请输入绑定IP地址'
+                },
+                {
+                    type: 'regExp[/^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/]',
+                    prompt: '请输入有效的IPv4地址'
+                }
+            ]
+        }
+    }
+});
+</script>
+{% endblock %}

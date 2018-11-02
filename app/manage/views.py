@@ -9,9 +9,10 @@ from flask import render_template, redirect, request, make_response, url_for, ab
 from flask_login import login_required, current_user
 from . import manage
 from .forms import ImportUserForm
+from .forms import NewDeviceForm, EditDeviceForm
 from .. import db
 from ..models import Role, User, IDType, Gender
-from ..models import DeviceType, Device
+from ..models import Room, DeviceType, Device
 from ..models import LessonType, Lesson, Video
 from ..decorators import permission_required, role_required
 from ..utils2 import add_user_log
@@ -486,11 +487,32 @@ def restore_user(id):
     return redirect(request.args.get('next') or url_for('profile.overview', id=user.id))
 
 
-@manage.route('/device')
+@manage.route('/device', methods=['GET', 'POST'])
 @login_required
 @permission_required('管理设备')
 def device():
     '''manage.device()'''
+    form = NewDeviceForm()
+    if form.validate_on_submit():
+        serial = form.serial.data.upper()
+        if Device.query.filter_by(serial=serial).first() is not None:
+            flash('已存在序列号为“{}”的设备'.format(serial), category='error')
+            return redirect(url_for('manage.device'))
+        device = Device(
+            serial=serial,
+            alias=form.alias.data,
+            type_id=int(form.device_type.data),
+            room_id=(None if int(form.room.data) == 0 else int(form.room.data)),
+            ip_address=form.ip_address.data,
+            category=('development' if form.development_machine.data and current_user.is_developer else 'production'),
+            modified_by_id=current_user.id
+        )
+        db.session.add(device)
+        db.session.commit()
+        flash('已添加设备：{} [{}]'.format(device.alias, device.serial), category='success')
+        add_user_log(user=current_user._get_current_object(), event='添加设备：{} [{}]'.format(device.alias, device.serial), category='manage')
+        db.session.commit()
+        return redirect(url_for('manage.device'))
     show_tablet_devices = True
     show_desktop_devices = False
     show_mobile_devices = False
@@ -555,6 +577,7 @@ def device():
     return minify(render_template(
         'manage/device.html',
         header=header,
+        form=form,
         show_tablet_devices=show_tablet_devices,
         show_desktop_devices=show_desktop_devices,
         show_mobile_devices=show_mobile_devices,
@@ -633,6 +656,82 @@ def obsolete_devices():
     resp.set_cookie('show_development_devices', '', max_age=current_app.config['COOKIE_MAX_AGE'])
     resp.set_cookie('show_obsolete_devices', '1', max_age=current_app.config['COOKIE_MAX_AGE'])
     return resp
+
+
+@manage.route('/device/edit/<int:id>', methods=['GET', 'POST'])
+@login_required
+@permission_required('管理设备')
+def edit_device(id):
+    '''manage.edit_device(id)'''
+    device = Device.query.get_or_404(id)
+    if device.category == 'development' and not current_user.is_developer:
+        abort(403)
+    form = EditDeviceForm()
+    if form.validate_on_submit():
+        serial = form.serial.data.upper()
+        if Device.query\
+            .filter(Device.id != device.id)\
+            .filter(Device.serial == serial)\
+            .first() is not None:
+            flash('已存在序列号为“{}”的设备'.format(serial), category='error')
+            return redirect(request.args.get('next') or url_for('manage.device'))
+        device.serial = serial
+        device.alias = form.alias.data
+        device.type_id = int(form.device_type.data)
+        device.room_id = (None if int(form.room.data) == 0 else int(form.room.data))
+        device.ip_address = form.ip_address.data
+        device.category = ('development' if form.development_machine.data and current_user.is_developer else 'production')
+        db.session.add(device)
+        db.session.commit()
+        flash('已更新设备信息：{}'.format(device.alias2), category='success')
+        add_user_log(user=current_user._get_current_object(), event='更新设备信息：{}'.format(device.alias2), category='manage')
+        db.session.commit()
+        return redirect(request.args.get('next') or url_for('manage.device'))
+    form.alias.data = device.alias
+    form.serial.data = device.serial
+    form.device_type.data = str(device.type_id)
+    form.room.data = ('0' if device.room_id == None else str(device.room_id))
+    form.ip_address.data = device.ip_address
+    form.development_machine.data = (device.category == 'development')
+    return minify(render_template(
+        'manage/edit_device.html',
+        device=device,
+        form=form
+    ))
+
+
+@manage.route('/device/toggle-obsolete/<int:id>')
+@login_required
+@permission_required('管理设备')
+def toggle_device_obsolete(id):
+    '''manage.toggle_device_obsolete(id)'''
+    device = Device.query.get_or_404(id)
+    if device.category == 'development' and not current_user.is_developer:
+        abort(403)
+    device.toggle_obsolete(modified_by=current_user._get_current_object())
+    if device.obsolete:
+        flash('已标记报废设备：{}'.format(device.alias2), category='success')
+        add_user_log(user=current_user._get_current_object(), event='标记报废设备：{}'.format(device.alias2), category='manage')
+    else:
+        flash('已恢复使用设备：{}'.format(device.alias2), category='success')
+        add_user_log(user=current_user._get_current_object(), event='恢复使用设备：{}'.format(device.alias2), category='manage')
+    db.session.commit()
+    return redirect(request.args.get('next') or url_for('manage.device'))
+
+
+@manage.route('/device/delete/<int:id>')
+@login_required
+@permission_required('管理设备')
+def delete_device(id):
+    '''manage.delete_device(id)'''
+    device = Device.query.get_or_404(id)
+    if device.category == 'development' and not current_user.is_developer:
+        abort(403)
+    db.session.delete(device)
+    flash('已恢删除设备：{}'.format(device.alias2), category='success')
+    add_user_log(user=current_user._get_current_object(), event='删除设备：{}'.format(device.alias2), category='manage')
+    db.session.commit()
+    return redirect(request.args.get('next') or url_for('manage.device'))
 
 
 @manage.route('/lesson')
