@@ -8,6 +8,12 @@
     <div class="ui container">
         {{ macros.message_widget() }}
         <h1 class="ui center aligned header"><i class="user tie icon"></i>员工管理</h1>
+        {% if current_user.can('管理学生') %}<div class="ui center aligned container">
+            <div class="ui labels">
+                <a class="ui label" href="{{ url_for('manage.student') }}"><i class="user graduate icon"></i>学生管理</a>
+                <a class="ui black label" href="{{ url_for('manage.staff') }}"><i class="user tie icon"></i>员工管理</a>
+            </div>
+        </div>{% endif %}
     </div>
 </div>
 <div class="ui main vertical segment">
