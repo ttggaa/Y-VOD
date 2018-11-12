@@ -35,8 +35,8 @@
                 </div>
             </div>
             <div class="required field">
-                {{ form.ip_address.label() }}
-                {{ form.ip_address(placeholder='绑定IP地址') }}
+                {{ form.mac_address.label() }}
+                {{ form.mac_address(placeholder='MAC地址') }}
             </div>
             {% if current_user.is_developer %}<div class="ui segment">
                 <div class="inline field">
@@ -101,16 +101,16 @@ $('#edit-device').form({
                 }
             ]
         },
-        ip_address: {
-            identifier: 'ip_address',
+        mac_address: {
+            identifier: 'mac_address',
             rules: [
                 {
                     type: 'empty',
-                    prompt: '请输入绑定IP地址'
+                    prompt: '请输入MAC地址'
                 },
                 {
-                    type: 'regExp[/^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/]',
-                    prompt: '请输入有效的IPv4地址'
+                    type: 'regExp[/^(?:[0-9a-fA-F]{2}:){5}[0-9a-fA-F]{2}$/]',
+                    prompt: '请输入有效的MAC地址'
                 }
             ]
         }

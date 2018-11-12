@@ -4,7 +4,7 @@
 
 from flask_wtf import FlaskForm
 from wtforms import StringField, BooleanField, SelectField, SubmitField
-from wtforms.validators import InputRequired, IPAddress
+from wtforms.validators import InputRequired, MacAddress
 from ..models import Room, DeviceType
 
 
@@ -20,7 +20,7 @@ class NewDeviceForm(FlaskForm):
     serial = StringField('序列号', validators=[InputRequired()])
     device_type = SelectField('设备类型', coerce=str, validators=[InputRequired()])
     room = SelectField('所属场地', coerce=str, validators=[InputRequired()])
-    ip_address = StringField('绑定IP地址', validators=[InputRequired(), IPAddress()])
+    mac_address = StringField('MAC地址', validators=[InputRequired(), MacAddress()])
     development_machine = BooleanField('开发用机器')
     submit = SubmitField('提交')
 
@@ -36,7 +36,7 @@ class EditDeviceForm(FlaskForm):
     serial = StringField('序列号', validators=[InputRequired()])
     device_type = SelectField('设备类型', coerce=str, validators=[InputRequired()])
     room = SelectField('所属场地', coerce=str, validators=[InputRequired()])
-    ip_address = StringField('绑定IP地址', validators=[InputRequired(), IPAddress()])
+    mac_address = StringField('MAC地址', validators=[InputRequired(), MacAddress()])
     development_machine = BooleanField('开发用机器')
     submit = SubmitField('提交')
 

@@ -10,6 +10,7 @@ from .forms import LoginForm
 from .. import db
 from ..models import User
 from ..models import Device
+from ..utils import get_mac_address_from_ip
 from ..utils2 import get_device_info, add_user_log
 
 
@@ -18,10 +19,10 @@ def before_request():
     '''auth.before_request()'''
     if current_user.is_authenticated:
         current_user.ping()
-        ip_address = request.headers.get('X-Forwarded-For', request.remote_addr)
-        if ip_address != current_user.last_seen_ip:
-            current_user.update_ip(ip_address=ip_address)
-            add_user_log(user=current_user._get_current_object(), event='请求访问（来源：{}）'.format(get_device_info(ip_address=ip_address, show_ip=True)), category='access')
+        mac_address = get_mac_address_from_ip(ip_address=request.headers.get('X-Forwarded-For', request.remote_addr))
+        if mac_address is not None and mac_address != current_user.last_seen_mac:
+            current_user.update_mac(mac_address=mac_address)
+            add_user_log(user=current_user._get_current_object(), event='请求访问（来源：{}）'.format(get_device_info(mac_address=mac_address, show_mac=True)), category='access')
         db.session.commit()
 
 
@@ -32,8 +33,12 @@ def login():
         return redirect(request.args.get('next') or current_user.index_url)
     form = LoginForm()
     if form.validate_on_submit():
-        ip_address = request.headers.get('X-Forwarded-For', request.remote_addr)
-        device = Device.query.filter_by(ip_address=ip_address).first()
+        mac_address = get_mac_address_from_ip(ip_address=request.headers.get('X-Forwarded-For', request.remote_addr))
+        print(mac_address)
+        if mac_address is None:
+            flash('无法获取设备信息', category='error')
+            return redirect(url_for('auth.login', next=request.args.get('next')))
+        device = Device.query.filter_by(mac_address=mac_address).first()
         if device is None:
             flash('设备未授权', category='error')
             return redirect(url_for('auth.login', next=request.args.get('next')))

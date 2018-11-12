@@ -1,8 +1,8 @@
 """initial
 
-Revision ID: 0b4a0d1e1888
+Revision ID: 62a52cafb8c1
 Revises: 
-Create Date: 2018-11-03 00:24:16.200675
+Create Date: 2018-11-12 22:59:35.277142
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '0b4a0d1e1888'
+revision = '62a52cafb8c1'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -91,7 +91,7 @@ def upgrade():
     sa.Column('role_id', sa.Integer(), nullable=True),
     sa.Column('created_at', sa.DateTime(), nullable=True),
     sa.Column('last_seen_at', sa.DateTime(), nullable=True),
-    sa.Column('last_seen_ip', sa.Unicode(length=64), nullable=True),
+    sa.Column('last_seen_mac', sa.Unicode(length=64), nullable=True),
     sa.Column('suspended', sa.Boolean(), nullable=True),
     sa.Column('name', sa.Unicode(length=64), nullable=True),
     sa.Column('name_pinyin', sa.Unicode(length=64), nullable=True),
@@ -112,7 +112,7 @@ def upgrade():
     sa.Column('alias', sa.Unicode(length=64), nullable=True),
     sa.Column('type_id', sa.Integer(), nullable=True),
     sa.Column('room_id', sa.Integer(), nullable=True),
-    sa.Column('ip_address', sa.Unicode(length=64), nullable=True),
+    sa.Column('mac_address', sa.Unicode(length=64), nullable=True),
     sa.Column('category', sa.Unicode(length=64), nullable=True),
     sa.Column('obsolete', sa.Boolean(), nullable=True),
     sa.Column('created_at', sa.DateTime(), nullable=True),

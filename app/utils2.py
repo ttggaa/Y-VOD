@@ -6,16 +6,16 @@ from . import db
 from .models import Device, UserLog
 
 
-def get_device_info(ip_address, show_ip=False):
-    '''get_device_info(ip_address, show_ip=False)'''
-    if ip_address is not None:
-        device = Device.query.filter_by(ip_address=ip_address).first()
+def get_device_info(mac_address, show_mac=False):
+    '''get_device_info(mac_address, show_mac=False)'''
+    if mac_address is not None:
+        device = Device.query.filter_by(mac_address=mac_address).first()
         if device is not None:
             device_info = device.alias
         else:
             device_info = '未授权设备'
-        if show_ip:
-            return '{} {}'.format(device_info, ip_address)
+        if show_mac:
+            return '{} {}'.format(device_info, mac_address)
         return device_info
     return 'N/A'
 

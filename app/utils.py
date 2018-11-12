@@ -7,6 +7,7 @@ import io
 from datetime import datetime, timedelta
 import csv
 import yaml
+from getmac import get_mac_address
 from pymediainfo import MediaInfo
 from flask import stream_with_context, Response
 from pypinyin import slug, Style
@@ -58,6 +59,16 @@ def load_yaml(yaml_file):
     return '{} does not exist.'.format(yaml_file)
 
 
+def get_mac_address_from_ip(ip_address):
+    '''get_mac_address_from_ip(ip_address)'''
+    print(ip_address)
+    if ip_address is None:
+        return None
+    if ip_address == '127.0.0.1':
+        return get_mac_address().upper()
+    return get_mac_address(ip=ip_address).upper()
+
+
 def get_video_duration(video_file):
     '''get_video_duration(video_file)'''
     if os.path.exists(video_file):
@@ -66,17 +77,17 @@ def get_video_duration(video_file):
     return '{} does not exist.'.format(video_file)
 
 
-# def stream_video(video_file, mimetype='video/mp4', chunk_size=1024*1024):
-#     '''stream_video(video_file, mimetype='video/mp4', chunk_size=1024*1024)'''
-#     def generator():
-#         with io.open(video_file, 'rb') as f:
-#             while True:
-#                 chunk = f.read(chunk_size)
-#                 if chunk:
-#                     yield chunk
-#                 else:
-#                     break
-#     return Response(stream_with_context(generator()), mimetype=mimetype, direct_passthrough=True)
+def stream_video(video_file, mimetype='video/mp4', chunk_size=1024*1024):
+    '''stream_video(video_file, mimetype='video/mp4', chunk_size=1024*1024)'''
+    def generator():
+        with io.open(video_file, 'rb') as f:
+            while True:
+                chunk = f.read(chunk_size)
+                if chunk:
+                    yield chunk
+                else:
+                    break
+    return Response(stream_with_context(generator()), mimetype=mimetype, direct_passthrough=True)
 
 
 def format_duration(duration):

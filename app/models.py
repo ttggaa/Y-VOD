@@ -419,7 +419,7 @@ class User(UserMixin, db.Model):
     role_id = db.Column(db.Integer, db.ForeignKey('roles.id'))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     last_seen_at = db.Column(db.DateTime)
-    last_seen_ip = db.Column(db.Unicode(64))
+    last_seen_mac = db.Column(db.Unicode(64))
     suspended = db.Column(db.Boolean, default=False)
     # profile properties
     name = db.Column(db.Unicode(64), index=True)
@@ -460,24 +460,24 @@ class User(UserMixin, db.Model):
         self.last_seen_at = datetime.utcnow()
         db.session.add(self)
 
-    def update_ip(self, ip_address):
-        '''User.update_ip(self, ip_address)'''
-        self.last_seen_ip = ip_address
+    def update_mac(self, mac_address):
+        '''User.update_mac(self, mac_address)'''
+        self.last_seen_mac = mac_address
         db.session.add(self)
 
     @property
     def last_login_device(self):
         '''User.last_login_device(self)'''
-        return Device.query.filter_by(ip_address=self.last_seen_ip).first()
+        return Device.query.filter_by(mac_address=self.last_seen_mac).first()
 
     @property
-    def last_login_device_with_ip(self):
-        '''User.last_login_device_with_ip(self)'''
+    def last_login_device_with_mac(self):
+        '''User.last_login_device_with_mac(self)'''
         if self.last_login_device is not None:
             device_info = self.last_login_device.alias
         else:
             device_info = '未授权设备'
-        return '{} ({})'.format(device_info, self.last_seen_ip)
+        return '{} ({})'.format(device_info, self.last_seen_mac)
 
     def suspend(self):
         '''User.suspend(self)'''
@@ -802,7 +802,7 @@ class User(UserMixin, db.Model):
             self.role.name,
             self.created_at.strftime(current_app.config['DATETIME_FORMAT']),
             last_seen_at,
-            self.last_seen_ip,
+            self.last_seen_mac,
             str(int(self.suspended)),
             self.name,
             self.id_type.name,
@@ -845,7 +845,7 @@ class User(UserMixin, db.Model):
                                 role_id=Role.query.filter_by(name=entry[1]).first().id,
                                 created_at=datetime.strptime(entry[2], current_app.config['DATETIME_FORMAT']),
                                 last_seen_at=entry[3],
-                                last_seen_ip=entry[4],
+                                last_seen_mac=entry[4],
                                 suspended=bool(int(entry[5])),
                                 name=entry[6],
                                 id_type_id=entry[7],
@@ -873,7 +873,7 @@ class User(UserMixin, db.Model):
                 'role',
                 'created_at',
                 'last_seen_at',
-                'last_seen_ip',
+                'last_seen_mac',
                 'suspended',
                 'name',
                 'id_type',
@@ -1011,7 +1011,7 @@ class Device(db.Model):
     alias = db.Column(db.Unicode(64))
     type_id = db.Column(db.Integer, db.ForeignKey('device_types.id'))
     room_id = db.Column(db.Integer, db.ForeignKey('rooms.id'))
-    ip_address = db.Column(db.Unicode(64))
+    mac_address = db.Column(db.Unicode(64))
     category = db.Column(db.Unicode(64), default='production', index=True)
     obsolete = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -1046,7 +1046,7 @@ class Device(db.Model):
             self.alias,
             self.type.name,
             room,
-            self.ip_address,
+            self.mac_address,
             self.category,
             str(int(self.obsolete)),
             self.created_at.strftime(current_app.config['DATETIME_FORMAT']),
@@ -1064,7 +1064,7 @@ class Device(db.Model):
                 serial=current_app.config['DEVELOPMENT_MACHINE_SERIAL'],
                 alias='Development Machine',
                 type_id=DeviceType.query.filter_by(name='Desktop').first().id,
-                ip_address=current_app.config['DEVELOPMENT_MACHINE_IP_ADDRESS'],
+                mac_address=current_app.config['DEVELOPMENT_MACHINE_MAC_ADDRESS'],
                 category='development',
                 modified_by_id=User.query.get(1).id
             )
@@ -1085,7 +1085,7 @@ class Device(db.Model):
                                 alias=entry[0],
                                 type_id=DeviceType.query.filter_by(name=entry[2]).first().id,
                                 room_id=Room.query.filter_by(name=entry[3]).first().id,
-                                ip_address=entry[4],
+                                mac_address=entry[4],
                                 modified_by_id=User.query.get(1).id
                             )
                             db.session.add(device)
@@ -1100,7 +1100,7 @@ class Device(db.Model):
                                 alias=entry[2],
                                 type_id=DeviceType.query.filter_by(name=entry[3]).first().id,
                                 room_id=entry[4],
-                                ip_address=entry[5],
+                                mac_address=entry[5],
                                 category=entry[6],
                                 obsolete=bool(int(entry[7])),
                                 created_at=datetime.strptime(entry[8], current_app.config['DATETIME_FORMAT']),
@@ -1129,7 +1129,7 @@ class Device(db.Model):
                 'alias',
                 'type',
                 'room',
-                'ip_address',
+                'mac_address',
                 'category',
                 'obsolete',
                 'created_at',

@@ -7,8 +7,8 @@
     <title>{% block title %}{% endblock %} &middot;{% if current_user.is_authenticated %} {{ current_user.name }} &middot;{% endif %} Y-VOD &middot; 云英语</title>
     <meta name="version" content="Y-VOD v{{ config.VERSION }} (Python {{ config.PYTHON_VERSION }})">
     <meta name="author" content="iROCKBUNNY">
-    <meta name="description" content="Y-VOD: Y-English Intranet Video-On-Demand Solution">
-    <meta name="keywords" content="Y-English, Y-VOD, VOD, English, Education">
+    <meta name="description" content="Y-VOD: Y-English Local Area Network Video-On-Demand Solution">
+    <meta name="keywords" content="Y-English, Y-VOD, VOD, Video-On-Demand, English, Education">
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='assets/library/ui/semantic.min.css') }}">
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='assets/css/common.css') }}">
     {% block css %}{% endblock %}
