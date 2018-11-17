@@ -41,6 +41,7 @@
 
 {% block js %}
 <script type="text/javascript" src="{{ url_for('static', filename='assets/library/count/countUp.min.js') }}"></script>
+{% if config.HLS_ENABLE %}<script type="text/javascript" src="{{ url_for('static', filename='assets/library/hls/hls.min.js') }}"></script>{% endif %}
 <script type="text/javascript" src="{{ url_for('static', filename='assets/library/player/player.min.js') }}"></script>
 <script type="text/javascript">
 {{ macros.close_message_js_snippet() }}
@@ -66,7 +67,8 @@ updateVideoProgress({{ current_user.video_progress(video=video) }});
 const player = new Player({
     container: document.getElementById('player'),
     video: {
-        url: "{{ url_for('resource.video', id=video.id) }}"
+        url: "{{ url_for('resource.video', id=video.id) }}"{% if config.HLS_ENABLE -%},
+        type: 'hls'{%- endif %}
     }
 });
 var granularity = {{ config.VIDEO_ANALYTICS_GRANULARITY }};

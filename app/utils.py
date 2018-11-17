@@ -77,8 +77,8 @@ def get_video_duration(video_file):
     return '{} does not exist.'.format(video_file)
 
 
-def stream_video(video_file, mimetype='video/mp4', chunk_size=1024*1024):
-    '''stream_video(video_file, mimetype='video/mp4', chunk_size=1024*1024)'''
+def hls_wrapper(video_file, mimetype='video/mp4', chunk_size=1024*1024):
+    '''hls_wrapper(video_file, mimetype='video/mp4', chunk_size=1024*1024)'''
     def generator():
         with io.open(video_file, 'rb') as f:
             while True:

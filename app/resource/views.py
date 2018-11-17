@@ -8,7 +8,7 @@ from flask import send_file, redirect, url_for, abort, current_app
 from flask_login import login_required, current_user
 from . import resource
 from ..models import Video
-from ..utils import stream_video
+from ..utils import hls_wrapper
 from ..decorators import permission_required
 
 
@@ -23,9 +23,9 @@ def video(id):
     video_file = os.path.join(current_app.config['VIDEO_DIR'], video.file_name)
     if not os.path.exists(video_file):
         abort(404)
-    if current_app.config['VIDEO_STREAMING_DISABLE']:
-        return send_file(video_file, mimetype='video/mp4')
-    return stream_video(video_file=video_file)
+    if current_app.config['HLS_ENABLE']:
+        return hls_wrapper(video_file=video_file)
+    return send_file(video_file, mimetype='video/mp4')
 
 
 @resource.route('/video/forbidden')
@@ -36,6 +36,6 @@ def video_forbidden():
     video_file = os.path.join(current_app.config['VIDEO_DIR'], 'forbidden.mp4')
     if not os.path.exists(video_file):
         abort(404)
-    if current_app.config['VIDEO_STREAMING_DISABLE']:
-        return send_file(video_file, mimetype='video/mp4')
-    return stream_video(video_file=video_file)
+    if current_app.config['HLS_ENABLE']:
+        return hls_wrapper(video_file=video_file)
+    return send_file(video_file, mimetype='video/mp4')

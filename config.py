@@ -46,7 +46,7 @@ class Config:
     VIDEO_ANALYTICS_UPDATE_PUNCH_INTERVAL = 60 * 1000 # 1 minute
     VIDEO_ANALYTICS_STATUS_EXPIRATION = 300 # seconds (5 minutes)
 
-    # Video Streaming
+    # HLS
 
     # Version
     PYTHON_VERSION = '{0.major}.{0.minor}.{0.micro}'.format(sys.version_info)
@@ -79,8 +79,8 @@ class DevelopmentConfig(Config):
     DEVELOPMENT_MACHINE_SERIAL = os.getenv('YVOD_DEV_DEVELOPMENT_MACHINE_SERIAL')
     DEVELOPMENT_MACHINE_MAC_ADDRESS = os.getenv('YVOD_DEV_DEVELOPMENT_MACHINE_MAC_ADDRESS')
 
-    # Video Streaming
-    VIDEO_STREAMING_DISABLE = True
+    # HLS
+    HLS_ENABLE = False
 
 
 class ProductionConfig(Config):
@@ -100,8 +100,8 @@ class ProductionConfig(Config):
     DEVELOPMENT_MACHINE_SERIAL = os.getenv('YVOD_PROD_DEVELOPMENT_MACHINE_SERIAL')
     DEVELOPMENT_MACHINE_MAC_ADDRESS = os.getenv('YVOD_PROD_DEVELOPMENT_MACHINE_MAC_ADDRESS')
 
-    # Video Streaming
-    VIDEO_STREAMING_DISABLE = False
+    # HLS
+    HLS_ENABLE = True
 
 
 config = {
