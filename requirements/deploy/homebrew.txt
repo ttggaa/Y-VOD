@@ -2,5 +2,4 @@ python
 media-info
 mariadb
 supervisor
-nginx
 dnsmasq
