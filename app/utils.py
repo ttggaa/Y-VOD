@@ -9,7 +9,7 @@ import csv
 import yaml
 from getmac import get_mac_address
 from pymediainfo import MediaInfo
-from flask import stream_with_context, Response
+from flask import current_app, Response
 from pypinyin import slug, Style
 
 
@@ -77,17 +77,12 @@ def get_video_duration(video_file):
     return '{} does not exist.'.format(video_file)
 
 
-def hls_wrapper(video_file, mimetype='video/mp4', chunk_size=1024*1024):
-    '''hls_wrapper(video_file, mimetype='video/mp4', chunk_size=1024*1024)'''
-    def generator():
-        with io.open(video_file, 'rb') as f:
-            while True:
-                chunk = f.read(chunk_size)
-                if chunk:
-                    yield chunk
-                else:
-                    break
-    return Response(stream_with_context(generator()), mimetype=mimetype, direct_passthrough=True)
+def hls_wrapper(video_file):
+    '''hls_wrapper(video_file)'''
+    resp = Response()
+    resp.headers['Content-Type'] = 'application/vnd.apple.mpegurl'
+    resp.headers['X-Accel-Redirect'] = '{}/index.m3u8'.format(video_file.replace(current_app.config['DATA_DIR'], ''))
+    return resp
 
 
 def format_duration(duration):
