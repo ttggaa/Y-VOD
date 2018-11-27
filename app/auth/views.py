@@ -34,13 +34,12 @@ def login():
     form = LoginForm()
     if form.validate_on_submit():
         mac_address = get_mac_address_from_ip(ip_address=request.headers.get('X-Forwarded-For', request.remote_addr))
-        print(mac_address)
         if mac_address is None:
             flash('无法获取设备信息', category='error')
             return redirect(url_for('auth.login', next=request.args.get('next')))
         device = Device.query.filter_by(mac_address=mac_address).first()
         if device is None:
-            flash('设备未授权', category='error')
+            flash('设备未授权（MAC地址：{}）'.format(mac_address), category='error')
             return redirect(url_for('auth.login', next=request.args.get('next')))
         users = User.query\
             .filter(User.name == form.name.data)\

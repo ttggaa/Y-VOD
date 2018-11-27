@@ -4,6 +4,7 @@
 
 import os
 import io
+import re
 from datetime import datetime, timedelta
 import csv
 import yaml
@@ -61,7 +62,6 @@ def load_yaml(yaml_file):
 
 def get_mac_address_from_ip(ip_address):
     '''get_mac_address_from_ip(ip_address)'''
-    print(ip_address)
     if ip_address is None:
         return None
     if ip_address == '127.0.0.1':
@@ -77,9 +77,31 @@ def get_video_duration(video_file):
     return '{} does not exist.'.format(video_file)
 
 
+def send_video_file(video_file, request, mimetype='video/mp4'):
+    '''send_video_file(video_file, request, mimetype='video/mp4')'''
+    file_size = os.path.getsize(video_file)
+    m = re.match(r'bytes=(?P<start>\d+)-(?P<end>\d+)?', request.headers.get('Range'))
+    if m:
+        start = m.group('start')
+        end = m.group('end')
+        start = int(start)
+        end = (file_size - 1) if end is None else min(int(end), file_size - 1)
+    else:
+        start = 0
+        end = file_size - 1
+    length = end - start + 1
+    with open(video_file, 'rb') as f:
+        f.seek(start)
+        video_file_chunk = f.read(length)
+    resp = Response(response=video_file_chunk, status=206, mimetype=mimetype, direct_passthrough=True)
+    resp.headers['Content-Range'] = 'bytes {}-{}/{}'.format(start, end, file_size)
+    resp.headers['Accept-Ranges'] = 'bytes'
+    return resp
+
+
 def hls_wrapper(video_file):
     '''hls_wrapper(video_file)'''
-    resp = Response()
+    resp = Response(mimetype='application/vnd.apple.mpegurl')
     resp.headers['Content-Type'] = 'application/vnd.apple.mpegurl'
     resp.headers['X-Accel-Redirect'] = '{}/index.m3u8'.format(video_file.replace(current_app.config['DATA_DIR'], ''))
     return resp
