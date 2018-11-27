@@ -11,5 +11,5 @@ pymediainfo==3.0
 pypinyin==0.33.2
 python-dotenv==0.9.1
 PyYAML==3.13
-SQLAlchemy==1.2.13
+SQLAlchemy==1.2.14
 Werkzeug==0.14.1
