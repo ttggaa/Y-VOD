@@ -848,7 +848,7 @@ class User(UserMixin, db.Model):
                                 last_seen_mac=entry[4],
                                 suspended=bool(int(entry[5])),
                                 name=entry[6],
-                                id_type_id=entry[7],
+                                id_type_id=IDType.query.filter_by(name=entry[7]).first().id,
                                 id_number=entry[8],
                                 gender_id=entry[9]
                             )
