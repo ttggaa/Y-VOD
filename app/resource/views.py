@@ -20,7 +20,7 @@ def video(id):
     video = Video.query.get_or_404(id)
     if not current_user.can_play(video=video):
         return redirect(url_for('resource.video_forbidden'))
-    video_file = os.path.join(current_app.config['HLS_DIR'], video.file_name)
+    video_file = os.path.join(current_app.config['VIDEO_DIR'], video.file_name)
     if not os.path.exists(video_file):
         abort(404)
     if current_app.config['HLS_ENABLE']:
