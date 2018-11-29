@@ -17,13 +17,13 @@ from ..decorators import permission_required
 @permission_required('研修')
 def video(id):
     '''resource.video(id)'''
+    if current_app.config['HLS_ENABLE']:
+        abort(404)
     video = Video.query.get_or_404(id)
     if not current_user.can_play(video=video):
         return redirect(url_for('resource.video_forbidden'))
     video_file = os.path.join(current_app.config['VIDEO_DIR'], video.file_name)
     if not os.path.exists(video_file):
-        abort(404)
-    if current_app.config['HLS_ENABLE']:
         abort(404)
     if 'Range' in request.headers:
         return send_video_file(video_file=video_file, request=request)
@@ -35,10 +35,10 @@ def video(id):
 @permission_required('研修')
 def video_forbidden():
     '''resource.video_forbidden()'''
+    if current_app.config['HLS_ENABLE']:
+        abort(404)
     video_file = os.path.join(current_app.config['VIDEO_DIR'], 'forbidden.mp4')
     if not os.path.exists(video_file):
-        abort(404)
-    if current_app.config['HLS_ENABLE']:
         abort(404)
     if 'Range' in request.headers:
         return send_video_file(video_file=video_file, request=request)
