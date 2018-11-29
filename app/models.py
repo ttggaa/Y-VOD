@@ -838,8 +838,8 @@ class User(UserMixin, db.Model):
                         if line_num >= 1:
                             if entry[3] is not None:
                                 entry[3] = datetime.strptime(entry[3], current_app.config['DATETIME_FORMAT'])
-                            if entry[10] is not None:
-                                entry[10] = Gender.query.filter_by(name=entry[10]).first().id
+                            if entry[9] is not None:
+                                entry[9] = Gender.query.filter_by(name=entry[9]).first().id
                             user = User(
                                 id=int(entry[0]),
                                 role_id=Role.query.filter_by(name=entry[1]).first().id,
@@ -1274,6 +1274,11 @@ class Video(db.Model):
     def duration_format(self):
         '''Video.duration_format(self)'''
         return format_duration(duration=self.duration)
+
+    @property
+    def hls_url(self):
+        '''hls_url(self)'''
+        return '/videos/{}/index.m3u8'.format(self.file_name)
 
     def to_json(self):
         '''Video.to_json(self)'''
