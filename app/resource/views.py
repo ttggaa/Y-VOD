@@ -8,7 +8,7 @@ from flask import send_file, redirect, request, url_for, abort, current_app
 from flask_login import login_required, current_user
 from . import resource
 from ..models import Video
-from ..utils import send_video_file, hls_wrapper
+from ..utils import send_video_file
 from ..decorators import permission_required
 
 
@@ -24,7 +24,7 @@ def video(id):
     if not os.path.exists(video_file):
         abort(404)
     if current_app.config['HLS_ENABLE']:
-        return hls_wrapper(video_file=video_file)
+        return redirect(video.hls_url)
     if 'Range' in request.headers:
         return send_video_file(video_file=video_file, request=request)
     return send_file(video_file, mimetype='video/mp4')
@@ -39,7 +39,7 @@ def video_forbidden():
     if not os.path.exists(video_file):
         abort(404)
     if current_app.config['HLS_ENABLE']:
-        return hls_wrapper(video_file=video_file)
+        return redirect(video.hls_url)
     if 'Range' in request.headers:
         return send_video_file(video_file=video_file, request=request)
     return send_file(video_file, mimetype='video/mp4')

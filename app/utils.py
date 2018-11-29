@@ -99,14 +99,6 @@ def send_video_file(video_file, request, mimetype='video/mp4'):
     return resp
 
 
-def hls_wrapper(video_file):
-    '''hls_wrapper(video_file)'''
-    resp = Response(mimetype='application/vnd.apple.mpegurl')
-    resp.headers['Content-Type'] = 'application/vnd.apple.mpegurl'
-    resp.headers['X-Accel-Redirect'] = '{}/index.m3u8'.format(video_file.replace(current_app.config['DATA_DIR'], ''))
-    return resp
-
-
 def format_duration(duration):
     '''format_duration(duration)'''
     hours, duration = divmod(duration, timedelta(hours=1))
