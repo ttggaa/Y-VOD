@@ -5,7 +5,7 @@
 import os
 import io
 import operator
-from shutil import copyfile
+from shutil import copyfile, rmtree
 from datetime import datetime, timedelta
 from hashlib import md5
 from base64 import b64encode
@@ -1315,11 +1315,12 @@ class Video(db.Model):
         entries = load_yaml(yaml_file=yaml_file)
         if entries is not None:
             print('---> Read: {}'.format(yaml_file))
+            if os.path.exists(current_app.config['HLS_DIR']):
+                rmtree(current_app.config['HLS_DIR'])
+            os.makedirs(current_app.config['HLS_DIR'])
             for entry in entries:
                 video_file = os.path.join(current_app.config['VIDEO_DIR'], entry['file_name'])
                 hls_file_name = '{}.mp4'.format(token_urlsafe(16))
-                if not os.path.exists(current_app.config['HLS_DIR']):
-                    os.makedirs(current_app.config['HLS_DIR'])
                 copyfile(video_file, os.path.join(current_app.config['HLS_DIR'], hls_file_name))
                 if os.path.exists(video_file):
                     video = Video(
