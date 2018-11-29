@@ -5,9 +5,11 @@
 import os
 import io
 import operator
+from shutil import copyfile
 from datetime import datetime, timedelta
 from hashlib import md5
 from base64 import b64encode
+from secrets import token_urlsafe
 from functools import reduce
 from sqlalchemy import and_
 from werkzeug.routing import BuildError
@@ -15,7 +17,7 @@ from itsdangerous import TimedJSONWebSignatureSerializer, BadSignature, Signatur
 from flask import current_app, url_for
 from flask_login import UserMixin, AnonymousUserMixin
 from . import db, login_manager
-from .utils import date_now, CSVReader, CSVWriter, load_yaml, get_video_duration, format_duration, to_pinyin
+from .utils import datetime_now, date_now, CSVReader, CSVWriter, load_yaml, get_video_duration, format_duration, to_pinyin
 
 
 class RolePermission(db.Model):
@@ -65,9 +67,9 @@ class Permission(db.Model):
         return self.roles.count()
 
     @staticmethod
-    def insert_entries(data, basedir, verbose=False):
-        '''Permission.insert_entries(data, basedir, verbose=False)'''
-        yaml_file = os.path.join(basedir, 'data', data, 'permissions.yml')
+    def insert_entries(data, verbose=False):
+        '''Permission.insert_entries(data, verbose=False)'''
+        yaml_file = os.path.join(current_app.config['DATA_DIR'], data, 'permissions.yml')
         entries = load_yaml(yaml_file=yaml_file)
         if entries is not None:
             print('---> Read: {}'.format(yaml_file))
@@ -159,9 +161,9 @@ class Role(db.Model):
         return False
 
     @staticmethod
-    def insert_entries(data, basedir, verbose=False):
-        '''Role.insert_entries(data, basedir, verbose=False)'''
-        yaml_file = os.path.join(basedir, 'data', data, 'roles.yml')
+    def insert_entries(data, verbose=False):
+        '''Role.insert_entries(data, verbose=False)'''
+        yaml_file = os.path.join(current_app.config['DATA_DIR'], data, 'roles.yml')
         entries = load_yaml(yaml_file=yaml_file)
         if entries is not None:
             print('---> Read: {}'.format(yaml_file))
@@ -196,9 +198,9 @@ class IDType(db.Model):
     users = db.relationship('User', backref='id_type', lazy='dynamic')
 
     @staticmethod
-    def insert_entries(data, basedir, verbose=False):
-        '''IDType.insert_entries(data, basedir, verbose=False)'''
-        yaml_file = os.path.join(basedir, 'data', data, 'id_types.yml')
+    def insert_entries(data, verbose=False):
+        '''IDType.insert_entries(data, verbose=False)'''
+        yaml_file = os.path.join(current_app.config['DATA_DIR'], data, 'id_types.yml')
         entries = load_yaml(yaml_file=yaml_file)
         if entries is not None:
             print('---> Read: {}'.format(yaml_file))
@@ -224,9 +226,9 @@ class Gender(db.Model):
     users = db.relationship('User', backref='gender', lazy='dynamic')
 
     @staticmethod
-    def insert_entries(data, basedir, verbose=False):
-        '''Gender.insert_entries(data, basedir, verbose=False)'''
-        yaml_file = os.path.join(basedir, 'data', data, 'genders.yml')
+    def insert_entries(data, verbose=False):
+        '''Gender.insert_entries(data, verbose=False)'''
+        yaml_file = os.path.join(current_app.config['DATA_DIR'], data, 'genders.yml')
         entries = load_yaml(yaml_file=yaml_file)
         if entries is not None:
             print('---> Read: {}'.format(yaml_file))
@@ -308,9 +310,9 @@ class Punch(db.Model):
         return entry_csv
 
     @staticmethod
-    def insert_entries(data, basedir, verbose=False):
-        '''Punch.insert_entries(data, basedir, verbose=False)'''
-        csv_file = os.path.join(basedir, 'data', data, 'punches.csv')
+    def insert_entries(data, verbose=False):
+        '''Punch.insert_entries(data, verbose=False)'''
+        csv_file = os.path.join(current_app.config['DATA_DIR'], data, 'punches.csv')
         if os.path.exists(csv_file):
             print('---> Read: {}'.format(csv_file))
             with io.open(csv_file, 'rt', newline='') as f:
@@ -333,9 +335,9 @@ class Punch(db.Model):
             print('文件不存在', csv_file)
 
     @staticmethod
-    def backup_entries(data, basedir):
-        '''Punch.backup_entries(data, basedir)'''
-        csv_file = os.path.join(basedir, 'data', data, 'punches.csv')
+    def backup_entries(data):
+        '''Punch.backup_entries(data)'''
+        csv_file = os.path.join(current_app.config['DATA_DIR'], data, 'punches.csv')
         if os.path.exists(csv_file):
             os.remove(csv_file)
         with io.open(csv_file, 'wt', newline='') as f:
@@ -369,9 +371,9 @@ class UserCreation(db.Model):
         return entry_csv
 
     @staticmethod
-    def insert_entries(data, basedir, verbose=False):
-        '''UserCreation.insert_entries(data, basedir, verbose=False)'''
-        csv_file = os.path.join(basedir, 'data', data, 'user_creations.csv')
+    def insert_entries(data, verbose=False):
+        '''UserCreation.insert_entries(data, verbose=False)'''
+        csv_file = os.path.join(current_app.config['DATA_DIR'], data, 'user_creations.csv')
         if os.path.exists(csv_file):
             print('---> Read: {}'.format(csv_file))
             with io.open(csv_file, 'rt', newline='') as f:
@@ -392,9 +394,9 @@ class UserCreation(db.Model):
             print('文件不存在', csv_file)
 
     @staticmethod
-    def backup_entries(data, basedir):
-        '''UserCreation.backup_entries(data, basedir)'''
-        csv_file = os.path.join(basedir, 'data', data, 'user_creations.csv')
+    def backup_entries(data):
+        '''UserCreation.backup_entries(data)'''
+        csv_file = os.path.join(current_app.config['DATA_DIR'], data, 'user_creations.csv')
         if os.path.exists(csv_file):
             os.remove(csv_file)
         with io.open(csv_file, 'wt', newline='') as f:
@@ -812,8 +814,8 @@ class User(UserMixin, db.Model):
         return entry_csv
 
     @staticmethod
-    def insert_entries(data, basedir, verbose=False):
-        '''User.insert_entries(data, basedir, verbose=False)'''
+    def insert_entries(data, verbose=False):
+        '''User.insert_entries(data, verbose=False)'''
         if data == 'initial':
             system_operator = User(
                 role_id=Role.query.filter_by(name='开发人员').first().id,
@@ -828,7 +830,7 @@ class User(UserMixin, db.Model):
             if verbose:
                 print('初始化系统管理员信息')
         else:
-            csv_file = os.path.join(basedir, 'data', data, 'users.csv')
+            csv_file = os.path.join(current_app.config['DATA_DIR'], data, 'users.csv')
             if os.path.exists(csv_file):
                 print('---> Read: {}'.format(csv_file))
                 with io.open(csv_file, 'rt', newline='') as f:
@@ -861,9 +863,9 @@ class User(UserMixin, db.Model):
                 print('文件不存在', csv_file)
 
     @staticmethod
-    def backup_entries(data, basedir):
-        '''User.backup_entries(data, basedir)'''
-        csv_file = os.path.join(basedir, 'data', data, 'users.csv')
+    def backup_entries(data):
+        '''User.backup_entries(data)'''
+        csv_file = os.path.join(current_app.config['DATA_DIR'], data, 'users.csv')
         if os.path.exists(csv_file):
             os.remove(csv_file)
         with io.open(csv_file, 'wt', newline='') as f:
@@ -953,9 +955,9 @@ class Room(db.Model):
     devices = db.relationship('Device', backref='room', lazy='dynamic')
 
     @staticmethod
-    def insert_entries(data, basedir, verbose=False):
-        '''Room.insert_entries(data, basedir, verbose=False)'''
-        yaml_file = os.path.join(basedir, 'data', data, 'rooms.yml')
+    def insert_entries(data, verbose=False):
+        '''Room.insert_entries(data, verbose=False)'''
+        yaml_file = os.path.join(current_app.config['DATA_DIR'], data, 'rooms.yml')
         entries = load_yaml(yaml_file=yaml_file)
         if entries is not None:
             print('---> Read: {}'.format(yaml_file))
@@ -981,9 +983,9 @@ class DeviceType(db.Model):
     devices = db.relationship('Device', backref='type', lazy='dynamic')
 
     @staticmethod
-    def insert_entries(data, basedir, verbose=False):
-        '''DeviceType.insert_entries(data, basedir, verbose=False)'''
-        yaml_file = os.path.join(basedir, 'data', data, 'device_types.yml')
+    def insert_entries(data, verbose=False):
+        '''DeviceType.insert_entries(data, verbose=False)'''
+        yaml_file = os.path.join(current_app.config['DATA_DIR'], data, 'device_types.yml')
         entries = load_yaml(yaml_file=yaml_file)
         if entries is not None:
             print('---> Read: {}'.format(yaml_file))
@@ -1056,9 +1058,9 @@ class Device(db.Model):
         return entry_csv
 
     @staticmethod
-    def insert_entries(data, basedir, verbose=False):
-        '''Device.insert_entries(data, basedir, verbose=False)'''
-        csv_file = os.path.join(basedir, 'data', data, 'devices.csv')
+    def insert_entries(data, verbose=False):
+        '''Device.insert_entries(data, verbose=False)'''
+        csv_file = os.path.join(current_app.config['DATA_DIR'], data, 'devices.csv')
         if data == 'initial':
             development_machine = Device(
                 serial=current_app.config['DEVELOPMENT_MACHINE_SERIAL'],
@@ -1116,9 +1118,9 @@ class Device(db.Model):
             print('文件不存在', csv_file)
 
     @staticmethod
-    def backup_entries(data, basedir):
-        '''Device.backup_entries(data, basedir)'''
-        csv_file = os.path.join(basedir, 'data', data, 'devices.csv')
+    def backup_entries(data):
+        '''Device.backup_entries(data)'''
+        csv_file = os.path.join(current_app.config['DATA_DIR'], data, 'devices.csv')
         if os.path.exists(csv_file):
             os.remove(csv_file)
         with io.open(csv_file, 'wt', newline='') as f:
@@ -1158,9 +1160,9 @@ class LessonType(db.Model):
         return self.name.lower().replace('-', '_')
 
     @staticmethod
-    def insert_entries(data, basedir, verbose=False):
-        '''LessonType.insert_entries(data, basedir, verbose=False)'''
-        yaml_file = os.path.join(basedir, 'data', data, 'lesson_types.yml')
+    def insert_entries(data, verbose=False):
+        '''LessonType.insert_entries(data, verbose=False)'''
+        yaml_file = os.path.join(current_app.config['DATA_DIR'], data, 'lesson_types.yml')
         entries = load_yaml(yaml_file=yaml_file)
         if entries is not None:
             print('---> Read: {}'.format(yaml_file))
@@ -1228,9 +1230,9 @@ class Lesson(db.Model):
         return entry_json
 
     @staticmethod
-    def insert_entries(data, basedir, verbose=False):
-        '''Lesson.insert_entries(data, basedir, verbose=False)'''
-        yaml_file = os.path.join(basedir, 'data', data, 'lessons.yml')
+    def insert_entries(data, verbose=False):
+        '''Lesson.insert_entries(data, verbose=False)'''
+        yaml_file = os.path.join(current_app.config['DATA_DIR'], data, 'lessons.yml')
         entries = load_yaml(yaml_file=yaml_file)
         if entries is not None:
             print('---> Read: {}'.format(yaml_file))
@@ -1262,6 +1264,8 @@ class Video(db.Model):
     lesson_id = db.Column(db.Integer, db.ForeignKey('lessons.id'))
     duration = db.Column(db.Interval, default=timedelta())
     file_name = db.Column(db.Unicode(64))
+    hls_file_name = db.Column(db.Unicode(64))
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
     punches = db.relationship(
         'Punch',
         foreign_keys=[Punch.video_id],
@@ -1277,8 +1281,15 @@ class Video(db.Model):
 
     @property
     def hls_url(self):
-        '''hls_url(self)'''
-        return '/videos/{}/index.m3u8'.format(self.file_name)
+        '''Video.hls_url(self)'''
+        if datetime_now(utc_offset=current_app.config['UTC_OFFSET'], timestamp=self.timestamp).date() < date_now(utc_offset=current_app.config['UTC_OFFSET']):
+            new_hls_file_name = '{}.mp4'.format(token_urlsafe(16))
+            os.rename(old=os.path.join(current_app.config['HLS_DIR'], self.hls_file_name), new=os.path.join(current_app.config['HLS_DIR'], new_hls_file_name))
+            self.hls_file_name = new_hls_file_name
+            self.timestamp = datetime.utcnow()
+            db.session.add(self)
+            db.session.commit()
+        return '/hls/{}/index.m3u8'.format(self.hls_file_name)
 
     def to_json(self):
         '''Video.to_json(self)'''
@@ -1295,14 +1306,18 @@ class Video(db.Model):
         return entry_json
 
     @staticmethod
-    def insert_entries(data, basedir, verbose=False):
-        '''Video.insert_entries(data, basedir, verbose=False)'''
-        yaml_file = os.path.join(basedir, 'data', data, 'videos.yml')
+    def insert_entries(data, verbose=False):
+        '''Video.insert_entries(data, verbose=False)'''
+        yaml_file = os.path.join(current_app.config['DATA_DIR'], data, 'videos.yml')
         entries = load_yaml(yaml_file=yaml_file)
         if entries is not None:
             print('---> Read: {}'.format(yaml_file))
             for entry in entries:
-                video_file = os.path.join(basedir, 'data', 'videos', entry['file_name'])
+                video_file = os.path.join(current_app.config['VIDEO_DIR'], entry['file_name'])
+                hls_file_name = '{}.mp4'.format(token_urlsafe(16))
+                if not os.path.exists(current_app.config['HLS_DIR']):
+                    os.makedirs(current_app.config['HLS_DIR'])
+                copyfile(src=video_file, dst=os.path.join(current_app.config['HLS_DIR'], hls_file_name))
                 if os.path.exists(video_file):
                     video = Video(
                         name='{} {}'.format(entry['lesson_name'], entry['abbr']),
@@ -1310,14 +1325,14 @@ class Video(db.Model):
                         description=entry['description'],
                         lesson_id=Lesson.query.filter_by(name=entry['lesson_name']).first().id,
                         duration=get_video_duration(video_file),
-                        file_name=entry['file_name']
+                        file_name=entry['file_name'],
+                        hls_file_name=hls_file_name
                     )
                     db.session.add(video)
                     if verbose:
                         print('导入视频信息', entry['lesson_name'], entry['abbr'], entry['file_name'])
                 else:
-                    if verbose:
-                        print('视频文件不存在', entry['lesson_name'], entry['abbr'], entry['file_name'])
+                    print('视频文件不存在', entry['lesson_name'], entry['abbr'], entry['file_name'])
             db.session.commit()
         else:
             print('文件不存在', yaml_file)
@@ -1347,9 +1362,9 @@ class UserLog(db.Model):
         return entry_csv
 
     @staticmethod
-    def insert_entries(data, basedir, verbose=False):
-        '''UserLog.insert_entries(data, basedir, verbose=False)'''
-        csv_file = os.path.join(basedir, 'data', data, 'user_logs.csv')
+    def insert_entries(data, verbose=False):
+        '''UserLog.insert_entries(data, verbose=False)'''
+        csv_file = os.path.join(current_app.config['DATA_DIR'], data, 'user_logs.csv')
         if os.path.exists(csv_file):
             print('---> Read: {}'.format(csv_file))
             with io.open(csv_file, 'rt', newline='') as f:
@@ -1373,9 +1388,9 @@ class UserLog(db.Model):
             print('文件不存在', csv_file)
 
     @staticmethod
-    def backup_entries(data, basedir):
-        '''UserLog.backup_entries(data, basedir)'''
-        csv_file = os.path.join(basedir, 'data', data, 'user_logs.csv')
+    def backup_entries(data):
+        '''UserLog.backup_entries(data)'''
+        csv_file = os.path.join(current_app.config['DATA_DIR'], data, 'user_logs.csv')
         if os.path.exists(csv_file):
             os.remove(csv_file)
         with io.open(csv_file, 'wt', newline='') as f:

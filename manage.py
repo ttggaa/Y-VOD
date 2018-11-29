@@ -43,14 +43,13 @@ def cleanup():
     if app.debug:
         remove_database_confirm = input('Would you like to remove all database files? [yes/No]: ')
         if remove_database_confirm.lower() in ['y', 'yes']:
-            from config import basedir
             from shutil import rmtree
             db_files = [
                 'yvod-dev.sqlite',
                 'migrations',
             ]
             for db_file in db_files:
-                full_db_file = os.path.join(basedir, db_file)
+                full_db_file = os.path.join(app.config['BASE_DIR'], db_file)
                 if os.path.exists(full_db_file):
                     if os.path.isfile(full_db_file):
                         os.remove(full_db_file)
@@ -77,83 +76,81 @@ def deploy():
             verbose = True
 
     # insert data
-    from config import basedir
     data = 'common'
 
     from app.models import Permission
-    Permission.insert_entries(data=data, basedir=basedir, verbose=verbose)
+    Permission.insert_entries(data=data, verbose=verbose)
 
     from app.models import Role
-    Role.insert_entries(data=data, basedir=basedir, verbose=verbose)
+    Role.insert_entries(data=data, verbose=verbose)
 
     from app.models import IDType
-    IDType.insert_entries(data=data, basedir=basedir, verbose=verbose)
+    IDType.insert_entries(data=data, verbose=verbose)
 
     from app.models import Gender
-    Gender.insert_entries(data=data, basedir=basedir, verbose=verbose)
+    Gender.insert_entries(data=data, verbose=verbose)
 
     from app.models import Room
-    Room.insert_entries(data=data, basedir=basedir, verbose=verbose)
+    Room.insert_entries(data=data, verbose=verbose)
 
     from app.models import DeviceType
-    DeviceType.insert_entries(data=data, basedir=basedir, verbose=verbose)
+    DeviceType.insert_entries(data=data, verbose=verbose)
 
     from app.models import LessonType
-    LessonType.insert_entries(data=data, basedir=basedir, verbose=verbose)
+    LessonType.insert_entries(data=data, verbose=verbose)
 
     from app.models import Lesson
-    Lesson.insert_entries(data=data, basedir=basedir, verbose=verbose)
+    Lesson.insert_entries(data=data, verbose=verbose)
 
     from app.models import Video
-    Video.insert_entries(data=data, basedir=basedir, verbose=verbose)
+    Video.insert_entries(data=data, verbose=verbose)
 
     data = input('Enter data identifier (e.g.: initial or 20180805 or press the enter/return key): ')
     if data == '':
         data = 'initial'
-    datadir = os.path.join(basedir, 'data', data)
+    datadir = os.path.join(app.config['DATA_DIR'], data)
     if os.path.exists(datadir):
         from app.models import User
-        User.insert_entries(data=data, basedir=basedir, verbose=verbose)
+        User.insert_entries(data=data, verbose=verbose)
 
         from app.models import UserCreation
-        UserCreation.insert_entries(data=data, basedir=basedir, verbose=verbose)
+        UserCreation.insert_entries(data=data, verbose=verbose)
 
         from app.models import Punch
-        Punch.insert_entries(data=data, basedir=basedir, verbose=verbose)
+        Punch.insert_entries(data=data, verbose=verbose)
 
         from app.models import Device
-        Device.insert_entries(data=data, basedir=basedir, verbose=verbose)
+        Device.insert_entries(data=data, verbose=verbose)
 
         from app.models import UserLog
-        UserLog.insert_entries(data=data, basedir=basedir, verbose=verbose)
+        UserLog.insert_entries(data=data, verbose=verbose)
 
 
 @manager.command
 def backup():
     '''Run backup tasks'''
-    from config import basedir
     data = input('Enter data identifier (e.g.: backup or 20180805 or press the enter/return key): ')
     if data == '':
         from datetime import datetime
         data = datetime.now().strftime('%Y%m%d%H%M%S')
-    datadir = os.path.join(basedir, 'data', data)
+    datadir = os.path.join(app.config['DATA_DIR'], data)
     if not os.path.exists(datadir):
         os.makedirs(datadir)
 
     from app.models import User
-    User.backup_entries(data=data, basedir=basedir)
+    User.backup_entries(data=data)
 
     from app.models import UserCreation
-    UserCreation.backup_entries(data=data, basedir=basedir)
+    UserCreation.backup_entries(data=data)
 
     from app.models import Punch
-    Punch.backup_entries(data=data, basedir=basedir)
+    Punch.backup_entries(data=data)
 
     from app.models import Device
-    Device.backup_entries(data=data, basedir=basedir)
+    Device.backup_entries(data=data)
 
     from app.models import UserLog
-    UserLog.backup_entries(data=data, basedir=basedir)
+    UserLog.backup_entries(data=data)
 
 
 if __name__ == '__main__':

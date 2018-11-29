@@ -17,6 +17,8 @@ class Config:
     BASE_DIR = basedir
     DATA_DIR = os.path.join(BASE_DIR, 'data')
     VIDEO_DIR = os.path.join(DATA_DIR, 'videos')
+    CACHE_DIR = os.path.join(BASE_DIR, 'cache')
+    HLS_DIR = os.path.join(CACHE_DIR, 'hls')
 
     # SSL
     SSL_DISABLE = True
