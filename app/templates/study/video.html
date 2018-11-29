@@ -67,7 +67,7 @@ updateVideoProgress({{ current_user.video_progress(video=video) }});
 const player = new Player({
     container: document.getElementById('player'),
     video: {
-        url: "{{ url_for('resource.video', id=video.id) }}"{% if config.HLS_ENABLE -%},
+        url: {% if not config.HLS_ENABLE -%}"{{ url_for('resource.video', id=video.id) }}"{% else %}"{{ video.hls_url }}",
         type: 'hls'{%- endif %}
     }
 });

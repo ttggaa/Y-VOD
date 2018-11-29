@@ -24,7 +24,7 @@ def video(id):
     if not os.path.exists(video_file):
         abort(404)
     if current_app.config['HLS_ENABLE']:
-        return redirect(video.hls_url)
+        abort(404)
     if 'Range' in request.headers:
         return send_video_file(video_file=video_file, request=request)
     return send_file(video_file, mimetype='video/mp4')
@@ -39,7 +39,7 @@ def video_forbidden():
     if not os.path.exists(video_file):
         abort(404)
     if current_app.config['HLS_ENABLE']:
-        return redirect(video.hls_url)
+        abort(404)
     if 'Range' in request.headers:
         return send_video_file(video_file=video_file, request=request)
     return send_file(video_file, mimetype='video/mp4')
