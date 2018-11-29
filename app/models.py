@@ -1282,13 +1282,16 @@ class Video(db.Model):
     @property
     def hls_url(self):
         '''Video.hls_url(self)'''
+        hls_file = os.path.join(current_app.config['HLS_DIR'], self.hls_file_name)
         if datetime_now(utc_offset=current_app.config['UTC_OFFSET'], timestamp=self.timestamp).date() < date_now(utc_offset=current_app.config['UTC_OFFSET']):
             new_hls_file_name = '{}.mp4'.format(token_urlsafe(16))
-            os.rename(old=os.path.join(current_app.config['HLS_DIR'], self.hls_file_name), new=os.path.join(current_app.config['HLS_DIR'], new_hls_file_name))
+            os.rename(old=hls_file, new=os.path.join(current_app.config['HLS_DIR'], new_hls_file_name))
             self.hls_file_name = new_hls_file_name
             self.timestamp = datetime.utcnow()
             db.session.add(self)
             db.session.commit()
+        elif not os.path.exists(hls_file):
+            copyfile(src=os.path.join(current_app.config['VIDEO_DIR'], self.file_name), dst=hls_file)
         return '/hls/{}/index.m3u8'.format(self.hls_file_name)
 
     def to_json(self):
