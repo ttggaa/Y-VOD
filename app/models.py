@@ -17,7 +17,7 @@ from itsdangerous import TimedJSONWebSignatureSerializer, BadSignature, Signatur
 from flask import current_app, url_for
 from flask_login import UserMixin, AnonymousUserMixin
 from . import db, login_manager
-from .utils import datetime_now, date_now, CSVReader, CSVWriter, load_yaml, get_video_duration, format_duration, to_pinyin
+from .utils import date_now, date_then, CSVReader, CSVWriter, load_yaml, get_video_duration, format_duration, to_pinyin
 
 
 class RolePermission(db.Model):
@@ -1285,7 +1285,7 @@ class Video(db.Model):
         hls_file = os.path.join(current_app.config['HLS_DIR'], self.hls_file_name)
         if not os.path.exists(hls_file):
             copyfile(os.path.join(current_app.config['VIDEO_DIR'], self.file_name), hls_file)
-        if datetime_now(utc_offset=current_app.config['UTC_OFFSET'], timestamp=self.timestamp).date() < date_now(utc_offset=current_app.config['UTC_OFFSET']):
+        if date_then(timestamp=self.timestamp, utc_offset=current_app.config['UTC_OFFSET']) < date_now(utc_offset=current_app.config['UTC_OFFSET']):
             new_hls_file_name = '{}.mp4'.format(token_urlsafe(16))
             os.rename(hls_file, os.path.join(current_app.config['HLS_DIR'], new_hls_file_name))
             self.hls_file_name = new_hls_file_name

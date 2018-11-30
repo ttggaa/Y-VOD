@@ -14,15 +14,24 @@ from flask import current_app, Response
 from pypinyin import slug, Style
 
 
-def datetime_now(utc_offset=0, timestamp=None):
-    '''datetime_now(utc_offset=0, timestamp=None)'''
-    timestamp = datetime.utcnow() if timestamp is None else timestamp
-    return timestamp + timedelta(hours=utc_offset)
+def datetime_now(utc_offset=0):
+    '''datetime_now(utc_offset=0)'''
+    return datetime.utcnow() + timedelta(hours=utc_offset)
 
 
 def date_now(utc_offset=0):
     '''date_now(utc_offset=0)'''
     return datetime_now(utc_offset=utc_offset).date()
+
+
+def datetime_then(timestamp, utc_offset=0):
+    '''datetime_then(timestamp, utc_offset=0)'''
+    return timestamp + timedelta(hours=utc_offset)
+
+
+def date_then(timestamp, utc_offset=0):
+    '''date_then(timestamp, utc_offset=0)'''
+    return datetime_then(timestamp=timestamp, utc_offset=utc_offset).date()
 
 
 class CSVReader:
