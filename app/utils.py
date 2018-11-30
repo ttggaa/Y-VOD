@@ -5,6 +5,7 @@
 import os
 import io
 import re
+from shutil import rmtree
 from datetime import datetime, timedelta
 import csv
 import yaml
@@ -12,6 +13,14 @@ from getmac import get_mac_address
 from pymediainfo import MediaInfo
 from flask import current_app, Response
 from pypinyin import slug, Style
+
+
+def makedirs(path, overwrite=False):
+    '''makedirs(path, overwrite=False)'''
+    if overwrite and os.path.exists(path):
+        rmtree(path)
+    if not os.path.exists(path):
+        os.makedirs(path)
 
 
 def datetime_now(utc_offset=0):

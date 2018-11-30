@@ -5,7 +5,7 @@
 import os
 import io
 import operator
-from shutil import copyfile, rmtree
+from shutil import copyfile
 from datetime import datetime, timedelta
 from hashlib import md5
 from base64 import b64encode
@@ -17,7 +17,7 @@ from itsdangerous import TimedJSONWebSignatureSerializer, BadSignature, Signatur
 from flask import current_app, url_for
 from flask_login import UserMixin, AnonymousUserMixin
 from . import db, login_manager
-from .utils import date_now, date_then, CSVReader, CSVWriter, load_yaml, get_video_duration, format_duration, to_pinyin
+from .utils import makedirs, date_now, date_then, CSVReader, CSVWriter, load_yaml, get_video_duration, format_duration, to_pinyin
 
 
 class RolePermission(db.Model):
@@ -1284,6 +1284,7 @@ class Video(db.Model):
         '''Video.hls_url(self)'''
         hls_file = os.path.join(current_app.config['HLS_DIR'], self.hls_file_name)
         if not os.path.exists(hls_file):
+            makedirs(path=current_app.config['HLS_DIR'])
             copyfile(os.path.join(current_app.config['VIDEO_DIR'], self.file_name), hls_file)
         if date_then(timestamp=self.timestamp, utc_offset=current_app.config['UTC_OFFSET']) < date_now(utc_offset=current_app.config['UTC_OFFSET']):
             new_hls_file_name = '{}.mp4'.format(token_urlsafe(16))
@@ -1315,9 +1316,7 @@ class Video(db.Model):
         entries = load_yaml(yaml_file=yaml_file)
         if entries is not None:
             print('---> Read: {}'.format(yaml_file))
-            if os.path.exists(current_app.config['HLS_DIR']):
-                rmtree(current_app.config['HLS_DIR'])
-            os.makedirs(current_app.config['HLS_DIR'])
+            makedirs(path=current_app.config['HLS_DIR'], overwrite=True)
             for entry in entries:
                 video_file = os.path.join(current_app.config['VIDEO_DIR'], entry['file_name'])
                 hls_file_name = '{}.mp4'.format(token_urlsafe(16))
