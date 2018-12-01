@@ -24,7 +24,7 @@
             <div class="field">
                 <div class="ui large left icon input">
                     <i class="key icon"></i>
-                    {{ form.auth_token(placeholder='授权码（6位）') }}
+                    {{ form.auth_token(placeholder='授权码（{}位）'.format(config.AUTH_TOKEN_LENGTH)) }}
                 </div>
             </div>
             {{ form.submit(class='ui large primary fluid button') }}
@@ -72,11 +72,11 @@ $('#login').form({
             rules: [
                 {
                     type: 'empty',
-                    prompt: '请输入您的授权码（6位）'
+                    prompt: '请输入您的授权码（{{ config.AUTH_TOKEN_LENGTH }}位）'
                 },
                 {
-                    type: 'exactLength[6]',
-                    prompt: '授权码（6位）位数有误'
+                    type: 'exactLength[{{ config.AUTH_TOKEN_LENGTH }}]',
+                    prompt: '授权码（{{ config.AUTH_TOKEN_LENGTH }}位）位数有误'
                 }
             ]
         }

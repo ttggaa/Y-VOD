@@ -3,7 +3,7 @@
 '''app/auth/views.py'''
 
 from htmlmin import minify
-from flask import render_template, redirect, request, url_for, flash
+from flask import render_template, redirect, request, url_for, flash, current_app
 from flask_login import login_user, logout_user, login_required, current_user
 from . import auth
 from .forms import LoginForm
@@ -31,7 +31,7 @@ def login():
     '''auth.login()'''
     if current_user.is_authenticated:
         return redirect(request.args.get('next') or current_user.index_url)
-    form = LoginForm()
+    form = LoginForm(auth_token_length=current_app.config['AUTH_TOKEN_LENGTH'])
     if form.validate_on_submit():
         mac_address = get_mac_address_from_ip(ip_address=request.headers.get('X-Forwarded-For', request.remote_addr))
         if mac_address is None:

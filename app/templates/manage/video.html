@@ -28,7 +28,9 @@
                 <tr>
                     <th>视频名称</th>
                     <th>视频时长</th>
-                    {% if current_user.is_developer %}<th>视频文件</th>{% endif %}
+                    {% if current_user.is_developer %}<th>视频文件</th>
+                    {% if config.HLS_ENABLED %}<th>HLS文件</th>
+                    <th>生成时间</th>{% endif %}{% endif %}
                 </tr>
             </thead>
             <tbody>
@@ -36,7 +38,9 @@
                 <tr>
                     <td>{{ macros.video_label_widget(video=video) }}</td>
                     <td><code>{{ video.duration_format }}</code></td>
-                    {% if current_user.is_developer %}<td><code>{{ video.file_name }}</code></td>{% endif %}
+                    {% if current_user.is_developer %}<td><code>{{ video.file_name }}</code></td>
+                    {% if config.HLS_ENABLED %}<td><code>{{ video.hls_file_name }}</code></td>
+                    <td>{{ macros.from_now_widget(video.timestamp) }}</td>{% endif %}{% endif %}
                 </tr>
                 {% endfor %}
             </tbody>
