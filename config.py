@@ -25,6 +25,7 @@ class Config:
 
     # Security
     AUTH_TOKEN_SECRET_KEY = os.getenv('YVOD_AUTH_TOKEN_SECRET_KEY')
+    AUTH_TOKEN_LENGTH = 4
 
     # SQLAlchemy
     SQLALCHEMY_RECORD_QUERIES = True
@@ -47,8 +48,6 @@ class Config:
     VIDEO_ANALYTICS_GRANULARITY = 100 # milliseconds (0.1 seconds)
     VIDEO_ANALYTICS_UPDATE_PUNCH_INTERVAL = 60 * 1000 # 1 minute
     VIDEO_ANALYTICS_STATUS_EXPIRATION = 300 # seconds (5 minutes)
-
-    # HLS
 
     # Version
     PYTHON_VERSION = '{0.major}.{0.minor}.{0.micro}'.format(sys.version_info)

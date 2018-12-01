@@ -506,7 +506,7 @@ class User(UserMixin, db.Model):
     def verify_auth_token(self, token):
         '''User.verify_auth_token(self, token)'''
         string = 'id={}&name={}&id_number={}&date={}&secret={}'.format(self.id, self.name, self.id_number, date_now(utc_offset=current_app.config['UTC_OFFSET']).isoformat(), current_app.config['AUTH_TOKEN_SECRET_KEY'])
-        return token == b64encode(md5(string.encode('utf-8')).digest()).decode('utf-8').replace('+', '').replace('/', '').replace('=', '').lower()[-6:]
+        return token.lower() == b64encode(md5(string.encode('utf-8')).digest()).decode('utf-8').replace('+', '').replace('/', '').replace('=', '').lower()[-current_app.config['AUTH_TOKEN_LENGTH']:]
 
     def can(self, permission_name):
         '''User.can(self, permission_name)'''
