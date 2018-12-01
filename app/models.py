@@ -1282,17 +1282,20 @@ class Video(db.Model):
     @property
     def hls_url(self):
         '''Video.hls_url(self)'''
-        hls_file = os.path.join(current_app.config['HLS_DIR'], self.hls_file_name)
-        if not os.path.exists(hls_file):
-            makedirs(path=current_app.config['HLS_DIR'])
-            copyfile(os.path.join(current_app.config['VIDEO_DIR'], self.file_name), hls_file)
-        if date_then(timestamp=self.timestamp, utc_offset=current_app.config['UTC_OFFSET']) < date_now(utc_offset=current_app.config['UTC_OFFSET']):
-            new_hls_file_name = '{}.mp4'.format(token_urlsafe(16))
-            os.rename(hls_file, os.path.join(current_app.config['HLS_DIR'], new_hls_file_name))
-            self.hls_file_name = new_hls_file_name
-            self.timestamp = datetime.utcnow()
-            db.session.add(self)
-            db.session.commit()
+        makedirs(path=current_app.config['HLS_DIR'])
+        for video in Video.query.all():
+            if date_then(timestamp=video.timestamp, utc_offset=current_app.config['UTC_OFFSET']) != date_now(utc_offset=current_app.config['UTC_OFFSET']):
+                hls_file = os.path.join(current_app.config['HLS_DIR'], video.hls_file_name)
+                new_hls_file_name = '{}.mp4'.format(token_urlsafe(16))
+                new_hls_file = os.path.join(current_app.config['HLS_DIR'], new_hls_file_name)
+                if os.path.exists(hls_file):
+                    os.rename(hls_file, new_hls_file)
+                else:
+                    copyfile(os.path.join(current_app.config['VIDEO_DIR'], video.file_name), new_hls_file)
+                video.hls_file_name = new_hls_file_name
+                video.timestamp = datetime.utcnow()
+                db.session.add(video)
+        db.session.commit()
         return '/hls/{}/index.m3u8'.format(self.hls_file_name)
 
     def to_json(self):

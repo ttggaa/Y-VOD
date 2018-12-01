@@ -18,7 +18,7 @@ from ..decorators import permission_required
 def video(id):
     '''resource.video(id)'''
     if current_app.config['HLS_ENABLE']:
-        abort(404)
+        abort(403)
     video = Video.query.get_or_404(id)
     if not current_user.can_play(video=video):
         return redirect(url_for('resource.video_forbidden'))
@@ -36,7 +36,7 @@ def video(id):
 def video_forbidden():
     '''resource.video_forbidden()'''
     if current_app.config['HLS_ENABLE']:
-        abort(404)
+        abort(403)
     video_file = os.path.join(current_app.config['VIDEO_DIR'], 'forbidden.mp4')
     if not os.path.exists(video_file):
         abort(404)
