@@ -39,7 +39,7 @@
                     <td>{{ macros.video_label_widget(video=video) }}</td>
                     <td><code>{{ video.duration_format }}</code></td>
                     {% if current_user.is_developer %}<td><code>{{ video.file_name }}</code></td>
-                    {% if config.HLS_ENABLED %}<td><code>{{ video.hls_file_name }}</code></td>
+                    {% if config.HLS_ENABLED %}<td><code>{{ video.hls_cache_file_name }}</code></td>
                     <td>{{ macros.from_now_widget(video.timestamp) }}</td>{% endif %}{% endif %}
                 </tr>
                 {% endfor %}

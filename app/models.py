@@ -1264,7 +1264,7 @@ class Video(db.Model):
     lesson_id = db.Column(db.Integer, db.ForeignKey('lessons.id'))
     duration = db.Column(db.Interval, default=timedelta())
     file_name = db.Column(db.Unicode(64))
-    hls_file_name = db.Column(db.Unicode(64))
+    hls_cache_file_name = db.Column(db.Unicode(64))
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
     punches = db.relationship(
         'Punch',
@@ -1282,21 +1282,30 @@ class Video(db.Model):
     @property
     def hls_url(self):
         '''Video.hls_url(self)'''
+        if self.hls_cache_invalid:
+            self.refresh_hls_cache()
+            db.session.commit()
+        return '/hls/{}/index.m3u8'.format(self.hls_cache_file_name)
+
+    @property
+    def hls_cache_invalid(self):
+        '''Video.hls_cache_invalid(self)'''
+        return not os.path.exists(os.path.join(current_app.config['HLS_DIR'], self.hls_cache_file_name)) or \
+            date_then(timestamp=self.timestamp, utc_offset=current_app.config['UTC_OFFSET']) != date_now(utc_offset=current_app.config['UTC_OFFSET'])
+
+    def refresh_hls_cache(self):
+        '''Video.refresh_hls_cache(self)'''
         makedirs(path=current_app.config['HLS_DIR'])
-        for video in Video.query.all():
-            if date_then(timestamp=video.timestamp, utc_offset=current_app.config['UTC_OFFSET']) != date_now(utc_offset=current_app.config['UTC_OFFSET']):
-                hls_file = os.path.join(current_app.config['HLS_DIR'], video.hls_file_name)
-                new_hls_file_name = '{}.mp4'.format(token_urlsafe(16))
-                new_hls_file = os.path.join(current_app.config['HLS_DIR'], new_hls_file_name)
-                if os.path.exists(hls_file):
-                    os.rename(hls_file, new_hls_file)
-                else:
-                    copyfile(os.path.join(current_app.config['VIDEO_DIR'], video.file_name), new_hls_file)
-                video.hls_file_name = new_hls_file_name
-                video.timestamp = datetime.utcnow()
-                db.session.add(video)
-        db.session.commit()
-        return '/hls/{}/index.m3u8'.format(self.hls_file_name)
+        hls_cache_file = os.path.join(current_app.config['HLS_DIR'], self.hls_cache_file_name)
+        new_hls_cache_file_name = '{}.mp4'.format(token_urlsafe(16))
+        new_hls_cache_file = os.path.join(current_app.config['HLS_DIR'], new_hls_cache_file_name)
+        if os.path.exists(hls_cache_file):
+            os.rename(hls_cache_file, new_hls_cache_file)
+        else:
+            copyfile(os.path.join(current_app.config['VIDEO_DIR'], self.file_name), new_hls_cache_file)
+        self.hls_cache_file_name = new_hls_cache_file_name
+        self.timestamp = datetime.utcnow()
+        db.session.add(self)
 
     def to_json(self):
         '''Video.to_json(self)'''
@@ -1322,8 +1331,8 @@ class Video(db.Model):
             makedirs(path=current_app.config['HLS_DIR'], overwrite=True)
             for entry in entries:
                 video_file = os.path.join(current_app.config['VIDEO_DIR'], entry['file_name'])
-                hls_file_name = '{}.mp4'.format(token_urlsafe(16))
-                copyfile(video_file, os.path.join(current_app.config['HLS_DIR'], hls_file_name))
+                hls_cache_file_name = '{}.mp4'.format(token_urlsafe(16))
+                copyfile(video_file, os.path.join(current_app.config['HLS_DIR'], hls_cache_file_name))
                 if os.path.exists(video_file):
                     video = Video(
                         name='{} {}'.format(entry['lesson_name'], entry['abbr']),
@@ -1332,7 +1341,7 @@ class Video(db.Model):
                         lesson_id=Lesson.query.filter_by(name=entry['lesson_name']).first().id,
                         duration=get_video_duration(video_file),
                         file_name=entry['file_name'],
-                        hls_file_name=hls_file_name
+                        hls_cache_file_name=hls_cache_file_name
                     )
                     db.session.add(video)
                     if verbose:
