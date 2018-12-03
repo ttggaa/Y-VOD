@@ -73,7 +73,7 @@ function updateRenderTime(timestamp) {
 var renderedAt = "{{ config.RENDERED_AT().strftime(config.DATETIME_FORMAT_ISO) }}";
 updateRenderTime(renderedAt);
 setInterval(function () {
-    if (typeof document.hidden !== "undefined" || typeof document.msHidden !== "undefined" || typeof document.webkitHidden !== "undefined") {
+    if (!(typeof document.hidden !== "undefined" || typeof document.msHidden !== "undefined" || typeof document.webkitHidden !== "undefined")) {
         updateRenderTime(renderedAt);
     };
 }, {{ config['STATUS_EXPIRATION_CHECK_INTERVAL'] }});

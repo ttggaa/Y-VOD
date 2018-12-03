@@ -78,7 +78,7 @@ var playTimeGranularity = granularity / 1000 * player.video.playbackRate;
 var playTime = {{ current_user.video_play_time(video=video).total_seconds() }};
 var lastVideoCurrentTime = null;
 function updatePunch() {
-    if (typeof document.hidden !== "undefined" || typeof document.msHidden !== "undefined" || typeof document.webkitHidden !== "undefined") {
+    if (!(typeof document.hidden !== "undefined" || typeof document.msHidden !== "undefined" || typeof document.webkitHidden !== "undefined")) {
         $.ajax({
             url: "{{ url_for('study.punch', id=video.id) }}",
             method: 'POST',
