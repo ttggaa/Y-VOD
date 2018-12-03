@@ -78,19 +78,21 @@ var playTimeGranularity = granularity / 1000 * player.video.playbackRate;
 var playTime = {{ current_user.video_play_time(video=video).total_seconds() }};
 var lastVideoCurrentTime = null;
 function updatePunch() {
-    $.ajax({
-        url: "{{ url_for('study.punch', id=video.id) }}",
-        method: 'POST',
-        data: JSON.stringify({
-            'play_time': playTime
-        }),
-        dataType: 'json',
-        contentType: 'application/json; charset=utf-8',
-        success: function (data) {
-            playTime = data.play_time.seconds;
-            updateVideoProgress(data.progress);
-        }
-    });
+    if (typeof document.hidden !== "undefined" || typeof document.msHidden !== "undefined" || typeof document.webkitHidden !== "undefined") {
+        $.ajax({
+            url: "{{ url_for('study.punch', id=video.id) }}",
+            method: 'POST',
+            data: JSON.stringify({
+                'play_time': playTime
+            }),
+            dataType: 'json',
+            contentType: 'application/json; charset=utf-8',
+            success: function (data) {
+                playTime = data.play_time.seconds;
+                updateVideoProgress(data.progress);
+            }
+        });
+    };
 };
 player.on('pause', function () {
     updatePunch();
