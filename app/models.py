@@ -1331,9 +1331,9 @@ class Video(db.Model):
             makedirs(path=current_app.config['HLS_DIR'], overwrite=True)
             for entry in entries:
                 video_file = os.path.join(current_app.config['VIDEO_DIR'], entry['file_name'])
-                hls_cache_file_name = '{}.mp4'.format(token_urlsafe(16))
-                copyfile(video_file, os.path.join(current_app.config['HLS_DIR'], hls_cache_file_name))
                 if os.path.exists(video_file):
+                    hls_cache_file_name = '{}.mp4'.format(token_urlsafe(16))
+                    copyfile(video_file, os.path.join(current_app.config['HLS_DIR'], hls_cache_file_name))
                     video = Video(
                         name='{} {}'.format(entry['lesson_name'], entry['abbr']),
                         abbr=entry['abbr'],
