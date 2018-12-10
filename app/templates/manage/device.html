@@ -76,7 +76,6 @@
                 <tr>
                     <th>设备名</th>
                     <th>序列号</th>
-                    <th>设备类型</th>
                     <th>所属场地</th>
                     <th>MAC地址</th>
                     <th>上次操作</th>
@@ -87,11 +86,10 @@
             <tbody>
                 {% for device in devices %}
                 <tr>
-                    <td>{{ device.alias }}</td>
-                    <td><div class="ui horizontal label"><code>{{ device.serial }}</code></div></td>
-                    <td>{{ device.type.name }}</td>
+                    <td><i class="{{ device.type.icon }} icon"></i>{{ device.alias }}</td>
+                    <td><code>{{ device.serial }}</code></td>
                     <td>{% if device.room_id %}{{ device.room.name }}{% else %}N/A{% endif %}</td>
-                    <td>{{ device.mac_address }}</td>
+                    <td>{% if device.mac_address %}<code>{{ device.mac_address }}</code>{% else %}N/A{% endif %}</td>
                     <td>{{ macros.from_now_widget(device.modified_at) }}</td>
                     <td>{{ macros.user_url_widget(device.modified_by, device.modified_by_id == current_user.id) }}</td>
                     <td>

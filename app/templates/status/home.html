@@ -40,7 +40,7 @@
                     <td>{% with punch = user.last_vb_punch %}{% if punch %}{{ macros.lesson_label_widget(lesson=punch.video.lesson) }}{% else %}N/A{% endif %}{% endwith %}</td>
                     <td>{% with punch = user.last_y_gre_punch %}{% if punch %}{{ macros.lesson_label_widget(lesson=punch.video.lesson) }}{% else %}N/A{% endif %}{% endwith %}</td>
                     <td>{% with punch = user.latest_punch %}{% if punch %}{{ macros.video_label_widget(video=punch.video) }} ({{ punch.progress_percentage }}){% else %}N/A{% endif %}{% endwith %}</td>
-                    <td>{% with device = user.last_login_device %}{% if device %}{% if device.room_id %}<div class="ui horizontal label">{{ device.room.name }}</div>{% endif %}<i class="{% if device.category == 'development' %}laptop code{% else %}{{ device.type.icon }}{% endif %} icon"></i>{{ device.alias }}{% else %}<i class="ban icon"></i>未授权设备{% endif %}{% endwith %}</td>
+                    <td>{% with device = user.last_login_device %}{% if device %}{% if device.room_id %}<div class="ui horizontal label">{{ device.room.name }}</div>{% endif %}<i class="{{ device.type.icon }} icon"></i>{{ device.alias }}{% else %}<i class="ban icon"></i>未授权设备{% endif %}{% endwith %}</td>
                     <td>{% with punch = user.latest_punch %}{% if punch %}{{ macros.from_now_widget(punch.timestamp) }}{% else %}N/A{% endif %}{% endwith %}</td>
                 </tr>
                 {% endfor %}
@@ -73,7 +73,7 @@ function updateRenderTime(timestamp) {
 var renderedAt = "{{ config.RENDERED_AT().strftime(config.DATETIME_FORMAT_ISO) }}";
 updateRenderTime(renderedAt);
 setInterval(function () {
-    if (!(typeof document.hidden !== "undefined" || typeof document.msHidden !== "undefined" || typeof document.webkitHidden !== "undefined")) {
+    if (!document.hidden) {
         updateRenderTime(renderedAt);
     };
 }, {{ config['STATUS_EXPIRATION_CHECK_INTERVAL'] }});

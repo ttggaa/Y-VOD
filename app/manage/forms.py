@@ -24,9 +24,12 @@ class NewDeviceForm(FlaskForm):
     development_machine = BooleanField('开发用机器')
     submit = SubmitField('提交')
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, current_user, *args, **kwargs):
         super(NewDeviceForm, self).__init__(*args, **kwargs)
-        self.device_type.choices = [('', '选择设备类型')] + [(str(device_type.id), device_type.name) for device_type in DeviceType.query.order_by(DeviceType.id.asc()).all()]
+        if current_user.is_developer:
+            self.device_type.choices = [('', '选择设备类型')] + [(str(device_type.id), device_type.name) for device_type in DeviceType.query.order_by(DeviceType.id.asc()).all()]
+        else:
+            self.device_type.choices = [('', '选择设备类型')] + [(str(device_type.id), device_type.name) for device_type in DeviceType.query.filter(DeviceType.name != 'Server').order_by(DeviceType.id.asc()).all()]
         self.room.choices = [('', '选择所属场地')] + [('0', '无')] + [(str(room.id), room.name) for room in Room.query.order_by(Room.id.asc()).all()]
 
 
@@ -40,7 +43,10 @@ class EditDeviceForm(FlaskForm):
     development_machine = BooleanField('开发用机器')
     submit = SubmitField('提交')
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, current_user, *args, **kwargs):
         super(EditDeviceForm, self).__init__(*args, **kwargs)
-        self.device_type.choices = [('', '选择设备类型')] + [(str(device_type.id), device_type.name) for device_type in DeviceType.query.order_by(DeviceType.id.asc()).all()]
+        if current_user.is_developer:
+            self.device_type.choices = [('', '选择设备类型')] + [(str(device_type.id), device_type.name) for device_type in DeviceType.query.order_by(DeviceType.id.asc()).all()]
+        else:
+            self.device_type.choices = [('', '选择设备类型')] + [(str(device_type.id), device_type.name) for device_type in DeviceType.query.filter(DeviceType.name != 'Server').order_by(DeviceType.id.asc()).all()]
         self.room.choices = [('', '选择所属场地')] + [('0', '无')] + [(str(room.id), room.name) for room in Room.query.order_by(Room.id.asc()).all()]

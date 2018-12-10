@@ -1062,18 +1062,18 @@ class Device(db.Model):
         '''Device.insert_entries(data, verbose=False)'''
         csv_file = os.path.join(current_app.config['DATA_DIR'], data, 'devices.csv')
         if data == 'initial':
-            development_machine = Device(
-                serial=current_app.config['DEVELOPMENT_MACHINE_SERIAL'],
-                alias='Development Machine',
-                type_id=DeviceType.query.filter_by(name='Desktop').first().id,
-                mac_address=current_app.config['DEVELOPMENT_MACHINE_MAC_ADDRESS'],
+            y_vod_server = Device(
+                serial=current_app.config['SERVER_SERIAL'],
+                alias='Y-VOD Server',
+                type_id=DeviceType.query.filter_by(name='Server').first().id,
+                mac_address=current_app.config['SERVER_MAC_ADDRESS'],
                 category='development',
                 modified_by_id=User.query.get(1).id
             )
-            db.session.add(development_machine)
+            db.session.add(y_vod_server)
             db.session.commit()
             if verbose:
-                print('初始化开发人员设备信息')
+                print('初始化服务器设备信息')
         if os.path.exists(csv_file):
             print('---> Read: {}'.format(csv_file))
             with io.open(csv_file, 'rt', newline='') as f:
@@ -1082,17 +1082,20 @@ class Device(db.Model):
                 for entry in reader:
                     if line_num >= 1:
                         if data == 'initial':
+                            if entry[3] is not None:
+                                entry[3] = Room.query.filter_by(name=entry[3]).first().id
                             device = Device(
                                 serial=entry[1].upper(),
                                 alias=entry[0],
                                 type_id=DeviceType.query.filter_by(name=entry[2]).first().id,
-                                room_id=Room.query.filter_by(name=entry[3]).first().id,
+                                room_id=entry[3],
                                 mac_address=entry[4],
+                                category=entry[5],
                                 modified_by_id=User.query.get(1).id
                             )
                             db.session.add(device)
                             if verbose:
-                                print('导入设备信息', entry[0], entry[1], entry[2], entry[3], entry[4])
+                                print('导入设备信息', entry[0], entry[1], entry[2], entry[4], entry[5])
                         else:
                             if entry[4] is not None:
                                 entry[4] = Room.query.filter_by(name=entry[4]).first().id
@@ -1111,7 +1114,7 @@ class Device(db.Model):
                             )
                             db.session.add(device)
                             if verbose:
-                                print('导入设备信息', entry[2], entry[1], entry[3], entry[4], entry[5], entry[6])
+                                print('导入设备信息', entry[2], entry[1], entry[3], entry[5], entry[6])
                     line_num += 1
                 db.session.commit()
         else:
