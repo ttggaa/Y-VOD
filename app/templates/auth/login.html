@@ -30,7 +30,7 @@
             {{ form.submit(class='ui large primary fluid button') }}
         </form>
         <div class="ui message">
-            <i class="info icon"></i>Y-VOD授权码（6位）在Y-System个人档案页面获取。</a>
+            <i class="info icon"></i>Y-VOD授权码（{{ config.AUTH_TOKEN_LENGTH }}位）在Y-System个人档案页面获取。</a>
         </div>
         {{ macros.message_widget() }}
     </div>
