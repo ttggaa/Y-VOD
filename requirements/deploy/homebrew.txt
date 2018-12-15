@@ -3,4 +3,3 @@ media-info
 mariadb
 supervisor
 nginx-vod
-bind
