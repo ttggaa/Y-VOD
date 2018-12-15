@@ -355,7 +355,7 @@ def import_user():
     form = ImportUserForm()
     if form.validate_on_submit():
         data = User.import_user(token=form.token.data)
-        if data is None or reduce(operator.or_, [data.get(key) is None for key in ['id', 'role', 'name', 'id_type', 'id_number', 'gender']]):
+        if data is None or reduce(operator.or_, [data.get(key) is None for key in ['id', 'role', 'name', 'id_type', 'id_number']]):
             flash('用户信息码有误', category='error')
             return redirect(url_for('manage.import_user', next=request.args.get('next')))
         if User.query.get(data.get('id')) is not None:
@@ -365,28 +365,38 @@ def import_user():
         if role is None:
             flash('用户角色信息有误：{}'.format(data.get('role')), category='error')
             return redirect(url_for('manage.import_user', next=request.args.get('next')))
+        if not current_user.role.can_manage(role=role):
+            flash('您无法创建该用户', category='error')
+            return redirect(url_for('manage.import_user', next=request.args.get('next')))
         id_type = IDType.query.filter_by(name=data.get('id_type')).first()
         if id_type is None:
             flash('证件类型信息有误：{}'.format(data.get('id_type')), category='error')
-            return redirect(url_for('manage.import_user', next=request.args.get('next')))
-        gender = Gender.query.filter_by(name=data.get('gender')).first()
-        if gender is None:
-            flash('性别信息有误：{}'.format(data.get('gender')), category='error')
-            return redirect(url_for('manage.import_user', next=request.args.get('next')))
-        if not current_user.role.can_manage(role=role):
-            flash('您无法创建该用户', category='error')
             return redirect(url_for('manage.import_user', next=request.args.get('next')))
         user = User(
             id=data.get('id'),
             role_id=role.id,
             name=data.get('name'),
             id_type_id=id_type.id,
-            id_number=data.get('id_number'),
-            gender_id=gender.id
+            id_number=data.get('id_number')
         )
+        if data.get('gender') is not None:
+            gender = Gender.query.filter_by(name=data.get('gender')).first()
+            if gender is None:
+                flash('性别信息有误：{}'.format(data.get('gender')), category='error')
+                return redirect(url_for('manage.import_user', next=request.args.get('next')))
+            user.gender_id = gender.id
         db.session.add(user)
         db.session.commit()
         current_user.create_user(user=user)
+        if user.is_student:
+            if data.get('vb_progress') is not None:
+                vb_lesson = Lesson.query.filter_by(name=data.get('vb_progress')).first()
+                if vb_lesson is not None:
+                    user.punch_through(lesson=vb_lesson)
+            if data.get('y_gre_progress') is not None:
+                y_gre_lesson = Lesson.query.filter_by(name=data.get('y_gre_progress')).first()
+                if y_gre_lesson is not None:
+                    user.punch_through(lesson=y_gre_lesson)
         flash('已导入用户：{}'.format(user.alias), category='success')
         add_user_log(user=user, event='用户信息被导入', category='auth')
         add_user_log(user=current_user._get_current_object(), event='导入用户：{}'.format(user.alias), category='manage')
@@ -409,7 +419,7 @@ def reimport_user(id):
     form = ImportUserForm()
     if form.validate_on_submit():
         data = User.import_user(token=form.token.data)
-        if data is None or reduce(operator.or_, [data.get(key) is None for key in ['id', 'role', 'name', 'id_type', 'id_number', 'gender']]):
+        if data is None or reduce(operator.or_, [data.get(key) is None for key in ['id', 'role', 'name', 'id_type', 'id_number']]):
             flash('用户信息码有误', category='error')
             return redirect(url_for('manage.reimport_user', id=user.id, next=request.args.get('next')))
         if data.get('id') != user.id:
@@ -426,17 +436,27 @@ def reimport_user(id):
         if id_type is None:
             flash('证件类型信息有误：{}'.format(data.get('id_type')), category='error')
             return redirect(url_for('manage.reimport_user', id=user.id, next=request.args.get('next')))
-        gender = Gender.query.filter_by(name=data.get('gender')).first()
-        if gender is None:
-            flash('性别信息有误：{}'.format(data.get('gender')), category='error')
-            return redirect(url_for('manage.reimport_user', id=user.id, next=request.args.get('next')))
         user.role_id = role.id
         user.name = data.get('name')
         user.id_type_id = id_type.id
         user.id_number = data.get('id_number')
-        user.gender_id = gender.id
+        if data.get('gender') is not None:
+            gender = Gender.query.filter_by(name=data.get('gender')).first()
+            if gender is None:
+                flash('性别信息有误：{}'.format(data.get('gender')), category='error')
+                return redirect(url_for('manage.reimport_user', id=user.id, next=request.args.get('next')))
+            user.gender_id = gender.id
         db.session.add(user)
         db.session.commit()
+        if user.is_student:
+            if data.get('vb_progress') is not None:
+                vb_lesson = Lesson.query.filter_by(name=data.get('vb_progress')).first()
+                if vb_lesson is not None:
+                    user.punch_through(lesson=vb_lesson)
+            if data.get('y_gre_progress') is not None:
+                y_gre_lesson = Lesson.query.filter_by(name=data.get('y_gre_progress')).first()
+                if y_gre_lesson is not None:
+                    user.punch_through(lesson=y_gre_lesson)
         flash('已重新导入用户：{}'.format(user.alias), category='success')
         add_user_log(user=user, event='用户信息被重新导入', category='auth')
         add_user_log(user=current_user._get_current_object(), event='重新导入用户：{}'.format(user.alias), category='manage')

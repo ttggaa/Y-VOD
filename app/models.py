@@ -643,8 +643,24 @@ class User(UserMixin, db.Model):
                 video_id=video.id
             )
         if play_time is not None:
-            punch.play_time = timedelta(seconds=play_time)
+            if isinstance(play_time, timedelta):
+                punch.play_time = play_time
+            else:
+                punch.play_time = timedelta(seconds=play_time)
         db.session.add(punch)
+
+    def punch_through(self, lesson):
+        '''User.punch_through(self, lesson)'''
+        for video in Video.query\
+            .join(Lesson, Lesson.id == Video.lesson_id)\
+            .join(LessonType, LessonType.id == Lesson.type_id)\
+            .filter(Lesson.type_id == lesson.type_id)\
+            .filter(and_(
+                Lesson.order > 0,
+                Lesson.order <= lesson.order
+            ))\
+            .all():
+            self.punch(video=video, play_time=video.duration)
 
     def punched(self, video):
         '''User.punched(self, video)'''
@@ -816,6 +832,7 @@ class User(UserMixin, db.Model):
     @staticmethod
     def insert_entries(data, verbose=False):
         '''User.insert_entries(data, verbose=False)'''
+        csv_file = os.path.join(current_app.config['DATA_DIR'], data, 'users.csv')
         if data == 'initial':
             system_operator = User(
                 role_id=Role.query.filter_by(name='开发人员').first().id,
@@ -829,15 +846,39 @@ class User(UserMixin, db.Model):
             db.session.commit()
             if verbose:
                 print('初始化系统管理员信息')
-        else:
-            csv_file = os.path.join(current_app.config['DATA_DIR'], data, 'users.csv')
-            if os.path.exists(csv_file):
-                print('---> Read: {}'.format(csv_file))
-                with io.open(csv_file, 'rt', newline='') as f:
-                    reader = CSVReader(f)
-                    line_num = 0
-                    for entry in reader:
-                        if line_num >= 1:
+        if os.path.exists(csv_file):
+            print('---> Read: {}'.format(csv_file))
+            with io.open(csv_file, 'rt', newline='') as f:
+                reader = CSVReader(f)
+                line_num = 0
+                for entry in reader:
+                    if line_num >= 1:
+                        if data == 'initial':
+                            if entry[5] is not None:
+                                entry[5] = Gender.query.filter_by(name=entry[5]).first().id
+                            user = User(
+                                id=int(entry[0]),
+                                role_id=Role.query.filter_by(name=entry[1]).first().id,
+                                name=entry[2],
+                                id_type_id=IDType.query.filter_by(name=entry[3]).first().id,
+                                id_number=entry[4],
+                                gender_id=entry[5]
+                            )
+                            db.session.add(user)
+                            db.session.commit()
+                            system_operator.create_user(user=user)
+                            if user.is_student:
+                                if entry[6] is not None:
+                                    vb_lesson = Lesson.query.filter_by(name=entry[6]).first()
+                                    if vb_lesson is not None:
+                                        user.punch_through(lesson=vb_lesson)
+                                if entry[7] is not None:
+                                    y_gre_lesson = Lesson.query.filter_by(name=entry[7]).first()
+                                    if y_gre_lesson is not None:
+                                        user.punch_through(lesson=y_gre_lesson)
+                            if verbose:
+                                print('导入用户信息', entry[1], entry[2])
+                        else:
                             if entry[3] is not None:
                                 entry[3] = datetime.strptime(entry[3], current_app.config['DATETIME_FORMAT'])
                             if entry[9] is not None:
@@ -856,11 +897,11 @@ class User(UserMixin, db.Model):
                             )
                             db.session.add(user)
                             if verbose:
-                                print('导入用户信息', entry[1], entry[7])
-                        line_num += 1
-                    db.session.commit()
-            else:
-                print('文件不存在', csv_file)
+                                print('导入用户信息', entry[1], entry[6])
+                    line_num += 1
+                db.session.commit()
+        else:
+            print('文件不存在', csv_file)
 
     @staticmethod
     def backup_entries(data):
