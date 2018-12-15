@@ -15,6 +15,7 @@
                 <div class="results"></div>
             </div>{% endif %}
             <a class="item" href="{{ current_user.url }}" data-tooltip="个人档案" data-position="bottom center" data-inverted=""><i class="{{ current_user.role.icon }} icon"></i>{{ current_user.name }}</a>
+            <a class="icon item" href="{{ url_for('auth.logout') }}" data-tooltip="登出" data-position="bottom center" data-inverted=""><i class="door open icon"></i></a>
         </div>{% endif %}
     </div>
 </div>
