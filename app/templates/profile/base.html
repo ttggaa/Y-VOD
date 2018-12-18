@@ -33,7 +33,7 @@
                     <div class="ui vertical segment">
                         <div>上次登录：{{ macros.from_now_widget(user.last_seen_at) }}</div>
                         {% if current_user.is_staff %}<div>登录设备：{{ user.last_login_device.alias }}</div>{% endif %}
-                        {% if current_user.is_developer %}<div>设备MAC地址：{{ current_user.last_seen_mac }}</div>{% endif %}
+                        {% if current_user.is_developer %}<div>设备MAC地址：{{ user.last_seen_mac }}</div>{% endif %}
                     </div>
                     {% if current_user.is_staff %}<div class="ui vertical segment">
                         <div>创建时间：{{ macros.from_now_widget(user.created_at) }}</div>
