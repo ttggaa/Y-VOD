@@ -30,7 +30,7 @@
                 <div class="ui sticky">
                     <div class="ui vertical segment">
                         <div class="ui header">{{ video.name }}{% if video.description %}<div class="ui {{ video.lesson.type.color }} horizontal label">{{ video.description }}</div>{% endif %}<div id="video-progress" class="ui orange horizontal label">0</div></div>
-                        <div id="player"></div>
+                        <div id="player-container"></div>
                     </div>
                 </div>
             </div>
@@ -65,7 +65,7 @@ function updateVideoProgress(progress) {
 };
 updateVideoProgress({{ current_user.video_progress(video=video) }});
 const y_player = new Player({
-    container: document.getElementById('player'),
+    container: document.getElementById('player-container'),
     volume: 1.0,
     video: {
         url: {% if not config.HLS_ENABLE -%}"{{ url_for('resource.video', id=video.id) }}"{% else %}"{{ video.hls_url }}",
