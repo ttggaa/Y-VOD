@@ -30,7 +30,7 @@
                 <div class="ui sticky">
                     <div class="ui vertical segment">
                         <div class="ui header">{{ video.name }}{% if video.description %}<div class="ui {{ video.lesson.type.color }} horizontal label">{{ video.description }}</div>{% endif %}<div id="video-progress" class="ui orange horizontal label">0</div></div>
-                        <div id="player"></div>
+                        <div id="player-container"></div>
                     </div>
                 </div>
             </div>
@@ -64,8 +64,8 @@ function updateVideoProgress(progress) {
     };
 };
 updateVideoProgress({{ current_user.video_progress(video=video) }});
-const player = new Player({
-    container: document.getElementById('player'),
+const video_player = new Player({
+    container: document.getElementById('player-container'),
     volume: 1.0,
     video: {
         url: {% if not config.HLS_ENABLE -%}"{{ url_for('resource.video', id=video.id) }}"{% else %}"{{ video.hls_url }}",
@@ -75,7 +75,7 @@ const player = new Player({
 var granularity = {{ config.VIDEO_ANALYTICS_GRANULARITY }};
 var updateInterval = {{ config.VIDEO_ANALYTICS_UPDATE_PUNCH_INTERVAL }};
 var elapsedTime = 0;
-var playTimeGranularity = granularity / 1000 * player.video.playbackRate;
+var playTimeGranularity = granularity / 1000 * video_player.video.playbackRate;
 var playTime = {{ current_user.video_play_time(video=video).total_seconds() }};
 var lastVideoCurrentTime = null;
 function updatePunch() {
@@ -95,22 +95,22 @@ function updatePunch() {
         });
     };
 };
-player.on('pause', function () {
+video_player.on('pause', function () {
     updatePunch();
 });
-player.on('ended', function () {
+video_player.on('ended', function () {
     updatePunch();
 });
-player.on('waiting', function () {
+video_player.on('waiting', function () {
     updatePunch();
 });
-player.on('error', function () {
+video_player.on('error', function () {
     updatePunch();
 });
 setInterval(function () {
-    if (!player.video.paused && player.video.currentTime !== lastVideoCurrentTime) {
+    if (!video_player.video.paused && video_player.video.currentTime !== lastVideoCurrentTime) {
         playTime += playTimeGranularity;
-        lastVideoCurrentTime = player.video.currentTime;
+        lastVideoCurrentTime = video_player.video.currentTime;
     };
     elapsedTime += granularity;
     if (elapsedTime % updateInterval === 0) {
