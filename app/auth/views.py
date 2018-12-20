@@ -47,7 +47,7 @@ def login():
         if users.count():
             for user in users.all():
                 if user.verify_auth_token(token=form.auth_token.data):
-                    login_user(user, remember=False)
+                    login_user(user, remember=current_app.config['AUTH_REMEMBER_LOGIN'])
                     add_user_log(user=user, event='登录系统', category='auth')
                     db.session.commit()
                     return redirect(request.args.get('next') or user.index_url)
