@@ -45,6 +45,7 @@ class Config:
     STATUS_EXPIRATION_CHECK_INTERVAL = 1000 # milliseconds (1 second)
 
     # Video Analytics
+    VIDEO_ANALYTICS_ACCELERATING_FACTOR = 1.25 # speedup
     VIDEO_ANALYTICS_GRANULARITY = 100 # milliseconds (0.1 seconds)
     VIDEO_ANALYTICS_UPDATE_PUNCH_INTERVAL = 15 * 1000 # 1 minute
     VIDEO_ANALYTICS_STATUS_EXPIRATION = 300 # seconds (5 minutes)

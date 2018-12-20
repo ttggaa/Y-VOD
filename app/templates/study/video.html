@@ -64,7 +64,7 @@ function updateVideoProgress(progress) {
     };
 };
 updateVideoProgress({{ current_user.video_progress(video=video) }});
-const y_player = new Player({
+const videoPlayer = new Player({
     container: document.getElementById('player-container'),
     volume: 1.0,
     video: {
@@ -72,10 +72,11 @@ const y_player = new Player({
         type: 'hls'{%- endif %}
     }
 });
-var granularity = {{ config.VIDEO_ANALYTICS_GRANULARITY }};
-var updateInterval = {{ config.VIDEO_ANALYTICS_UPDATE_PUNCH_INTERVAL }};
+const acceleratingFactor = {{ config.VIDEO_ANALYTICS_ACCELERATING_FACTOR }};
+const granularity = {{ config.VIDEO_ANALYTICS_GRANULARITY }};
+const updateInterval = {{ config.VIDEO_ANALYTICS_UPDATE_PUNCH_INTERVAL }};
+const playTimeGranularity = granularity / 1000 * videoPlayer.video.playbackRate * acceleratingFactor;
 var elapsedTime = 0;
-var playTimeGranularity = granularity / 1000 * y_player.video.playbackRate;
 var playTime = {{ current_user.video_play_time(video=video).total_seconds() }};
 var lastVideoCurrentTime = null;
 function updatePunch() {
@@ -95,22 +96,22 @@ function updatePunch() {
         });
     };
 };
-y_player.on('pause', function () {
+videoPlayer.on('pause', function () {
     updatePunch();
 });
-y_player.on('ended', function () {
+videoPlayer.on('ended', function () {
     updatePunch();
 });
-y_player.on('waiting', function () {
+videoPlayer.on('waiting', function () {
     updatePunch();
 });
-y_player.on('error', function () {
+videoPlayer.on('error', function () {
     updatePunch();
 });
 setInterval(function () {
-    if (!y_player.video.paused && y_player.video.currentTime !== lastVideoCurrentTime) {
+    if (!videoPlayer.video.paused && videoPlayer.video.currentTime !== lastVideoCurrentTime) {
         playTime += playTimeGranularity;
-        lastVideoCurrentTime = y_player.video.currentTime;
+        lastVideoCurrentTime = videoPlayer.video.currentTime;
     };
     elapsedTime += granularity;
     if (elapsedTime % updateInterval === 0) {
