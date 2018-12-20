@@ -14,8 +14,9 @@
                 </div>
                 <div class="results"></div>
             </div>{% endif %}
+            {% if current_user.is_staff %}<a class="item" href="{{ url_for('status.home') }}" data-tooltip="系统实况" data-position="bottom center" data-inverted=""><i class="tachometer alternate icon"></i>实况</a>{% endif %}
             <a class="item" href="{{ current_user.url }}" data-tooltip="个人档案" data-position="bottom center" data-inverted=""><i class="{{ current_user.role.icon }} icon"></i>{{ current_user.name }}</a>
-            <a class="icon item" href="{{ url_for('auth.logout') }}" data-tooltip="登出" data-position="bottom center" data-inverted=""><i class="door open icon"></i></a>
+            <a class="item" href="{{ url_for('auth.logout') }}" data-tooltip="登出" data-position="bottom center" data-inverted=""><i class="door open icon"></i>登出</a>
         </div>{% endif %}
     </div>
 </div>
