@@ -54,7 +54,8 @@ def login():
             flash('登录失败：授权码错误', category='error')
             return redirect(url_for('auth.login', next=request.args.get('next')))
         else:
-            flash('登录失败：无效的用户信息', category='error')
+            flash('登录失败：用户信息无效', category='error')
+            flash('初次登录时，请联系工作人员确认用户信息已被导入', category='info')
             return redirect(url_for('auth.login', next=request.args.get('next')))
     return minify(render_template('auth/login.html', form=form))
 

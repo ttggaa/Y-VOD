@@ -53,7 +53,7 @@
                             {{ form.room(class='ui dropdown') }}
                         </div>
                     </div>
-                    <div class="required field">
+                    <div class="field">
                         {{ form.mac_address.label() }}
                         {{ form.mac_address(placeholder='MAC地址') }}
                     </div>
@@ -170,11 +170,8 @@ $('#new-device').form({
         },
         mac_address: {
             identifier: 'mac_address',
+            optional: true,
             rules: [
-                {
-                    type: 'empty',
-                    prompt: '请输入MAC地址'
-                },
                 {
                     type: 'regExp[/^(?:[0-9a-fA-F]{2}:){5}[0-9a-fA-F]{2}$/]',
                     prompt: '请输入有效的MAC地址'
