@@ -20,8 +20,8 @@
             <div class="four wide column">
                 <div class="ui vertical segment">
                     <div class="ui header">研修视频列表</div>
-                    <div class="ui bulleted selection link list">
-                        {% for item in video.lesson.videos %}<a class="{% if item.id == video.id %}active {% endif %}item" href="{{ url_for('study.video', id=item.id) }}#main"><i class="{% if current_user.complete_video(video=item) %}green check{% else %}{% if item.id == video.id %}{{ item.lesson.type.color }} play{% else %}file video{% endif %}{% endif %} icon"></i>{{ item.abbr }} ({{ current_user.video_progress_percentage(video=item) }})</a>{% endfor %}
+                    <div class="ui secondary vertical menu">
+                        {% for item in video.lesson.videos %}<a class="{% if item.id == video.id %}active {% endif %}item" href="{{ url_for('study.video', id=item.id) }}#main"><i class="file video icon"></i>{{ item.abbr }}<div {% if item.id == video.id %}id="video-progress-side" {% endif %}class="ui {% if current_user.complete_video(video=item) %}green {% elif item.id == video.id %}orange {% endif %}label">{{ current_user.video_progress_percentage(video=item) }}</div></a>{% endfor %}
                         <a class="item" href="{{ url_for('study.{}'.format(video.lesson.type.snake_case)) }}"><i class="arrow left icon"></i>返回{{ video.lesson.type.name }}研修课程列表</a>
                     </div>
                 </div>
@@ -57,10 +57,13 @@ var countUpOptions = {
     suffix: '%'
 };
 var videoProgressCountUp = new CountUp('video-progress', 0, 0, 0, 2.5, countUpOptions);
+var videoProgressSideCountUp = new CountUp('video-progress-side', 0, 0, 0, 2.5, countUpOptions);
 function updateVideoProgress(progress) {
     videoProgressCountUp.update((progress * 100).toFixed(0));
+    videoProgressSideCountUp.update((progress * 100).toFixed(0));
     if (progress >= 1) {
         $('#video-progress').attr('class', 'ui green horizontal label');
+        $('#video-progress-side').attr('class', 'ui green label');
     };
 };
 updateVideoProgress({{ current_user.video_progress(video=video) }});
