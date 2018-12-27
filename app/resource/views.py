@@ -7,9 +7,32 @@ from htmlmin import minify
 from flask import send_file, redirect, request, url_for, abort, current_app
 from flask_login import login_required, current_user
 from . import resource
+from ..models import Device
 from ..models import Video
-from ..utils import send_video_file
+from ..utils import get_mac_address_from_ip, send_video_file
 from ..decorators import permission_required
+
+
+@resource.route('/demo/<int:id>')
+def demo(id):
+    '''resource.demo(id)'''
+    if current_app.config['HLS_ENABLE']:
+        abort(403)
+    mac_address = get_mac_address_from_ip(ip_address=request.headers.get('X-Forwarded-For', request.remote_addr))
+    if mac_address is None:
+        abort(403)
+    device = Device.query.filter_by(mac_address=mac_address).first()
+    if device is None:
+        abort(403)
+    video = Video.query.get_or_404(id)
+    if not video.demo:
+        return redirect(url_for('resource.video_forbidden'))
+    video_file = os.path.join(current_app.config['VIDEO_DIR'], video.file_name)
+    if not os.path.exists(video_file):
+        abort(404)
+    if 'Range' in request.headers:
+        return send_video_file(video_file=video_file, request=request)
+    return send_file(video_file, mimetype='video/mp4')
 
 
 @resource.route('/video/<int:id>')
@@ -31,8 +54,6 @@ def video(id):
 
 
 @resource.route('/video/forbidden')
-@login_required
-@permission_required('研修')
 def video_forbidden():
     '''resource.video_forbidden()'''
     if current_app.config['HLS_ENABLE']:
