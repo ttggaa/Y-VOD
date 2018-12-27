@@ -7,10 +7,39 @@ from flask import render_template, jsonify, redirect, request, url_for, abort, f
 from flask_login import login_required, current_user
 from . import study
 from .. import db
+from ..models import Device
 from ..models import LessonType, Lesson, Video
 from ..models import Punch
 from ..decorators import permission_required
+from ..utils import get_mac_address_from_ip
 from ..utils2 import add_user_log
+
+
+@study.route('/demo')
+def demo():
+    '''study.demo()'''
+    mac_address = get_mac_address_from_ip(ip_address=request.headers.get('X-Forwarded-For', request.remote_addr))
+    if mac_address is None:
+        flash('无法获取设备信息', category='error')
+        return redirect(url_for('auth.login'))
+    device = Device.query.filter_by(mac_address=mac_address).first()
+    if device is None:
+        flash('设备未授权（MAC地址：{}）'.format(mac_address), category='error')
+        return redirect(url_for('auth.login'))
+    query = Video.query\
+        .filter(Video.demo == True)\
+        .order_by(Video.id.asc())
+    video_id = request.args.get('id')
+    if video_id is not None:
+        video = Video.query.get_or_404(video_id)
+    else:
+        video = query.first()
+    videos = query.all()
+    return minify(render_template(
+        'study/demo.html',
+        video=video,
+        videos=videos
+    ))
 
 
 @study.route('/vb')

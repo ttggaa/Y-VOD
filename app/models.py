@@ -1306,6 +1306,7 @@ class Video(db.Model):
     abbr = db.Column(db.Unicode(64))
     description = db.Column(db.Unicode(64))
     lesson_id = db.Column(db.Integer, db.ForeignKey('lessons.id'))
+    demo = db.Column(db.Boolean, default=False)
     duration = db.Column(db.Interval, default=timedelta())
     file_name = db.Column(db.Unicode(64))
     hls_cache_file_name = db.Column(db.Unicode(64))
@@ -1383,6 +1384,7 @@ class Video(db.Model):
                         abbr=entry['abbr'],
                         description=entry['description'],
                         lesson_id=Lesson.query.filter_by(name=entry['lesson_name']).first().id,
+                        demo=entry['demo'],
                         duration=get_video_duration(video_file),
                         file_name=entry['file_name'],
                         hls_cache_file_name=hls_cache_file_name
