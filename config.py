@@ -53,7 +53,7 @@ class Config:
 
     # Version
     PYTHON_VERSION = '{0.major}.{0.minor}.{0.micro}'.format(sys.version_info)
-    VERSION = '1.0.0'
+    VERSION = '1.0.1'
     ESTABLISHED_AT = '2018-08-05T00:00:00+08:00'
     UPDATED_AT = datetime.utcnow().strftime(DATETIME_FORMAT_ISO)
     RENDERED_AT = datetime.utcnow
