@@ -41,8 +41,8 @@ class Permission(db.Model):
         cascade='all, delete-orphan'
     )
 
-    def roles_alias(self, category=None):
-        '''Permission.roles_alias(self, category=None)'''
+    def roles_from_category(self, category=None):
+        '''Permission.roles_from_category(self, category=None)'''
         if category is not None:
             roles = Role.query\
                 .join(RolePermission, RolePermission.role_id == Role.id)\
@@ -106,24 +106,12 @@ class Role(db.Model):
     )
     users = db.relationship('User', backref='role', lazy='dynamic')
 
-    def add_permission(self, permission):
-        '''Role.add_permission(self, permission)'''
-        if not self.has_permission(permission=permission):
-            role_permission = RolePermission(role_id=self.id, permission_id=permission.id)
-            db.session.add(role_permission)
-
-    def remove_permission(self, permission):
-        '''Role.remove_permission(self, permission)'''
-        role_permission = self.permissions.filter_by(permission_id=permission.id).first()
-        if role_permission is not None:
-            db.session.delete(role_permission)
-
     def has_permission(self, permission):
         '''Role.has_permission(self, permission)'''
         return self.permissions.filter_by(permission_id=permission.id).first() is not None
 
-    def permissions_alias(self, category=None):
-        '''Role.permissions_alias(self, category=None)'''
+    def permissions_from_category(self, category=None):
+        '''Role.permissions_from_category(self, category=None)'''
         if category is not None:
             permissions = Permission.query\
                 .join(RolePermission, RolePermission.permission_id == Permission.id)\
@@ -179,7 +167,11 @@ class Role(db.Model):
                 if verbose:
                     print('导入用户角色信息', entry['name'], entry['category'])
                 for permission in entry['permissions']:
-                    role.add_permission(permission=Permission.query.filter_by(name=permission).first())
+                    role_permission = RolePermission(
+                        role_id=role.id,
+                        permission_id=Permission.query.filter_by(name=permission).first().id
+                    )
+                    db.session.add(role_permission)
                     if verbose:
                         print('赋予权限', entry['name'], permission)
                 db.session.commit()
@@ -1056,6 +1048,7 @@ class Device(db.Model):
     room_id = db.Column(db.Integer, db.ForeignKey('rooms.id'))
     mac_address = db.Column(db.Unicode(64))
     category = db.Column(db.Unicode(64), default='production', index=True)
+    restricted = db.Column(db.Boolean, default=False)
     obsolete = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     modified_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -1091,6 +1084,7 @@ class Device(db.Model):
             room,
             self.mac_address,
             self.category,
+            str(int(self.restricted)),
             str(int(self.obsolete)),
             self.created_at.strftime(current_app.config['DATETIME_FORMAT']),
             self.modified_at.strftime(current_app.config['DATETIME_FORMAT']),
@@ -1109,6 +1103,7 @@ class Device(db.Model):
                 type_id=DeviceType.query.filter_by(name='Server').first().id,
                 mac_address=current_app.config['SERVER_MAC_ADDRESS'],
                 category='development',
+                restricted=True,
                 modified_by_id=User.query.get(1).id
             )
             db.session.add(y_vod_server)
@@ -1132,6 +1127,7 @@ class Device(db.Model):
                                 room_id=entry[3],
                                 mac_address=entry[4],
                                 category=entry[5],
+                                restricted=bool(int(entry[6])),
                                 modified_by_id=User.query.get(1).id
                             )
                             db.session.add(device)
@@ -1148,10 +1144,11 @@ class Device(db.Model):
                                 room_id=entry[4],
                                 mac_address=entry[5],
                                 category=entry[6],
-                                obsolete=bool(int(entry[7])),
-                                created_at=datetime.strptime(entry[8], current_app.config['DATETIME_FORMAT']),
-                                modified_at=datetime.strptime(entry[9], current_app.config['DATETIME_FORMAT']),
-                                modified_by_id=int(entry[10])
+                                restricted=bool(int(entry[7])),
+                                obsolete=bool(int(entry[8])),
+                                created_at=datetime.strptime(entry[9], current_app.config['DATETIME_FORMAT']),
+                                modified_at=datetime.strptime(entry[10], current_app.config['DATETIME_FORMAT']),
+                                modified_by_id=int(entry[11])
                             )
                             db.session.add(device)
                             if verbose:
@@ -1177,6 +1174,7 @@ class Device(db.Model):
                 'room',
                 'mac_address',
                 'category',
+                'restricted',
                 'obsolete',
                 'created_at',
                 'modified_at',
@@ -1298,6 +1296,46 @@ class Lesson(db.Model):
         return '<Lesson {}>'.format(self.name)
 
 
+class VideoCollection(db.Model):
+    '''Table: video_collections'''
+    __tablename__ = 'video_collections'
+    collection_id = db.Column(db.Integer, db.ForeignKey('collections.id'), primary_key=True)
+    video_id = db.Column(db.Integer, db.ForeignKey('videos.id'), primary_key=True)
+
+
+class Collection(db.Model):
+    '''Table: collections'''
+    __tablename__ = 'collections'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.Unicode(64), unique=True, index=True)
+    videos = db.relationship(
+        'VideoCollection',
+        foreign_keys=[VideoCollection.collection_id],
+        backref=db.backref('collection', lazy='joined'),
+        lazy='dynamic',
+        cascade='all, delete-orphan'
+    )
+
+    @staticmethod
+    def insert_entries(data, verbose=False):
+        '''Collection.insert_entries(data, verbose=False)'''
+        yaml_file = os.path.join(current_app.config['DATA_DIR'], data, 'collections.yml')
+        entries = load_yaml(yaml_file=yaml_file)
+        if entries is not None:
+            print('---> Read: {}'.format(yaml_file))
+            for entry in entries:
+                collection = Collection(name=entry['name'])
+                db.session.add(collection)
+                if verbose:
+                    print('导入视频选集信息', entry['name'])
+            db.session.commit()
+        else:
+            print('文件不存在', yaml_file)
+
+    def __repr__(self):
+        return '<Collection {}>'.format(self.name)
+
+
 class Video(db.Model):
     '''Table: videos'''
     __tablename__ = 'videos'
@@ -1307,10 +1345,17 @@ class Video(db.Model):
     description = db.Column(db.Unicode(64))
     lesson_id = db.Column(db.Integer, db.ForeignKey('lessons.id'))
     duration = db.Column(db.Interval, default=timedelta())
-    demo = db.Column(db.Boolean, default=False)
     file_name = db.Column(db.Unicode(64))
     hls_cache_file_name = db.Column(db.Unicode(64))
+    restricted = db.Column(db.Boolean, default=False)
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    collections = db.relationship(
+        'VideoCollection',
+        foreign_keys=[VideoCollection.video_id],
+        backref=db.backref('video', lazy='joined'),
+        lazy='dynamic',
+        cascade='all, delete-orphan'
+    )
     punches = db.relationship(
         'Punch',
         foreign_keys=[Punch.video_id],
@@ -1318,6 +1363,13 @@ class Video(db.Model):
         lazy='dynamic',
         cascade='all, delete-orphan'
     )
+
+    @property
+    def collections_format(self):
+        '''Video.collections_format(self)'''
+        if self.collections.count()
+            return '、'.join([item.collection.name for item in self.collections])
+        return 'N/A'
 
     @property
     def duration_format(self):
@@ -1385,13 +1437,22 @@ class Video(db.Model):
                         description=entry['description'],
                         lesson_id=Lesson.query.filter_by(name=entry['lesson_name']).first().id,
                         duration=get_video_duration(video_file),
-                        demo=entry['demo'],
                         file_name=entry['file_name'],
-                        hls_cache_file_name=hls_cache_file_name
+                        hls_cache_file_name=hls_cache_file_name,
+                        restricted=entry['restricted']
                     )
                     db.session.add(video)
+                    db.session.commit()
                     if verbose:
                         print('导入视频信息', entry['lesson_name'], entry['abbr'], entry['file_name'])
+                    for collection in entry['collections']:
+                        video_collection = VideoCollection(
+                            collection_id=Collection.query.filter_by(name=collection).first().id,
+                            video_id=video.id
+                        )
+                        db.session.add(video_collection)
+                        if verbose:
+                            print('加入选集', collection, video.name)
                 else:
                     print('视频文件不存在', entry['lesson_name'], entry['abbr'], entry['file_name'])
             db.session.commit()

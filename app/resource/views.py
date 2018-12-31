@@ -13,9 +13,9 @@ from ..utils import get_mac_address_from_ip, send_video_file
 from ..decorators import permission_required
 
 
-@resource.route('/demo/<int:id>')
-def demo(id):
-    '''resource.demo(id)'''
+@resource.route('/collection/<int:id>')
+def collection(id):
+    '''resource.collection(id)'''
     if current_app.config['HLS_ENABLE']:
         abort(403)
     mac_address = get_mac_address_from_ip(ip_address=request.headers.get('X-Forwarded-For', request.remote_addr))
@@ -24,9 +24,9 @@ def demo(id):
     device = Device.query.filter_by(mac_address=mac_address).first()
     if device is None:
         abort(403)
-    video = Video.query.get_or_404(id)
-    if not video.demo:
+    if not device.restricted:
         return redirect(url_for('resource.video_forbidden'))
+    video = Video.query.get_or_404(id)
     video_file = os.path.join(current_app.config['VIDEO_DIR'], video.file_name)
     if not os.path.exists(video_file):
         abort(404)

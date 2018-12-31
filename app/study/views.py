@@ -9,15 +9,16 @@ from . import study
 from .. import db
 from ..models import Device
 from ..models import LessonType, Lesson, Video
+from ..models import VideoCollection, Collection
 from ..models import Punch
 from ..decorators import permission_required
 from ..utils import get_mac_address_from_ip
 from ..utils2 import add_user_log
 
 
-@study.route('/demo')
-def demo():
-    '''study.demo()'''
+@study.route('/vb/demo/')
+def vb_demo():
+    '''study.vb_demo()'''
     mac_address = get_mac_address_from_ip(ip_address=request.headers.get('X-Forwarded-For', request.remote_addr))
     if mac_address is None:
         flash('无法获取设备信息', category='error')
@@ -26,8 +27,14 @@ def demo():
     if device is None:
         flash('设备未授权（MAC地址：{}）'.format(mac_address), category='error')
         return redirect(url_for('auth.login'))
+    if not device.restricted:
+        flash('该设备无法访问受限资源', category='error')
+        return redirect(url_for('auth.login'))
+    header = 'VB体验课程'
     query = Video.query\
-        .filter(Video.demo == True)\
+        .join(VideoCollection, VideoCollection.video_id == Video.id)\
+        .join(Collection, Collection.id == VideoCollection.collection_id)\
+        .filter(Collection.name == 'VB Demo Lessons')\
         .order_by(Video.id.asc())
     video_id = request.args.get('id')
     if video_id is not None:
@@ -36,7 +43,8 @@ def demo():
         video = query.first()
     videos = query.all()
     return minify(render_template(
-        'study/demo.html',
+        'study/collection.html',
+        header=header,
         video=video,
         videos=videos
     ))

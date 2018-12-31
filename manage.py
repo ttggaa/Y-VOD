@@ -102,6 +102,9 @@ def deploy():
     from app.models import Lesson
     Lesson.insert_entries(data=data, verbose=verbose)
 
+    from app.models import Collection
+    Collection.insert_entries(data=data, verbose=verbose)
+
     from app.models import Video
     Video.insert_entries(data=data, verbose=verbose)
 
