@@ -50,7 +50,7 @@ const videoPlayer = new Player({
     container: document.getElementById('player-container'),
     volume: 1.0,
     video: {
-        url: {% if not config.HLS_ENABLE -%}"{{ url_for('resource.collection', video_id=video.id) }}"{% else %}"{{ video.hls_url }}",
+        url: {% if not config.HLS_ENABLE -%}"{{ url_for('resource.collection', collection_id=collection.id, video_id=video.id) }}"{% else %}"{{ video.hls_url }}",
         type: 'hls'{%- endif %}
     }
 });

@@ -44,6 +44,8 @@ def collection():
     video_id = request.args.get('video_id')
     if video_id is not None:
         video = Video.query.get_or_404(video_id)
+        if not collection.has_video(video=video):
+            abort(403)
     else:
         video = query.first()
     videos = query.all()

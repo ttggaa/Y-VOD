@@ -1336,6 +1336,10 @@ class Collection(db.Model):
         cascade='all, delete-orphan'
     )
 
+    def has_video(self, video):
+        '''Collection.has_video(self, video)'''
+        return self.videos.filter_by(video_id=video.id).first() is not None
+
     @staticmethod
     def insert_entries(data, verbose=False):
         '''Collection.insert_entries(data, verbose=False)'''
