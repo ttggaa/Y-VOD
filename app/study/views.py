@@ -16,9 +16,9 @@ from ..utils import get_mac_address_from_ip
 from ..utils2 import add_user_log
 
 
-@study.route('/vb/demo/')
-def vb_demo():
-    '''study.vb_demo()'''
+@study.route('/collection')
+def collection():
+    '''study.collection()'''
     mac_address = get_mac_address_from_ip(ip_address=request.headers.get('X-Forwarded-For', request.remote_addr))
     if mac_address is None:
         flash('无法获取设备信息', category='error')
@@ -27,16 +27,21 @@ def vb_demo():
     if device is None:
         flash('设备未授权（MAC地址：{}）'.format(mac_address), category='error')
         return redirect(url_for('auth.login'))
-    if not device.restricted:
+    if not device.restricted_permit:
         flash('该设备无法访问受限资源', category='error')
         return redirect(url_for('auth.login'))
-    header = 'VB体验课程'
+    collection_name = request.args.get('name')
+    if collection_name is None:
+        abort(404)
+    collection = Collection.query.filter_by(name=collection_name).first()
+    if collection is None:
+        abort(404)
     query = Video.query\
         .join(VideoCollection, VideoCollection.video_id == Video.id)\
         .join(Collection, Collection.id == VideoCollection.collection_id)\
-        .filter(Collection.name == 'VB Demo Lessons')\
+        .filter(Collection.name == collection.name)\
         .order_by(Video.id.asc())
-    video_id = request.args.get('id')
+    video_id = request.args.get('video_id')
     if video_id is not None:
         video = Video.query.get_or_404(video_id)
     else:
@@ -44,7 +49,7 @@ def vb_demo():
     videos = query.all()
     return minify(render_template(
         'study/collection.html',
-        header=header,
+        collection=collection,
         video=video,
         videos=videos
     ))
@@ -90,11 +95,13 @@ def y_gre():
 def video(id):
     '''study.video(id)'''
     video = Video.query.get_or_404(id)
+    if video.restricted:
+        abort(403)
     if not current_user.can('研修{}'.format(video.lesson.type.name)):
         abort(403)
     if not current_user.can_study(lesson=video.lesson):
         flash('请先完成本课程的前序内容！', category='warning')
-        return redirect(url_for('study.{}'.format(video.lesson.type.snake_case)))
+        return redirect(url_for('study.{}'.format(video.lesson.type.name_snake_case)))
     if not current_user.punched(video=video):
         add_user_log(user=current_user._get_current_object(), event='视频研修：{}'.format(video.name), category='study')
         db.session.commit()
@@ -110,6 +117,8 @@ def video(id):
 def punch(id):
     '''study.punch(id)'''
     video = Video.query.get_or_404(id)
+    if video.restricted:
+        abort(403)
     if not current_user.can('研修{}'.format(video.lesson.type.name)) or not current_user.can_study(lesson=video.lesson):
         abort(403)
     if request.json is None:

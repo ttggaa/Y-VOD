@@ -28,6 +28,7 @@
                 <tr>
                     <th>视频名称</th>
                     <th>选集</th>
+                    <th>受限资源</th>
                     <th>视频时长</th>
                     {% if current_user.is_developer %}<th>视频文件</th>
                     {% if config.HLS_ENABLE %}<th>HLS文件</th>
@@ -39,6 +40,7 @@
                 <tr>
                     <td>{{ macros.video_label_widget(video=video) }}</td>
                     <td>{{ video.collections_format }}</td>
+                    {% if video.restricted %}<td class="negative">受限</td>{% else %}<td class="positive">非受限</td>{% endif %}
                     <td><code>{{ video.duration_format }}</code></td>
                     {% if current_user.is_developer %}<td><code>{{ video.file_name }}</code></td>
                     {% if config.HLS_ENABLE %}<td><code>{{ video.hls_cache_file_name }}</code></td>

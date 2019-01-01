@@ -57,14 +57,20 @@
                         {{ form.mac_address.label() }}
                         {{ form.mac_address(placeholder='MAC地址') }}
                     </div>
-                    {% if current_user.is_developer %}<div class="ui segment">
+                    <div class="ui segment">
                         <div class="inline field">
+                            <div class="ui toggle checkbox">
+                                {{ form.restricted_permit() }}
+                                {{ form.restricted_permit.label() }}
+                            </div>
+                        </div>
+                        {% if current_user.is_developer %}<div class="inline field">
                             <div class="ui toggle checkbox">
                                 {{ form.development_machine() }}
                                 {{ form.development_machine.label() }}
                             </div>
-                        </div>
-                    </div>{% endif %}
+                        </div>{% endif %}
+                    </div>
                     {{ form.submit(class='ui primary button') }}
                     <div class="ui basic left pointing label">只需点击一次</div>
                 </form>
@@ -78,6 +84,7 @@
                     <th>序列号</th>
                     <th>所属场地</th>
                     <th>MAC地址</th>
+                    <th>访问受限资源</th>
                     <th>上次操作</th>
                     <th>操作人</th>
                     <th>操作</th>
@@ -90,6 +97,7 @@
                     <td><code>{{ device.serial }}</code></td>
                     <td>{% if device.room_id %}{{ device.room.name }}{% else %}N/A{% endif %}</td>
                     <td>{% if device.mac_address %}<code>{{ device.mac_address }}</code>{% else %}N/A{% endif %}</td>
+                    {% if device.restricted_permit %}<td class="positive">允许</td>{% else %}<td class="negative">禁止</td>{% endif %}
                     <td>{{ macros.from_now_widget(device.modified_at) }}</td>
                     <td>{{ macros.user_url_widget(device.modified_by, device.modified_by_id == current_user.id) }}</td>
                     <td>

@@ -651,6 +651,7 @@ class User(UserMixin, db.Model):
                 Lesson.order > 0,
                 Lesson.order <= lesson.order
             ))\
+            .filter(Video.restricted == False)\
             .all():
             self.punch(video=video, play_time=video.duration)
 
@@ -672,6 +673,7 @@ class User(UserMixin, db.Model):
             .join(LessonType, LessonType.id == Lesson.type_id)\
             .filter(LessonType.name == 'VB')\
             .filter(Lesson.order > 0)\
+            .filter(Video.restricted == False)\
             .filter(Punch.user_id == self.id)\
             .order_by(Video.id.desc())\
             .first()
@@ -685,6 +687,7 @@ class User(UserMixin, db.Model):
             .join(LessonType, LessonType.id == Lesson.type_id)\
             .filter(LessonType.name == 'Y-GRE')\
             .filter(Lesson.order > 0)\
+            .filter(Video.restricted == False)\
             .filter(Punch.user_id == self.id)\
             .order_by(Video.id.desc())\
             .first()
@@ -697,12 +700,14 @@ class User(UserMixin, db.Model):
                 .join(Lesson, Lesson.id == Video.lesson_id)\
                 .join(LessonType, LessonType.id == Lesson.type_id)\
                 .filter(LessonType.name == 'VB')\
+                .filter(Video.restricted == False)\
                 .all()], timedelta()).total_seconds(),
             'value': reduce(operator.add, [punch.play_time_trim for punch in Punch.query\
                 .join(Video, Video.id == Punch.video_id)\
                 .join(Lesson, Lesson.id == Video.lesson_id)\
                 .join(LessonType, LessonType.id == Lesson.type_id)\
                 .filter(LessonType.name == 'VB')\
+                .filter(Video.restricted == False)\
                 .filter(Punch.user_id == self.id)\
                 .all()], timedelta()).total_seconds(),
         }
@@ -720,12 +725,14 @@ class User(UserMixin, db.Model):
                 .join(Lesson, Lesson.id == Video.lesson_id)\
                 .join(LessonType, LessonType.id == Lesson.type_id)\
                 .filter(LessonType.name == 'Y-GRE')\
+                .filter(Video.restricted == False)\
                 .all()], timedelta()).total_seconds(),
             'value': reduce(operator.add, [punch.play_time_trim for punch in Punch.query\
                 .join(Video, Video.id == Punch.video_id)\
                 .join(Lesson, Lesson.id == Video.lesson_id)\
                 .join(LessonType, LessonType.id == Lesson.type_id)\
                 .filter(LessonType.name == 'Y-GRE')\
+                .filter(Video.restricted == False)\
                 .filter(Punch.user_id == self.id)\
                 .all()], timedelta()).total_seconds(),
         }
@@ -740,6 +747,7 @@ class User(UserMixin, db.Model):
         return reduce(operator.add, [punch.play_time_trim for punch in Punch.query\
             .join(Video, Video.id == Punch.video_id)\
             .filter(Video.lesson_id == lesson.id)\
+            .filter(Video.restricted == False)\
             .filter(Punch.user_id == self.id)\
             .all()], timedelta()) / lesson.duration
 
@@ -752,6 +760,7 @@ class User(UserMixin, db.Model):
         return Punch.query\
             .join(Video, Video.id == Punch.video_id)\
             .filter(Video.lesson_id == lesson.id)\
+            .filter(Video.restricted == False)\
             .filter(Punch.user_id == self.id)\
             .order_by(Punch.timestamp.desc())\
             .first()
@@ -793,6 +802,7 @@ class User(UserMixin, db.Model):
                 Lesson.order > 0,
                 Lesson.order < lesson.order
             ))\
+            .filter(Video.restricted == False)\
             .all()], True)
 
     def can_play(self, video):
@@ -1047,8 +1057,8 @@ class Device(db.Model):
     type_id = db.Column(db.Integer, db.ForeignKey('device_types.id'))
     room_id = db.Column(db.Integer, db.ForeignKey('rooms.id'))
     mac_address = db.Column(db.Unicode(64))
+    restricted_permit = db.Column(db.Boolean, default=False)
     category = db.Column(db.Unicode(64), default='production', index=True)
-    restricted = db.Column(db.Boolean, default=False)
     obsolete = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     modified_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -1084,7 +1094,7 @@ class Device(db.Model):
             room,
             self.mac_address,
             self.category,
-            str(int(self.restricted)),
+            str(int(self.restricted_permit)),
             str(int(self.obsolete)),
             self.created_at.strftime(current_app.config['DATETIME_FORMAT']),
             self.modified_at.strftime(current_app.config['DATETIME_FORMAT']),
@@ -1102,8 +1112,8 @@ class Device(db.Model):
                 alias='Y-VOD Server',
                 type_id=DeviceType.query.filter_by(name='Server').first().id,
                 mac_address=current_app.config['SERVER_MAC_ADDRESS'],
+                restricted_permit=True,
                 category='development',
-                restricted=True,
                 modified_by_id=User.query.get(1).id
             )
             db.session.add(y_vod_server)
@@ -1126,13 +1136,13 @@ class Device(db.Model):
                                 type_id=DeviceType.query.filter_by(name=entry[2]).first().id,
                                 room_id=entry[3],
                                 mac_address=entry[4],
-                                category=entry[5],
-                                restricted=bool(int(entry[6])),
+                                restricted_permit=bool(int(entry[5])),
+                                category=entry[6],
                                 modified_by_id=User.query.get(1).id
                             )
                             db.session.add(device)
                             if verbose:
-                                print('导入设备信息', entry[0], entry[1], entry[2], entry[4], entry[5])
+                                print('导入设备信息', entry[0], entry[1], entry[2], entry[4], entry[6])
                         else:
                             if entry[4] is not None:
                                 entry[4] = Room.query.filter_by(name=entry[4]).first().id
@@ -1143,8 +1153,8 @@ class Device(db.Model):
                                 type_id=DeviceType.query.filter_by(name=entry[3]).first().id,
                                 room_id=entry[4],
                                 mac_address=entry[5],
-                                category=entry[6],
-                                restricted=bool(int(entry[7])),
+                                restricted_permit=bool(int(entry[6])),
+                                category=entry[7],
                                 obsolete=bool(int(entry[8])),
                                 created_at=datetime.strptime(entry[9], current_app.config['DATETIME_FORMAT']),
                                 modified_at=datetime.strptime(entry[10], current_app.config['DATETIME_FORMAT']),
@@ -1152,7 +1162,7 @@ class Device(db.Model):
                             )
                             db.session.add(device)
                             if verbose:
-                                print('导入设备信息', entry[2], entry[1], entry[3], entry[5], entry[6])
+                                print('导入设备信息', entry[2], entry[1], entry[3], entry[5], entry[7])
                     line_num += 1
                 db.session.commit()
         else:
@@ -1173,8 +1183,8 @@ class Device(db.Model):
                 'type',
                 'room',
                 'mac_address',
+                'restricted_permit',
                 'category',
-                'restricted',
                 'obsolete',
                 'created_at',
                 'modified_at',
@@ -1197,8 +1207,8 @@ class LessonType(db.Model):
     lessons = db.relationship('Lesson', backref='type', lazy='dynamic')
 
     @property
-    def snake_case(self):
-        '''LessonType.snake_case(self)'''
+    def name_snake_case(self):
+        '''LessonType.name_snake_case(self)'''
         return self.name.lower().replace('-', '_')
 
     @staticmethod
@@ -1235,9 +1245,19 @@ class Lesson(db.Model):
     videos = db.relationship('Video', backref='lesson', lazy='dynamic')
 
     @property
+    def unrestricted_videos(self):
+        '''Lesson.unrestricted_videos(self)'''
+        return self.videos.filter_by(restricted=False)
+
+    @property
+    def restricted_videos(self):
+        '''Lesson.restricted_videos(self)'''
+        return self.videos.filter_by(restricted=True)
+
+    @property
     def duration(self):
         '''Lesson.duration(self)'''
-        return reduce(operator.add, [video.duration for video in self.videos], timedelta())
+        return reduce(operator.add, [video.duration for video in self.unrestricted_videos], timedelta())
 
     @property
     def duration_format(self):
@@ -1367,7 +1387,7 @@ class Video(db.Model):
     @property
     def collections_format(self):
         '''Video.collections_format(self)'''
-        if self.collections.count()
+        if self.collections.count():
             return '、'.join([item.collection.name for item in self.collections])
         return 'N/A'
 
