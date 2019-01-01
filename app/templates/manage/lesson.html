@@ -35,7 +35,7 @@
                     <td>{{ macros.lesson_label_widget(lesson=lesson) }}</td>
                     <td><code>{{ lesson.duration_format }}</code></td>
                     <td>{{ lesson.dependencies_format }}</td>
-                    <td><a href="{{ url_for('manage.video', lesson_id=lesson.id) }}" data-tooltip="查看" data-position="top center" data-inverted="">{{ lesson.videos.count() }} 个</a></td>
+                    <td><a href="{{ url_for('manage.video', lesson_id=lesson.id) }}" data-tooltip="查看" data-position="top center" data-inverted="">{{ lesson.unrestricted_videos.count() }} + {{ lesson.restricted_videos.count() }} = {{ lesson.videos.count() }} 个</a></td>
                 </tr>
                 {% endfor %}
             </tbody>

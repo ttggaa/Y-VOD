@@ -21,6 +21,7 @@ class NewDeviceForm(FlaskForm):
     device_type = SelectField('设备类型', coerce=str, validators=[InputRequired()])
     room = SelectField('所属场地', coerce=str, validators=[InputRequired()])
     mac_address = StringField('MAC地址', validators=[Optional(), MacAddress()])
+    restricted_permit = BooleanField('允许访问受限资源')
     development_machine = BooleanField('开发用机器')
     submit = SubmitField('提交')
 
@@ -40,6 +41,7 @@ class EditDeviceForm(FlaskForm):
     device_type = SelectField('设备类型', coerce=str, validators=[InputRequired()])
     room = SelectField('所属场地', coerce=str, validators=[InputRequired()])
     mac_address = StringField('MAC地址', validators=[Optional(), MacAddress()])
+    restricted_permit = BooleanField('允许访问受限资源')
     development_machine = BooleanField('开发用机器')
     submit = SubmitField('提交')
 

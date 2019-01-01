@@ -9,13 +9,14 @@ from flask_login import login_required, current_user
 from . import resource
 from ..models import Device
 from ..models import Video
+from ..models import Collection
 from ..utils import get_mac_address_from_ip, send_video_file
 from ..decorators import permission_required
 
 
-@resource.route('/demo/<int:id>')
-def demo(id):
-    '''resource.demo(id)'''
+@resource.route('/collection/<int:collection_id>/<int:video_id>')
+def collection(collection_id, video_id):
+    '''resource.collection(collection_id, video_id)'''
     if current_app.config['HLS_ENABLE']:
         abort(403)
     mac_address = get_mac_address_from_ip(ip_address=request.headers.get('X-Forwarded-For', request.remote_addr))
@@ -24,9 +25,12 @@ def demo(id):
     device = Device.query.filter_by(mac_address=mac_address).first()
     if device is None:
         abort(403)
-    video = Video.query.get_or_404(id)
-    if not video.demo:
+    if not device.restricted_permit:
         return redirect(url_for('resource.video_forbidden'))
+    collection = Collection.query.get_or_404(collection_id)
+    video = Video.query.get_or_404(video_id)
+    if not collection.has_video(video=video):
+        abort(403)
     video_file = os.path.join(current_app.config['VIDEO_DIR'], video.file_name)
     if not os.path.exists(video_file):
         abort(404)
@@ -43,6 +47,8 @@ def video(id):
     if current_app.config['HLS_ENABLE']:
         abort(403)
     video = Video.query.get_or_404(id)
+    if video.restricted:
+        abort(403)
     if not current_user.can_play(video=video):
         return redirect(url_for('resource.video_forbidden'))
     video_file = os.path.join(current_app.config['VIDEO_DIR'], video.file_name)

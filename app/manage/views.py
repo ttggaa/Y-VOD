@@ -524,6 +524,7 @@ def device():
             type_id=int(form.device_type.data),
             room_id=(None if int(form.room.data) == 0 else int(form.room.data)),
             mac_address=(None if form.mac_address.data == '' else form.mac_address.data),
+            restricted_permit=form.restricted_permit.data,
             category=('development' if form.development_machine.data and current_user.is_developer else 'production'),
             modified_by_id=current_user.id
         )
@@ -700,6 +701,7 @@ def edit_device(id):
         device.type_id = int(form.device_type.data)
         device.room_id = (None if int(form.room.data) == 0 else int(form.room.data))
         device.mac_address = (None if form.mac_address.data == '' else form.mac_address.data)
+        device.restricted_permit = form.restricted_permit.data
         device.category = ('development' if form.development_machine.data and current_user.is_developer else 'production')
         db.session.add(device)
         db.session.commit()
@@ -712,6 +714,7 @@ def edit_device(id):
     form.device_type.data = str(device.type_id)
     form.room.data = ('0' if device.room_id == None else str(device.room_id))
     form.mac_address.data = device.mac_address
+    form.restricted_permit.data = device.restricted_permit
     form.development_machine.data = (device.category == 'development')
     return minify(render_template(
         'manage/edit_device.html',
