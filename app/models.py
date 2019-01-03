@@ -33,7 +33,7 @@ class Permission(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.Unicode(64), unique=True, index=True)
     category = db.Column(db.Unicode(64), index=True)
-    roles = db.relationship(
+    role_authorizations = db.relationship(
         'RolePermission',
         foreign_keys=[RolePermission.permission_id],
         backref=db.backref('permission', lazy='joined'),
@@ -88,7 +88,7 @@ class Role(db.Model):
     category = db.Column(db.Unicode(64), index=True)
     icon = db.Column(db.Unicode(64))
     level = db.Column(db.Integer, nullable=False)
-    permissions = db.relationship(
+    permission_authorizations = db.relationship(
         'RolePermission',
         foreign_keys=[RolePermission.role_id],
         backref=db.backref('role', lazy='joined'),
@@ -99,7 +99,7 @@ class Role(db.Model):
 
     def has_permission(self, permission):
         '''Role.has_permission(self, permission)'''
-        return self.permissions.filter_by(permission_id=permission.id).first() is not None
+        return self.permission_authorizations.filter_by(permission_id=permission.id).first() is not None
 
     def permissions_from_category(self, category):
         '''Role.permissions_from_category(self, category)'''
