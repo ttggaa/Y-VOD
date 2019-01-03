@@ -8,12 +8,6 @@ from wtforms.validators import InputRequired, Optional, MacAddress
 from ..models import Room, DeviceType
 
 
-class ImportUserForm(FlaskForm):
-    '''manage.forms.ImportUserForm(FlaskForm)'''
-    token = StringField('用户信息码', validators=[InputRequired()])
-    submit = SubmitField('提交')
-
-
 class NewDeviceForm(FlaskForm):
     '''manage.forms.NewDeviceForm(FlaskForm)'''
     alias = StringField('设备名', validators=[InputRequired()])

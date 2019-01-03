@@ -110,7 +110,7 @@ def video(id):
         add_user_log(user=current_user._get_current_object(), event='视频研修：{}'.format(video.name), category='study')
         db.session.commit()
     return minify(render_template(
-        'study/video_demo.html',
+        'study/video.html',
         video=video
     ))
 
