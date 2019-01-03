@@ -24,9 +24,9 @@
             </thead>
             <tbody>
                 {% for permission in permissions %}
-                <tr{% if permission.roles_num(category='student') > 1 or permission.roles_num(category='staff') > 1 %} class="top aligned"{% endif %}>
+                <tr{% if permission.role_quantity_from_category(category='student') > 1 or permission.role_quantity_from_category(category='staff') > 1 %} class="top aligned"{% endif %}>
                     <td>{{ permission.name }}</td>
-                    <td>{{ permission.roles.count() }} ({{ permission.roles_num(category='student') }} + {{ permission.roles_num(category='staff') }})</td>
+                    <td>{{ permission.roles.count() }} ({{ permission.role_quantity_from_category(category='student') }} + {{ permission.role_quantity_from_category(category='staff') }})</td>
                     <td>
                         {% with roles = permission.roles_from_category(category='student') %}{% if roles.count() > 0 %}<div class="ui ordered list">
                             {% for role in roles %}<div class="item"><i class="{{ role.icon }} icon"></i>{{ role.name }}</div>{% endfor %}

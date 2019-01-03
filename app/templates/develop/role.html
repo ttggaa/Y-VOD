@@ -26,7 +26,7 @@
             </thead>
             <tbody>
                 {% for role in roles %}
-                <tr{% if role.permissions_num(category='study') > 1 or role.permissions_num(category='manage') > 1 or role.permissions_num(category='develop') > 1 %} class="top aligned"{% endif %}>
+                <tr{% if role.permission_quantity_from_category(category='study') > 1 or role.permission_quantity_from_category(category='manage') > 1 or role.permission_quantity_from_category(category='develop') > 1 %} class="top aligned"{% endif %}>
                     <td><i class="{{ role.icon }} icon"></i>{{ role.name }}</td>
                     <td>{{ role.level }} 级</td>
                     <td>{{ role.users.count() }}</td>

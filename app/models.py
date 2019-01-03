@@ -43,21 +43,15 @@ class Permission(db.Model):
 
     def roles_from_category(self, category=None):
         '''Permission.roles_from_category(self, category=None)'''
+        query = Role.query\
+            .join(RolePermission, RolePermission.role_id == Role.id)\
+            .filter(RolePermission.permission_id == self.id)
         if category is not None:
-            roles = Role.query\
-                .join(RolePermission, RolePermission.role_id == Role.id)\
-                .filter(RolePermission.permission_id == self.id)\
-                .filter(Role.category == category)\
-                .order_by(Role.id.asc())
-        else:
-            roles = Role.query\
-                .join(RolePermission, RolePermission.role_id == Role.id)\
-                .filter(RolePermission.permission_id == self.id)\
-                .order_by(Role.id.asc())
-        return roles
+            query = query.filter(Role.category == category)
+        return query.order_by(Role.id.asc())
 
-    def roles_num(self, category=None):
-        '''Permission.roles_num(self, category=None)'''
+    def role_quantity_from_category(self, category=None):
+        '''Permission.role_quantity_from_category(self, category=None)'''
         if category is not None:
             return Role.query\
                 .join(RolePermission, RolePermission.role_id == Role.id)\
@@ -112,21 +106,15 @@ class Role(db.Model):
 
     def permissions_from_category(self, category=None):
         '''Role.permissions_from_category(self, category=None)'''
+        query = Permission.query\
+            .join(RolePermission, RolePermission.permission_id == Permission.id)\
+            .filter(RolePermission.role_id == self.id)
         if category is not None:
-            permissions = Permission.query\
-                .join(RolePermission, RolePermission.permission_id == Permission.id)\
-                .filter(RolePermission.role_id == self.id)\
-                .filter(Permission.category == category)\
-                .order_by(Permission.id.asc())
-        else:
-            permissions = Permission.query\
-                .join(RolePermission, RolePermission.permission_id == Permission.id)\
-                .filter(RolePermission.role_id == self.id)\
-                .order_by(Permission.id.asc())
-        return permissions
+            query = query.filter(Permission.category == category)
+        return query.order_by(Permission.id.asc())
 
-    def permissions_num(self, category=None):
-        '''Role.permissions_num(self, category=None)'''
+    def permission_quantity_from_category(self, category=None):
+        '''Role.permission_quantity_from_category(self, category=None)'''
         if category is not None:
             return Permission.query\
                 .join(RolePermission, RolePermission.permission_id == Permission.id)\
