@@ -41,24 +41,21 @@ class Permission(db.Model):
         cascade='all, delete-orphan'
     )
 
-    def roles_from_category(self, category=None):
-        '''Permission.roles_from_category(self, category=None)'''
-        query = Role.query\
+    def roles_from_category(self, category):
+        '''Permission.roles_from_category(self, category)'''
+        return Role.query\
             .join(RolePermission, RolePermission.role_id == Role.id)\
-            .filter(RolePermission.permission_id == self.id)
-        if category is not None:
-            query = query.filter(Role.category == category)
-        return query.order_by(Role.id.asc())
+            .filter(RolePermission.permission_id == self.id)\
+            .filter(Role.category == category)\
+            .order_by(Role.id.asc())
 
-    def role_quantity_from_category(self, category=None):
-        '''Permission.role_quantity_from_category(self, category=None)'''
-        if category is not None:
-            return Role.query\
-                .join(RolePermission, RolePermission.role_id == Role.id)\
-                .filter(RolePermission.permission_id == self.id)\
-                .filter(Role.category == category)\
-                .count()
-        return self.roles.count()
+    def role_quantity_from_category(self, category):
+        '''Permission.role_quantity_from_category(self, category)'''
+        return Role.query\
+            .join(RolePermission, RolePermission.role_id == Role.id)\
+            .filter(RolePermission.permission_id == self.id)\
+            .filter(Role.category == category)\
+            .count()
 
     @staticmethod
     def insert_entries(data, verbose=False):
@@ -104,24 +101,21 @@ class Role(db.Model):
         '''Role.has_permission(self, permission)'''
         return self.permissions.filter_by(permission_id=permission.id).first() is not None
 
-    def permissions_from_category(self, category=None):
-        '''Role.permissions_from_category(self, category=None)'''
-        query = Permission.query\
+    def permissions_from_category(self, category):
+        '''Role.permissions_from_category(self, category)'''
+        return Permission.query\
             .join(RolePermission, RolePermission.permission_id == Permission.id)\
-            .filter(RolePermission.role_id == self.id)
-        if category is not None:
-            query = query.filter(Permission.category == category)
-        return query.order_by(Permission.id.asc())
+            .filter(RolePermission.role_id == self.id)\
+            .filter(Permission.category == category)\
+            .order_by(Permission.id.asc())
 
-    def permission_quantity_from_category(self, category=None):
-        '''Role.permission_quantity_from_category(self, category=None)'''
-        if category is not None:
-            return Permission.query\
-                .join(RolePermission, RolePermission.permission_id == Permission.id)\
-                .filter(RolePermission.role_id == self.id)\
-                .filter(Permission.category == category)\
-                .count()
-        return self.permissions.count()
+    def permission_quantity_from_category(self, category):
+        '''Role.permission_quantity_from_category(self, category)'''
+        return Permission.query\
+            .join(RolePermission, RolePermission.permission_id == Permission.id)\
+            .filter(RolePermission.role_id == self.id)\
+            .filter(Permission.category == category)\
+            .count()
 
     def is_superior_than(self, role):
         '''Role.is_superior_than(self, role)'''
