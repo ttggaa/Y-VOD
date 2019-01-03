@@ -7,7 +7,7 @@
 <div class="ui masthead vertical segment">
     <div class="ui container">
         {{ macros.message_widget() }}
-        <h1 class="ui center aligned header"><i class="chalkboard teacher icon"></i>{{ header }}</h1>
+        <h1 class="ui center aligned header"><i class="chalkboard teacher icon"></i>研修课程：{{ header }}</h1>
     </div>
 </div>
 <div class="ui main vertical segment">
@@ -31,7 +31,7 @@
                 <tr>
                     <td><div class="ui {{ lesson.type.color }} horizontal label">{{ lesson.type.name }}</div>{{ lesson.abbr }}</td>
                     <td><code>{{ lesson.duration_format }}</code></td>
-                    <td>{{ lesson.unrestricted_videos.count() }} 个</td>
+                    <td>{{ lesson.videos.count() }} 个</td>
                     <td>{{ current_user.lesson_progress_percentage(lesson=lesson) }}</td>
                     <td>{% if current_user.can_study(lesson=lesson) %}<a class="ui mini {{ lesson.type.color }} left labeled icon button" href="{{ url_for('study.video', id=lesson.videos.first().id) }}"><i class="play circle icon"></i>研修</a>{% else %}<div class="ui mini {{ lesson.type.color }} left labeled icon button disabled"><i class="lock icon"></i>研修</div>{% endif %}</td>
                 </tr>

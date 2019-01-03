@@ -38,20 +38,14 @@
                 {{ form.mac_address.label() }}
                 {{ form.mac_address(placeholder='MAC地址') }}
             </div>
-            <div class="ui segment">
+            {% if current_user.is_developer %}<div class="ui segment">
                 <div class="inline field">
-                    <div class="ui toggle checkbox">
-                        {{ form.restricted_permit() }}
-                        {{ form.restricted_permit.label() }}
-                    </div>
-                </div>
-                {% if current_user.is_developer %}<div class="inline field">
                     <div class="ui toggle checkbox">
                         {{ form.development_machine() }}
                         {{ form.development_machine.label() }}
                     </div>
-                </div>{% endif %}
-            </div>
+                </div>
+            </div>{% endif %}
             {{ form.submit(class='ui primary button') }}
             <a class="ui button" href="{{ request.args.get('next') or url_for('manage.device') }}">取消</a>
         </form>

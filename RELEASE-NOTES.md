@@ -1,6 +1,6 @@
 ## RELEASE NOTES
 
-### Version 1.0.1 - January 1, 2019
+### Version 1.0.1 - January 4, 2019
 
 **NEW**
 - **Model** - Add `demo` attribute to video data model #1
@@ -9,9 +9,16 @@
 - **Model** - Add `restricted_permit` attribute to device data model #9
 - **Feature** - Only permitted devices can access restricted videos #10
 - **Feature** - Add VB demo lessons, Y-GRE demo lessons, and Y-GRE test reviews #11
+- **Model** - Add device lesson data model #13
+- **Model** - Add `name_snake_case` attribute to lesson type data model #19
 
 **IMPROVED**
 - **Model** - Change `demo` attribute of video data model to `restricted` #7
+- **Model** - Remove user creation data model #14
+- **Model** - Change `created_at` attribute of video data model to `imported_at` #15
+- **Model** - Remove `restricted_permit` attribute from device data model #16
+- **Model** - Remove `restricted` attribute from video data model #17
+- **Model** - Remove `order` attribute from lesson data model #18
 
 **FIXED**
 

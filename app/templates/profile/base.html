@@ -36,8 +36,7 @@
                         {% if current_user.is_developer %}<div>设备MAC地址：{{ user.last_seen_mac }}</div>{% endif %}
                     </div>
                     {% if current_user.is_staff %}<div class="ui vertical segment">
-                        <div>创建时间：{{ macros.from_now_widget(user.created_at) }}</div>
-                        <div>创建人：{{ macros.user_url_widget(user.created_by, user.created_by.id == current_user.id) }}</div>
+                        <div>创建时间：{{ macros.from_now_widget(user.imported_at) }}</div>
                     </div>{% endif %}
                     {% if current_user.can_manage(user=user) %}<div class="ui vertical segment">
                         <div class="ui labels">
@@ -50,7 +49,6 @@
                                     <div id="suspension-hide-trigger" class="ui black button">返回</div>
                                 </div>
                             </div>
-                            <a class="ui label" href="{{ url_for('manage.reimport_user', id=user.id, next=user.profile_url(tab=profile_tab)) }}"><i class="file import icon"></i>重新导入</a>
                         </div>
                     </div>{% endif %}
                 </div>

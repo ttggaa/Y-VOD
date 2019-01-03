@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% import "_macros.html" as macros %}
 
-{% block title %}{{ collection.name }}{% endblock %}
+{% block title %}{{ video.abbr }} &middot; {{ video.lesson.name }}{% endblock %}
 
 {% block css %}
 <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='assets/library/player/player.min.css') }}">
@@ -11,7 +11,7 @@
 <div class="ui masthead vertical segment">
     <div class="ui container">
         {{ macros.message_widget() }}
-        <h1 class="ui center aligned header"><i class="chalkboard teacher icon"></i>{{ collection.name }}</h1>
+        <h1 class="ui center aligned header"><i class="chalkboard teacher icon"></i>{{ video.lesson.type.name }}：{{ video.lesson.abbr }}</h1>
     </div>
 </div>
 <div id="main" class="ui main vertical segment">
@@ -20,8 +20,9 @@
             <div class="four wide column">
                 <div class="ui vertical segment">
                     <div class="ui header">研修视频列表</div>
-                    <div class="ui secondary fluid vertical menu">
-                        {% for item in videos %}<a class="{% if item.id == video.id %}active {% endif %}item" href="{{ url_for('study.collection', name=collection.name, video_id=item.id) }}#main"><i class="{% if item.id == video.id %}{{ item.lesson.type.color }} play{% else %}file video{% endif %} icon"></i>{{ item.name }}</a>{% endfor %}
+                    <div class="ui small secondary fluid vertical menu">
+                        {% for item in video.lesson.videos %}<a class="{% if item.id == video.id %}active {% endif %}item" href="{{ url_for('study.video', id=item.id) }}#main"><i class="file video icon"></i>{{ item.abbr }}</a>{% endfor %}
+                        <a class="item" href="{{ url_for('study.{}'.format(video.lesson.type.name_snake_case)) }}"><i class="arrow left icon"></i>返回研修课程列表</a>
                     </div>
                 </div>
             </div>
@@ -50,7 +51,7 @@ const videoPlayer = new Player({
     container: document.getElementById('player-container'),
     volume: 1.0,
     video: {
-        url: {% if not config.HLS_ENABLE -%}"{{ url_for('resource.collection', collection_id=collection.id, video_id=video.id) }}"{% else %}"{{ video.hls_url }}",
+        url: {% if not config.HLS_ENABLE -%}"{{ url_for('resource.video', id=video.id) }}"{% else %}"{{ video.hls_url }}",
         type: 'hls'{%- endif %}
     }
 });

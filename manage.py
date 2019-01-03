@@ -102,9 +102,6 @@ def deploy():
     from app.models import Lesson
     Lesson.insert_entries(data=data, verbose=verbose)
 
-    from app.models import Collection
-    Collection.insert_entries(data=data, verbose=verbose)
-
     from app.models import Video
     Video.insert_entries(data=data, verbose=verbose)
 
@@ -116,14 +113,14 @@ def deploy():
         from app.models import User
         User.insert_entries(data=data, verbose=verbose)
 
-        from app.models import UserCreation
-        UserCreation.insert_entries(data=data, verbose=verbose)
-
         from app.models import Punch
         Punch.insert_entries(data=data, verbose=verbose)
 
         from app.models import Device
         Device.insert_entries(data=data, verbose=verbose)
+
+        from app.models import DeviceLesson
+        DeviceLesson.insert_entries(data=data, verbose=verbose)
 
         from app.models import UserLog
         UserLog.insert_entries(data=data, verbose=verbose)
@@ -143,14 +140,14 @@ def backup():
     from app.models import User
     User.backup_entries(data=data)
 
-    from app.models import UserCreation
-    UserCreation.backup_entries(data=data)
-
     from app.models import Punch
     Punch.backup_entries(data=data)
 
     from app.models import Device
     Device.backup_entries(data=data)
+
+    from app.models import DeviceLesson
+    DeviceLesson.backup_entries(data=data)
 
     from app.models import UserLog
     UserLog.backup_entries(data=data)

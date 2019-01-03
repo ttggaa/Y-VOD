@@ -11,8 +11,10 @@
     {% if current_user.can('研修') %}<div class="item">
         <div class="header">研修</div>
         <div class="menu">
-            {% if current_user.can('研修VB') %}<a class="item"  href="{{ url_for('study.vb') }}"><i class="chalkboard teacher icon"></i>VB研修</a>{% endif %}
-            {% if current_user.can('研修Y-GRE') %}<a class="item"  href="{{ url_for('study.y_gre') }}"><i class="chalkboard teacher icon"></i>Y-GRE研修</a>{% endif %}
+            {% if current_user.can('研修VB') %}<a class="item"  href="{{ url_for('study.vb') }}"><i class="chalkboard teacher icon"></i>VB</a>{% endif %}
+            {% if current_user.can('研修Y-GRE') %}<a class="item"  href="{{ url_for('study.y_gre') }}"><i class="chalkboard teacher icon"></i>Y-GRE</a>
+            <a class="item"  href="{{ url_for('study.y_gre_aw') }}"><i class="chalkboard teacher icon"></i>Y-GRE AW</a>
+            <a class="item"  href="{{ url_for('study.test_review') }}"><i class="chalkboard teacher icon"></i>考试讲解</a>{% endif %}
         </div>
     </div>{% endif %}
     {% if current_user.is_staff %}<div class="item">
@@ -45,8 +47,6 @@
     <a class="item" href="{{ url_for('auth.logout') }}"><i class="door open icon"></i>登出</a>
     {% else %}
     <a class="item" href="{{ url_for('auth.login') }}"><i class="user circle icon"></i>登录</a>
-    <a class="item" href="{{ url_for('study.collection', name='VB 体验课程') }}"><i class="chalkboard teacher icon"></i>VB 体验课程</a>
-    <a class="item" href="{{ url_for('study.collection', name='Y-GRE 体验课程') }}"><i class="chalkboard teacher icon"></i>Y-GRE 体验课程</a>
-    <a class="item" href="{{ url_for('study.collection', name='Y-GRE 考试讲解') }}"><i class="chalkboard teacher icon"></i>Y-GRE 考试讲解</a>
+    <a class="item" href="{{ url_for('study.demo') }}"><i class="chalkboard teacher icon"></i>体验课程</a>
     {% endif %}
 </div>

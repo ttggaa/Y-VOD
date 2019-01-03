@@ -7,7 +7,7 @@
 <div class="ui masthead vertical segment">
     <div class="ui container">
         {{ macros.message_widget() }}
-        <h1 class="ui center aligned header"><i class="file video icon"></i>研修视频：{{ lesson.name }}</h1>
+        <h1 class="ui center aligned header"><i class="book icon"></i>{{ lesson.type.name }}：{{ lesson.abbr }}</h1>
     </div>
 </div>
 <div class="ui main vertical segment">
@@ -15,9 +15,11 @@
         <div class="ui breadcrumb">
             <a class="section" href="{{ url_for('manage.lesson') }}">研修课程</a>
             <i class="chevron right icon divider"></i>
-            <div class="section">研修视频</div>
+            <div class="section">{{ lesson.type.name }}</div>
             <i class="chevron right icon divider"></i>
-            <div class="active section">{{ lesson.name }}</div>
+            <div class="active section">{{ lesson.abbr }}</div>
+            <i class="chevron right icon divider"></i>
+            <div class="section">研修视频</div>
         </div>
         <h3 class="ui header">
             <i class="file video icon"></i>
@@ -27,8 +29,6 @@
             <thead>
                 <tr>
                     <th>视频名称</th>
-                    <th>选集</th>
-                    <th>受限资源</th>
                     <th>视频时长</th>
                     {% if current_user.is_developer %}<th>视频文件</th>
                     {% if config.HLS_ENABLE %}<th>HLS文件</th>
@@ -39,8 +39,6 @@
                 {% for video in videos %}
                 <tr>
                     <td>{{ macros.video_label_widget(video=video) }}</td>
-                    <td>{{ video.collections_format }}</td>
-                    {% if video.restricted %}<td class="negative">受限</td>{% else %}<td class="positive">非受限</td>{% endif %}
                     <td><code>{{ video.duration_format }}</code></td>
                     {% if current_user.is_developer %}<td><code>{{ video.file_name }}</code></td>
                     {% if config.HLS_ENABLE %}<td><code>{{ video.hls_cache_file_name }}</code></td>
