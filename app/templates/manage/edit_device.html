@@ -38,6 +38,10 @@
                 {{ form.mac_address.label() }}
                 {{ form.mac_address(placeholder='MAC地址') }}
             </div>
+            <div class="field">
+                {{ form.lessons.label() }}
+                {{ form.lessons(class='ui dropdown') }}
+            </div>
             {% if current_user.is_developer %}<div class="ui segment">
                 <div class="inline field">
                     <div class="ui toggle checkbox">

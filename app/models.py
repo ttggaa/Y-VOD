@@ -845,33 +845,6 @@ def load_user(user_id):
     return User.query.get(int(user_id))
 
 
-class Room(db.Model):
-    '''Table: rooms'''
-    __tablename__ = 'rooms'
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.Unicode(64), unique=True, index=True)
-    devices = db.relationship('Device', backref='room', lazy='dynamic')
-
-    @staticmethod
-    def insert_entries(data, verbose=False):
-        '''Room.insert_entries(data, verbose=False)'''
-        yaml_file = os.path.join(current_app.config['DATA_DIR'], data, 'rooms.yml')
-        entries = load_yaml(yaml_file=yaml_file)
-        if entries is not None:
-            print('---> Read: {}'.format(yaml_file))
-            for entry in entries:
-                room = Room(name=entry['name'])
-                db.session.add(room)
-                if verbose:
-                    print('导入房间信息', entry['name'])
-            db.session.commit()
-        else:
-            print('文件不存在', yaml_file)
-
-    def __repr__(self):
-        return '<Room {}>'.format(self.name)
-
-
 class DeviceLesson(db.Model):
     '''Table: device_lessons'''
     __tablename__ = 'device_lessons'
@@ -929,6 +902,33 @@ class DeviceLesson(db.Model):
         return '<Device Lesson {} {}>'.format(self.device.name, self.lesson.name)
 
 
+class Room(db.Model):
+    '''Table: rooms'''
+    __tablename__ = 'rooms'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.Unicode(64), unique=True, index=True)
+    devices = db.relationship('Device', backref='room', lazy='dynamic')
+
+    @staticmethod
+    def insert_entries(data, verbose=False):
+        '''Room.insert_entries(data, verbose=False)'''
+        yaml_file = os.path.join(current_app.config['DATA_DIR'], data, 'rooms.yml')
+        entries = load_yaml(yaml_file=yaml_file)
+        if entries is not None:
+            print('---> Read: {}'.format(yaml_file))
+            for entry in entries:
+                room = Room(name=entry['name'])
+                db.session.add(room)
+                if verbose:
+                    print('导入房间信息', entry['name'])
+            db.session.commit()
+        else:
+            print('文件不存在', yaml_file)
+
+    def __repr__(self):
+        return '<Room {}>'.format(self.name)
+
+
 class DeviceType(db.Model):
     '''Table: device_types'''
     __tablename__ = 'device_types'
@@ -974,7 +974,7 @@ class Device(db.Model):
     imported_at = db.Column(db.DateTime, default=datetime.utcnow)
     modified_at = db.Column(db.DateTime, default=datetime.utcnow)
     modified_by_id = db.Column(db.Integer, db.ForeignKey('users.id'))
-    authorized_lessons = db.relationship(
+    lesson_authorizations = db.relationship(
         'DeviceLesson',
         foreign_keys=[DeviceLesson.device_id],
         backref=db.backref('device', lazy='joined'),
@@ -998,6 +998,21 @@ class Device(db.Model):
     def alias2(self):
         '''Device.alias2(self)'''
         return '{} [{}]'.format(self.alias, self.serial)
+
+    def add_lesson(self, lesson):
+        '''Device.add_lesson(self, lesson)'''
+        if not self.has_lesson(lesson=lesson):
+            device_lesson = DeviceLesson(device_id=self.id, lesson_id=lesson.id)
+            db.session.add(device_lesson)
+
+    def has_lesson(self, lesson):
+        '''Device.has_lesson(self, lesson)'''
+        return self.lesson_authorizations.filter_by(lesson_id=lesson.id).first() is not None
+
+    def empty_lessons(self):
+        '''Device.empty_lessons(self)'''
+        for item in self.lesson_authorizations:
+            db.session.delete(item)
 
     def to_csv(self):
         '''Device.to_csv(self)'''
@@ -1152,7 +1167,7 @@ class Lesson(db.Model):
     abbr = db.Column(db.Unicode(64))
     type_id = db.Column(db.Integer, db.ForeignKey('lesson_types.id'))
     videos = db.relationship('Video', backref='lesson', lazy='dynamic')
-    authorized_devices = db.relationship(
+    device_authorizations = db.relationship(
         'DeviceLesson',
         foreign_keys=[DeviceLesson.lesson_id],
         backref=db.backref('lesson', lazy='joined'),
