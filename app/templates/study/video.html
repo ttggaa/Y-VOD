@@ -19,10 +19,10 @@
         <div class="row">
             <div class="four wide column">
                 <div class="ui vertical segment">
-                    <div class="ui header">研修视频列表</div>
+                    <div class="ui header">视频列表</div>
                     <div class="ui small secondary fluid vertical menu">
                         {% for item in video.lesson.videos %}<a class="{% if item.id == video.id %}active {% endif %}item" href="{{ url_for('study.video', id=item.id) }}#main"><i class="file video icon"></i>{{ item.abbr }}<div {% if item.id == video.id %}id="video-progress-side" {% endif %}class="ui {% if current_user.complete_video(video=item) %}green {% elif item.id == video.id %}orange {% endif %}label">{{ current_user.video_progress_percentage(video=item) }}</div></a>{% endfor %}
-                        <a class="item" href="{{ url_for('study.{}'.format(video.lesson.type.view_point)) }}"><i class="arrow left icon"></i>返回研修课程列表</a>
+                        <a class="item" href="{{ url_for('study.{}'.format(video.lesson.type.view_point)) }}"><i class="arrow left icon"></i>返回课程列表</a>
                     </div>
                 </div>
             </div>
