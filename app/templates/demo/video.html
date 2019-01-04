@@ -21,8 +21,8 @@
                 <div class="ui vertical segment">
                     <div class="ui header">视频列表</div>
                     <div class="ui small secondary fluid vertical menu">
-                        {% for item in video.lesson.videos %}<a class="{% if item.id == video.id %}active {% endif %}item" href="{{ url_for('study.demo_video', id=item.id) }}#main"><i class="file video icon"></i>{{ item.abbr }}</a>{% endfor %}
-                        <a class="item" href="{{ url_for('study.{}'.format(video.lesson.type.view_point)) }}"><i class="arrow left icon"></i>返回课程列表</a>
+                        {% for item in video.lesson.videos %}<a class="{% if item.id == video.id %}active {% endif %}item" href="{{ url_for('demo.video', id=item.id) }}#main"><i class="file video icon"></i>{{ item.abbr }}</a>{% endfor %}
+                        <a class="item" href="{{ url_for('demo.lesson') }}"><i class="arrow left icon"></i>返回课程列表</a>
                     </div>
                 </div>
             </div>

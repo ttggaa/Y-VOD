@@ -11,7 +11,7 @@ import csv
 import yaml
 from getmac import get_mac_address
 from pymediainfo import MediaInfo
-from flask import current_app, Response
+from flask import Response
 from pypinyin import slug, Style
 
 

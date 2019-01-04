@@ -31,7 +31,7 @@
                     <td><div class="ui {{ lesson.type.color }} horizontal label">{{ lesson.type.name }}</div>{{ lesson.abbr }}</td>
                     <td><code>{{ lesson.duration_format }}</code></td>
                     <td>{{ lesson.videos.count() }} 个</td>
-                    <td><a class="ui mini {{ lesson.type.color }} left labeled icon button" href="{{ url_for('study.demo_video', id=lesson.videos.first().id) }}"><i class="play circle icon"></i>观看</a></td>
+                    <td><a class="ui mini {{ lesson.type.color }} left labeled icon button" href="{{ url_for('demo.video', id=lesson.videos.first().id) }}"><i class="play circle icon"></i>观看</a></td>
                 </tr>
                 {% endfor %}
             </tbody>

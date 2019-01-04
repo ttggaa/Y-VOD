@@ -3,13 +3,12 @@
 '''app/profile/views.py'''
 
 from htmlmin import minify
-from flask import render_template, jsonify, redirect, request, url_for, abort, current_app
+from flask import render_template, jsonify, request, abort, current_app
 from flask_login import login_required, current_user
 from . import profile
 from ..models import User
 from ..models import UserLog
 from ..models import LessonType, Lesson
-from ..decorators import permission_required
 
 
 @profile.route('/<int:id>/overview')
