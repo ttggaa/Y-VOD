@@ -42,8 +42,7 @@ def demo_video(id):
     if current_app.config['HLS_ENABLE']:
         abort(403)
     video = Video.query.get_or_404(id)
-    lesson_type_name = video.lesson.type.name
-    if not device.can_access_lesson_type(lesson_type_name=lesson_type_name):
+    if not device.can_access_lesson_type(lesson_type=video.lesson.type):
         abort(403)
     video_file = os.path.join(current_app.config['VIDEO_DIR'], video.file_name)
     if not os.path.exists(video_file):

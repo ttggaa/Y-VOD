@@ -21,17 +21,17 @@ def lesson():
     if device is None:
         flash('设备未授权（MAC地址：{}）'.format(mac_address), category='error')
         return redirect(url_for('auth.login'))
-    lesson_type_name = '体验课程'
-    if not device.can_access_lesson_type(lesson_type_name=lesson_type_name):
-        flash('该设备无法访问“{}”资源'.format(lesson_type_name), category='error')
+    lesson_type = '体验课程'
+    if not device.can_access_lesson_type(lesson_type=lesson_type):
+        flash('该设备无法访问“{}”资源'.format(lesson_type), category='error')
         return redirect(url_for('auth.login'))
     lessons = Lesson.query\
         .join(LessonType, LessonType.id == Lesson.type_id)\
-        .filter(LessonType.name == lesson_type_name)\
+        .filter(LessonType.name == lesson_type)\
         .order_by(Lesson.id.asc())
     return minify(render_template(
         'demo/lesson.html',
-        header=lesson_type_name,
+        header=lesson_type,
         lessons=lessons
     ))
 
@@ -48,9 +48,8 @@ def video(id):
         flash('设备未授权（MAC地址：{}）'.format(mac_address), category='error')
         return redirect(url_for('auth.login'))
     video = Video.query.get_or_404(id)
-    lesson_type_name = video.lesson.type.name
-    if not device.can_access_lesson_type(lesson_type_name=lesson_type_name):
-        flash('该设备无法访问“{}”资源'.format(lesson_type_name), category='error')
+    if not device.can_access_lesson_type(lesson_type=video.lesson.type):
+        flash('该设备无法访问“{}”资源'.format(video.lesson.type.name), category='error')
         return redirect(url_for('auth.login'))
     return minify(render_template(
         'demo/video.html',

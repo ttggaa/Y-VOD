@@ -991,9 +991,10 @@ class Device(db.Model):
         '''Device.has_lesson_type(self, lesson_type)'''
         return self.lesson_type_authorizations.filter_by(lesson_type_id=lesson_type.id).first() is not None
 
-    def can_access_lesson_type(self, lesson_type_name):
-        '''Device.can_access_lesson_type(self, lesson_type_name)'''
-        lesson_type = LessonType.query.filter_by(name=lesson_type_name).first()
+    def can_access_lesson_type(self, lesson_type):
+        '''Device.can_access_lesson_type(self, lesson_type)'''
+        if isinstance(lesson_type, str):
+            lesson_type = LessonType.query.filter_by(name=lesson_type).first()
         return lesson_type is not None and \
             self.lesson_type_authorizations.filter_by(lesson_type_id=lesson_type.id).first() is not None
 

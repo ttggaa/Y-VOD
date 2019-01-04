@@ -27,17 +27,17 @@ def vb():
     if device is None:
         flash('设备未授权（MAC地址：{}）'.format(mac_address), category='error')
         return redirect(url_for('auth.login'))
-    lesson_type_name = 'VB'
-    if not device.can_access_lesson_type(lesson_type_name=lesson_type_name):
-        flash('该设备无法访问“{}”资源'.format(lesson_type_name), category='error')
+    lesson_type = 'VB'
+    if not device.can_access_lesson_type(lesson_type=lesson_type):
+        flash('该设备无法访问“{}”资源'.format(lesson_type), category='error')
         return redirect(url_for('auth.login'))
     lessons = Lesson.query\
         .join(LessonType, LessonType.id == Lesson.type_id)\
-        .filter(LessonType.name == lesson_type_name)\
+        .filter(LessonType.name == lesson_type)\
         .order_by(Lesson.id.asc())
     return minify(render_template(
         'study/lesson.html',
-        header=lesson_type_name,
+        header=lesson_type,
         lessons=lessons
     ))
 
@@ -55,17 +55,17 @@ def y_gre():
     if device is None:
         flash('设备未授权（MAC地址：{}）'.format(mac_address), category='error')
         return redirect(url_for('auth.login'))
-    lesson_type_name = 'Y-GRE'
-    if not device.can_access_lesson_type(lesson_type_name=lesson_type_name):
-        flash('该设备无法访问“{}”资源'.format(lesson_type_name), category='error')
+    lesson_type = 'Y-GRE'
+    if not device.can_access_lesson_type(lesson_type=lesson_type):
+        flash('该设备无法访问“{}”资源'.format(lesson_type), category='error')
         return redirect(url_for('auth.login'))
     lessons = Lesson.query\
         .join(LessonType, LessonType.id == Lesson.type_id)\
-        .filter(LessonType.name == lesson_type_name)\
+        .filter(LessonType.name == lesson_type)\
         .order_by(Lesson.id.asc())
     return minify(render_template(
         'study/lesson.html',
-        header=lesson_type_name,
+        header=lesson_type,
         lessons=lessons
     ))
 
@@ -83,17 +83,17 @@ def y_gre_aw():
     if device is None:
         flash('设备未授权（MAC地址：{}）'.format(mac_address), category='error')
         return redirect(url_for('auth.login'))
-    lesson_type_name = 'Y-GRE AW'
-    if not device.can_access_lesson_type(lesson_type_name=lesson_type_name):
-        flash('该设备无法访问“{}”资源'.format(lesson_type_name), category='error')
+    lesson_type = 'Y-GRE AW'
+    if not device.can_access_lesson_type(lesson_type=lesson_type):
+        flash('该设备无法访问“{}”资源'.format(lesson_type), category='error')
         return redirect(url_for('auth.login'))
     lessons = Lesson.query\
         .join(LessonType, LessonType.id == Lesson.type_id)\
-        .filter(LessonType.name == lesson_type_name)\
+        .filter(LessonType.name == lesson_type)\
         .order_by(Lesson.id.asc())
     return minify(render_template(
         'study/lesson.html',
-        header=lesson_type_name,
+        header=lesson_type,
         lessons=lessons
     ))
 
@@ -111,17 +111,17 @@ def test_review():
     if device is None:
         flash('设备未授权（MAC地址：{}）'.format(mac_address), category='error')
         return redirect(url_for('auth.login'))
-    lesson_type_name = '考试讲解'
-    if not device.can_access_lesson_type(lesson_type_name=lesson_type_name):
-        flash('该设备无法访问“{}”资源'.format(lesson_type_name), category='error')
+    lesson_type = '考试讲解'
+    if not device.can_access_lesson_type(lesson_type=lesson_type):
+        flash('该设备无法访问“{}”资源'.format(lesson_type), category='error')
         return redirect(url_for('auth.login'))
     lessons = Lesson.query\
         .join(LessonType, LessonType.id == Lesson.type_id)\
-        .filter(LessonType.name == lesson_type_name)\
+        .filter(LessonType.name == lesson_type)\
         .order_by(Lesson.id.asc())
     return minify(render_template(
         'study/lesson.html',
-        header=lesson_type_name,
+        header=lesson_type,
         lessons=lessons
     ))
 
