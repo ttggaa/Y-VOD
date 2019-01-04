@@ -416,7 +416,7 @@ class User(UserMixin, db.Model):
             return False
         permission = Permission.query.filter_by(name=permission_name).first()
         return permission is not None and \
-            self.role is not None and \
+            self.role_id is not None and \
             self.role.has_permission(permission=permission)
 
     def plays(self, role_name):
@@ -425,8 +425,8 @@ class User(UserMixin, db.Model):
             return False
         role = Role.query.filter_by(name=role_name).first()
         return role is not None and \
-            self.role is not None and \
-            (self.role.id == role.id or self.role.is_superior_than(role=role))
+            self.role_id is not None and \
+            (self.role_id == role.id or self.role.is_superior_than(role=role))
 
     @property
     def is_student(self):
@@ -827,24 +827,24 @@ def load_user(user_id):
     return User.query.get(int(user_id))
 
 
-class DeviceLesson(db.Model):
-    '''Table: device_lessons'''
-    __tablename__ = 'device_lessons'
+class DeviceLessonType(db.Model):
+    '''Table: device_lesson_types'''
+    __tablename__ = 'device_lesson_types'
     device_id = db.Column(db.Integer, db.ForeignKey('devices.id'), primary_key=True)
-    lesson_id = db.Column(db.Integer, db.ForeignKey('lessons.id'), primary_key=True)
+    lesson_type_id = db.Column(db.Integer, db.ForeignKey('lesson_types.id'), primary_key=True)
 
     def to_csv(self):
-        '''DeviceLesson.to_csv(self)'''
+        '''DeviceLessonType.to_csv(self)'''
         entry_csv = [
             str(self.device_id),
-            self.lesson.name,
+            self.lesson_type.name,
         ]
         return entry_csv
 
     @staticmethod
     def insert_entries(data, verbose=False):
-        '''DeviceLesson.insert_entries(data, verbose=False)'''
-        csv_file = os.path.join(current_app.config['DATA_DIR'], data, 'device_lessons.csv')
+        '''DeviceLessonType.insert_entries(data, verbose=False)'''
+        csv_file = os.path.join(current_app.config['DATA_DIR'], data, 'device_lesson_types.csv')
         if os.path.exists(csv_file):
             print('---> Read: {}'.format(csv_file))
             with io.open(csv_file, 'rt', newline='') as f:
@@ -852,13 +852,13 @@ class DeviceLesson(db.Model):
                 line_num = 0
                 for entry in reader:
                     if line_num >= 1:
-                        device_lesson = DeviceLesson(
+                        device_lesson_type = DeviceLessonType(
                             device_id=int(entry[0]),
-                            lesson_id=Lesson.query.filter_by(name=entry[1]).first().id
+                            lesson_type_id=LessonType.query.filter_by(name=entry[1]).first().id
                         )
-                        db.session.add(device_lesson)
+                        db.session.add(device_lesson_type)
                         if verbose:
-                            print('导入设备课程授权信息', entry[0], entry[1])
+                            print('导入设备课程类型授权信息', entry[0], entry[1])
                     line_num += 1
                 db.session.commit()
         else:
@@ -866,22 +866,22 @@ class DeviceLesson(db.Model):
 
     @staticmethod
     def backup_entries(data):
-        '''DeviceLesson.backup_entries(data)'''
-        csv_file = os.path.join(current_app.config['DATA_DIR'], data, 'device_lessons.csv')
+        '''DeviceLessonType.backup_entries(data)'''
+        csv_file = os.path.join(current_app.config['DATA_DIR'], data, 'device_lesson_types.csv')
         if os.path.exists(csv_file):
             os.remove(csv_file)
         with io.open(csv_file, 'wt', newline='') as f:
             writer = CSVWriter(f)
             writer.writerow([
                 'device_id',
-                'lesson',
+                'lesson_type',
             ])
-            for entry in DeviceLesson.query.all():
+            for entry in DeviceLessonType.query.all():
                 writer.writerow(entry.to_csv())
             print('---> Write: {}'.format(csv_file))
 
     def __repr__(self):
-        return '<Device Lesson {} {}>'.format(self.device.name, self.lesson.name)
+        return '<Device Lesson Type {} {}>'.format(self.device.name, self.lesson_type.name)
 
 
 class Room(db.Model):
@@ -956,9 +956,9 @@ class Device(db.Model):
     imported_at = db.Column(db.DateTime, default=datetime.utcnow)
     modified_at = db.Column(db.DateTime, default=datetime.utcnow)
     modified_by_id = db.Column(db.Integer, db.ForeignKey('users.id'))
-    lesson_authorizations = db.relationship(
-        'DeviceLesson',
-        foreign_keys=[DeviceLesson.device_id],
+    lesson_type_authorizations = db.relationship(
+        'DeviceLessonType',
+        foreign_keys=[DeviceLessonType.device_id],
         backref=db.backref('device', lazy='joined'),
         lazy='dynamic',
         cascade='all, delete-orphan'
@@ -981,19 +981,25 @@ class Device(db.Model):
         '''Device.alias2(self)'''
         return '{} [{}]'.format(self.alias, self.serial)
 
-    def add_lesson(self, lesson):
-        '''Device.add_lesson(self, lesson)'''
-        if not self.has_lesson(lesson=lesson):
-            device_lesson = DeviceLesson(device_id=self.id, lesson_id=lesson.id)
-            db.session.add(device_lesson)
+    def add_lesson_type(self, lesson_type):
+        '''Device.add_lesson_type(self, lesson_type)'''
+        if not self.has_lesson_type(lesson_type=lesson_type):
+            device_lesson_type = DeviceLessonType(device_id=self.id, lesson_type_id=lesson_type.id)
+            db.session.add(device_lesson_type)
 
-    def has_lesson(self, lesson):
-        '''Device.has_lesson(self, lesson)'''
-        return self.lesson_authorizations.filter_by(lesson_id=lesson.id).first() is not None
+    def has_lesson_type(self, lesson_type):
+        '''Device.has_lesson_type(self, lesson_type)'''
+        return self.lesson_type_authorizations.filter_by(lesson_type_id=lesson_type.id).first() is not None
 
-    def empty_lessons(self):
-        '''Device.empty_lessons(self)'''
-        for item in self.lesson_authorizations:
+    def can_access_lesson_type(self, lesson_type_name):
+        '''Device.can_access_lesson_type(self, lesson_type_name)'''
+        lesson_type = LessonType.query.filter_by(name=lesson_type_name).first()
+        return lesson_type is not None and \
+            self.lesson_type_authorizations.filter_by(lesson_type_id=lesson_type.id).first() is not None
+
+    def remove_all_lesson_types(self):
+        '''Device.remove_all_lesson_types(self)'''
+        for item in self.lesson_type_authorizations:
             db.session.delete(item)
 
     def to_csv(self):
@@ -1117,6 +1123,13 @@ class LessonType(db.Model):
     view_point = db.Column(db.Unicode(64))
     login_required = db.Column(db.Boolean, default=True)
     lessons = db.relationship('Lesson', backref='type', lazy='dynamic')
+    device_authorizations = db.relationship(
+        'DeviceLessonType',
+        foreign_keys=[DeviceLessonType.lesson_type_id],
+        backref=db.backref('lesson_type', lazy='joined'),
+        lazy='dynamic',
+        cascade='all, delete-orphan'
+    )
 
     @staticmethod
     def insert_entries(data, verbose=False):
@@ -1151,13 +1164,6 @@ class Lesson(db.Model):
     abbr = db.Column(db.Unicode(64))
     type_id = db.Column(db.Integer, db.ForeignKey('lesson_types.id'))
     videos = db.relationship('Video', backref='lesson', lazy='dynamic')
-    device_authorizations = db.relationship(
-        'DeviceLesson',
-        foreign_keys=[DeviceLesson.lesson_id],
-        backref=db.backref('lesson', lazy='joined'),
-        lazy='dynamic',
-        cascade='all, delete-orphan'
-    )
 
     @property
     def duration(self):

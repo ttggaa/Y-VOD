@@ -119,8 +119,8 @@ def deploy():
         from app.models import Device
         Device.insert_entries(data=data, verbose=verbose)
 
-        from app.models import DeviceLesson
-        DeviceLesson.insert_entries(data=data, verbose=verbose)
+        from app.models import DeviceLessonType
+        DeviceLessonType.insert_entries(data=data, verbose=verbose)
 
         from app.models import UserLog
         UserLog.insert_entries(data=data, verbose=verbose)
@@ -146,8 +146,8 @@ def backup():
     from app.models import Device
     Device.backup_entries(data=data)
 
-    from app.models import DeviceLesson
-    DeviceLesson.backup_entries(data=data)
+    from app.models import DeviceLessonType
+    DeviceLessonType.backup_entries(data=data)
 
     from app.models import UserLog
     UserLog.backup_entries(data=data)
