@@ -1,8 +1,8 @@
 """initial
 
-Revision ID: 52d2e9398e45
+Revision ID: 69597e8aee36
 Revises: 
-Create Date: 2019-01-04 05:19:03.434437
+Create Date: 2019-01-04 07:55:56.054821
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '52d2e9398e45'
+revision = '69597e8aee36'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -41,8 +41,9 @@ def upgrade():
     op.create_table('lesson_types',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('name', sa.Unicode(length=64), nullable=True),
-    sa.Column('name_snake_case', sa.Unicode(length=64), nullable=True),
     sa.Column('color', sa.Unicode(length=64), nullable=True),
+    sa.Column('view_point', sa.Unicode(length=64), nullable=True),
+    sa.Column('login_required', sa.Boolean(), nullable=True),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_lesson_types_name'), 'lesson_types', ['name'], unique=True)

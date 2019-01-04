@@ -1113,8 +1113,9 @@ class LessonType(db.Model):
     __tablename__ = 'lesson_types'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.Unicode(64), unique=True, index=True)
-    name_snake_case = db.Column(db.Unicode(64))
     color = db.Column(db.Unicode(64))
+    view_point = db.Column(db.Unicode(64))
+    login_required = db.Column(db.Boolean, default=True)
     lessons = db.relationship('Lesson', backref='type', lazy='dynamic')
 
     @staticmethod
@@ -1127,12 +1128,13 @@ class LessonType(db.Model):
             for entry in entries:
                 lesson_type = LessonType(
                     name=entry['name'],
-                    name_snake_case=entry['name_snake_case'],
-                    color=entry['color']
+                    color=entry['color'],
+                    view_point=entry['view_point'],
+                    login_required=entry['login_required']
                 )
                 db.session.add(lesson_type)
                 if verbose:
-                    print('导入课程类型信息', entry['name'], entry['name_snake_case'], entry['color'])
+                    print('导入课程类型信息', entry['name'], entry['color'], entry['view_point'])
             db.session.commit()
         else:
             print('文件不存在', yaml_file)

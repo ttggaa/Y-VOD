@@ -10,7 +10,8 @@
 - **Feature** - Only permitted devices can access restricted videos #10
 - **Feature** - Add VB demo lessons, Y-GRE demo lessons, and Y-GRE test reviews #11
 - **Model** - Add device lesson data model #13
-- **Model** - Add `name_snake_case` attribute to lesson type data model #19
+- **Model** - Add `view_point` attribute to lesson type data model #19
+- **Model** - Add `login_required` attribute to lesson type data model #20
 
 **IMPROVED**
 - **Model** - Change `demo` attribute of video data model to `restricted` #7

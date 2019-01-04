@@ -20,7 +20,10 @@ def overview(id):
     user = User.query.get_or_404(id)
     if (user.id != current_user.id and not current_user.is_staff) or user.is_superior_than(user=current_user._get_current_object()):
         abort(403)
-    lessons = Lesson.query.order_by(Lesson.id.asc())
+    lessons = Lesson.query\
+        .join(LessonType, LessonType.id == Lesson.type_id)\
+        .filter(LessonType.login_required == True)\
+        .order_by(Lesson.id.asc())
     return minify(render_template(
         'profile/overview.html',
         profile_tab=tab,

@@ -105,7 +105,7 @@ def video(id):
     video = Video.query.get_or_404(id)
     if not current_user.can_study(lesson=video.lesson):
         flash('请先完成本课程的前序内容！', category='warning')
-        return redirect(url_for('study.{}'.format(video.lesson.type.name_snake_case)))
+        return redirect(url_for('study.{}'.format(video.lesson.type.view_point)))
     if not current_user.punched(video=video):
         add_user_log(user=current_user._get_current_object(), event='视频研修：{}'.format(video.name), category='study')
         db.session.commit()
