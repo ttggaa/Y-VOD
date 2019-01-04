@@ -95,7 +95,7 @@
                     <td><code>{{ device.serial }}</code></td>
                     <td>{% if device.room_id %}{{ device.room.name }}{% else %}N/A{% endif %}</td>
                     <td>{% if device.mac_address %}<code>{{ device.mac_address }}</code>{% else %}N/A{% endif %}</td>
-                    <td>{% with items = device.lesson_type_authorizations %}{% if items.count() %}<div class="ui list">{% for item in items %}<div class="item">{{ item.lesson_type.name }}</div>{% endfor %}</div>{% else %}无{% endif %}{% endwith %}</td>
+                    <td>{% with items = device.lesson_type_authorizations %}{% if items.count() %}<div class="ui ordered list">{% for item in items %}<div class="item">{{ item.lesson_type.name }}</div>{% endfor %}</div>{% else %}无{% endif %}{% endwith %}</td>
                     <td>{{ macros.from_now_widget(device.modified_at) }}</td>
                     <td>{{ macros.user_url_widget(device.modified_by, device.modified_by_id == current_user.id) }}</td>
                     <td>

@@ -20,7 +20,18 @@ from ..utils2 import add_user_log
 @permission_required('研修VB')
 def vb():
     '''study.vb()'''
+    mac_address = get_mac_address_from_ip(ip_address=request.headers.get('X-Forwarded-For', request.remote_addr))
+    if mac_address is None:
+        flash('无法获取设备信息', category='error')
+        return redirect(url_for('auth.login'))
+    device = Device.query.filter_by(mac_address=mac_address).first()
+    if device is None:
+        flash('设备未授权（MAC地址：{}）'.format(mac_address), category='error')
+        return redirect(url_for('auth.login'))
     lesson_type = 'VB'
+    if not device.can_access_lesson_type(lesson_type_name=lesson_type):
+        flash('该设备无法访问“{}”资源'.format(lesson_type), category='error')
+        return redirect(url_for('auth.login'))
     lessons = Lesson.query\
         .join(LessonType, LessonType.id == Lesson.type_id)\
         .filter(LessonType.name == lesson_type)\
@@ -37,7 +48,18 @@ def vb():
 @permission_required('研修Y-GRE')
 def y_gre():
     '''study.y_gre()'''
+    mac_address = get_mac_address_from_ip(ip_address=request.headers.get('X-Forwarded-For', request.remote_addr))
+    if mac_address is None:
+        flash('无法获取设备信息', category='error')
+        return redirect(url_for('auth.login'))
+    device = Device.query.filter_by(mac_address=mac_address).first()
+    if device is None:
+        flash('设备未授权（MAC地址：{}）'.format(mac_address), category='error')
+        return redirect(url_for('auth.login'))
     lesson_type = 'Y-GRE'
+    if not device.can_access_lesson_type(lesson_type_name=lesson_type):
+        flash('该设备无法访问“{}”资源'.format(lesson_type), category='error')
+        return redirect(url_for('auth.login'))
     lessons = Lesson.query\
         .join(LessonType, LessonType.id == Lesson.type_id)\
         .filter(LessonType.name == lesson_type)\
@@ -54,7 +76,18 @@ def y_gre():
 @permission_required('研修Y-GRE')
 def y_gre_aw():
     '''study.y_gre_aw()'''
+    mac_address = get_mac_address_from_ip(ip_address=request.headers.get('X-Forwarded-For', request.remote_addr))
+    if mac_address is None:
+        flash('无法获取设备信息', category='error')
+        return redirect(url_for('auth.login'))
+    device = Device.query.filter_by(mac_address=mac_address).first()
+    if device is None:
+        flash('设备未授权（MAC地址：{}）'.format(mac_address), category='error')
+        return redirect(url_for('auth.login'))
     lesson_type = 'Y-GRE AW'
+    if not device.can_access_lesson_type(lesson_type_name=lesson_type):
+        flash('该设备无法访问“{}”资源'.format(lesson_type), category='error')
+        return redirect(url_for('auth.login'))
     lessons = Lesson.query\
         .join(LessonType, LessonType.id == Lesson.type_id)\
         .filter(LessonType.name == lesson_type)\
@@ -71,7 +104,18 @@ def y_gre_aw():
 @permission_required('研修Y-GRE')
 def test_review():
     '''study.test_review()'''
+    mac_address = get_mac_address_from_ip(ip_address=request.headers.get('X-Forwarded-For', request.remote_addr))
+    if mac_address is None:
+        flash('无法获取设备信息', category='error')
+        return redirect(url_for('auth.login'))
+    device = Device.query.filter_by(mac_address=mac_address).first()
+    if device is None:
+        flash('设备未授权（MAC地址：{}）'.format(mac_address), category='error')
+        return redirect(url_for('auth.login'))
     lesson_type = '考试讲解'
+    if not device.can_access_lesson_type(lesson_type_name=lesson_type):
+        flash('该设备无法访问“{}”资源'.format(lesson_type), category='error')
+        return redirect(url_for('auth.login'))
     lessons = Lesson.query\
         .join(LessonType, LessonType.id == Lesson.type_id)\
         .filter(LessonType.name == lesson_type)\
@@ -96,7 +140,7 @@ def demo():
         return redirect(url_for('auth.login'))
     lesson_type = '体验课程'
     if not device.can_access_lesson_type(lesson_type_name=lesson_type):
-        flash('该设备无法访问受限资源', category='error')
+        flash('该设备无法访问“{}”资源'.format(lesson_type), category='error')
         return redirect(url_for('auth.login'))
     lessons = Lesson.query\
         .join(LessonType, LessonType.id == Lesson.type_id)\
