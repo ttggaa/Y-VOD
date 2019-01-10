@@ -46,11 +46,7 @@
                 {% endfor %}
             </tbody>
         </table>
-        {% else %}
-        <div class="ui placeholder segment">
-            <div class="ui icon header"><i class="user slash icon"></i>共 0 人</div>
-        </div>
-        {% endif %}
+        {% else %}{{ macros.placeholder_widget() }}{% endif %}
     </div>
 </div>
 {% endblock %}

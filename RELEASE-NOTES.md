@@ -1,6 +1,6 @@
 ## RELEASE NOTES
 
-### Version 1.0.1 - January 5, 2019
+### Version 1.0.1 - January 10, 2019
 
 **NEW**
 - **Model** - Add `demo` attribute to video data model #1
@@ -12,6 +12,7 @@
 - **Model** - Add device lesson type data model #13
 - **Model** - Add `view_point` attribute to lesson type data model #19
 - **Model** - Add `login_required` attribute to lesson type data model #20
+- **Template** - Add template macro `placeholder_widget()` #21
 
 **IMPROVED**
 - **Model** - Change `demo` attribute of video data model to `restricted` #7

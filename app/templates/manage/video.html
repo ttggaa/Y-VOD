@@ -23,8 +23,9 @@
         </div>
         <h3 class="ui header">
             <i class="file video icon"></i>
-            <div class="content">研修视频列表{% if pagination %}<div class="sub header">{{ lesson.name }}：共 {{ pagination.total }} 个视频</div>{% endif %}</div>
+            <div class="content">研修视频列表<div class="sub header">{{ lesson.name }}：共 {{ pagination.total }} 个视频</div></div>
         </h3>
+        {% if pagination.total > 0 %}
         <table class="ui sortable selectable celled table">
             <thead>
                 <tr>
@@ -47,7 +48,8 @@
                 {% endfor %}
             </tbody>
         </table>
-        {% if pagination %}{{ macros.pagination_widget(pagination, 'manage.video', lesson_id=lesson.id) }}{% endif %}
+        {{ macros.pagination_widget(pagination, 'manage.video', lesson_id=lesson.id) }}
+        {% else %}{{ macros.placeholder_widget() }}{% endif %}
     </div>
 </div>
 {% endblock %}

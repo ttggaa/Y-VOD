@@ -20,7 +20,7 @@
     <div class="ui container">
         <h3 class="ui header">
             <i class="user graduate icon"></i>
-            <div class="content">学生列表{% if pagination %}<div class="sub header">{{ header }}：共 {{ pagination.total }} 人</div>{% endif %}</div>
+            <div class="content">学生列表<div class="sub header">{{ header }}：共 {{ pagination.total }} 人</div></div>
         </h3>
         <div class="ui secondary stackable menu">
             <a class="item {% if show_vb_students %}active {% endif %}" href="{{ url_for('manage.vb_students') }}">VB研修</a>
@@ -48,12 +48,8 @@
                 {% endfor %}
             </tbody>
         </table>
-        {% if pagination %}{{ macros.pagination_widget(pagination, 'manage.student') }}{% endif %}
-        {% else %}
-        <div class="ui placeholder segment">
-            <div class="ui icon header"><i class="user slash icon"></i>{{ header }}：共 0 人</div>
-        </div>
-        {% endif %}
+        {{ macros.pagination_widget(pagination, 'manage.student') }}
+        {% else %}{{ macros.placeholder_widget() }}{% endif %}
     </div>
 </div>
 {% endblock %}

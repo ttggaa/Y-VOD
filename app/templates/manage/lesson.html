@@ -14,7 +14,7 @@
     <div class="ui container">
         <h3 class="ui header">
             <i class="book icon"></i>
-            <div class="content">研修课程列表{% if pagination %}<div class="sub header">{{ header }}：共 {{ pagination.total }} 课</div>{% endif %}</div>
+            <div class="content">研修课程列表<div class="sub header">{{ header }}：共 {{ pagination.total }} 课</div></div>
         </h3>
         <div class="ui secondary stackable menu">
             <a class="item {% if show_vb_lessons %}active {% endif %}" href="{{ url_for('manage.vb_lessons') }}">VB</a>
@@ -23,6 +23,7 @@
             <a class="item {% if show_test_review_lessons %}active {% endif %}" href="{{ url_for('manage.test_review_lessons') }}">考试讲解</a>
             <a class="item {% if show_demo_lessons %}active {% endif %}" href="{{ url_for('manage.demo_lessons') }}">体验课程</a>
         </div>
+        {% if pagination.total > 0 %}
         <table class="ui sortable selectable celled table">
             <thead>
                 <tr>
@@ -41,7 +42,8 @@
                 {% endfor %}
             </tbody>
         </table>
-        {% if pagination %}{{ macros.pagination_widget(pagination, 'manage.lesson') }}{% endif %}
+        {{ macros.pagination_widget(pagination, 'manage.lesson') }}
+        {% else %}{{ macros.placeholder_widget() }}{% endif %}
     </div>
 </div>
 {% endblock %}

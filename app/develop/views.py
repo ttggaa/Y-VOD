@@ -52,14 +52,12 @@ def log():
     show_all_logs = True
     show_study_logs = False
     show_manage_logs = False
-    show_develop_logs = False
     show_auth_logs = False
     show_access_logs = False
     if current_user.is_authenticated:
         show_all_logs = bool(request.cookies.get('show_all_logs', '1'))
         show_study_logs = bool(request.cookies.get('show_study_logs', ''))
         show_manage_logs = bool(request.cookies.get('show_manage_logs', ''))
-        show_develop_logs = bool(request.cookies.get('show_develop_logs', ''))
         show_auth_logs = bool(request.cookies.get('show_auth_logs', ''))
         show_access_logs = bool(request.cookies.get('show_access_logs', ''))
     if show_all_logs:
@@ -72,10 +70,6 @@ def log():
     if show_manage_logs:
         query = UserLog.query\
             .filter(UserLog.category == 'manage')\
-            .order_by(UserLog.timestamp.desc())
-    if show_develop_logs:
-        query = UserLog.query\
-            .filter(UserLog.category == 'develop')\
             .order_by(UserLog.timestamp.desc())
     if show_auth_logs:
         query = UserLog.query\
@@ -96,7 +90,6 @@ def log():
         show_all_logs=show_all_logs,
         show_study_logs=show_study_logs,
         show_manage_logs=show_manage_logs,
-        show_develop_logs=show_develop_logs,
         show_auth_logs=show_auth_logs,
         show_access_logs=show_access_logs,
         pagination=pagination,
@@ -113,7 +106,6 @@ def all_logs():
     resp.set_cookie('show_all_logs', '1', max_age=current_app.config['COOKIE_MAX_AGE'])
     resp.set_cookie('show_study_logs', '', max_age=current_app.config['COOKIE_MAX_AGE'])
     resp.set_cookie('show_manage_logs', '', max_age=current_app.config['COOKIE_MAX_AGE'])
-    resp.set_cookie('show_develop_logs', '', max_age=current_app.config['COOKIE_MAX_AGE'])
     resp.set_cookie('show_auth_logs', '', max_age=current_app.config['COOKIE_MAX_AGE'])
     resp.set_cookie('show_access_logs', '', max_age=current_app.config['COOKIE_MAX_AGE'])
     return resp
@@ -128,7 +120,6 @@ def study_logs():
     resp.set_cookie('show_all_logs', '', max_age=current_app.config['COOKIE_MAX_AGE'])
     resp.set_cookie('show_study_logs', '1', max_age=current_app.config['COOKIE_MAX_AGE'])
     resp.set_cookie('show_manage_logs', '', max_age=current_app.config['COOKIE_MAX_AGE'])
-    resp.set_cookie('show_develop_logs', '', max_age=current_app.config['COOKIE_MAX_AGE'])
     resp.set_cookie('show_auth_logs', '', max_age=current_app.config['COOKIE_MAX_AGE'])
     resp.set_cookie('show_access_logs', '', max_age=current_app.config['COOKIE_MAX_AGE'])
     return resp
@@ -143,22 +134,6 @@ def manage_logs():
     resp.set_cookie('show_all_logs', '', max_age=current_app.config['COOKIE_MAX_AGE'])
     resp.set_cookie('show_study_logs', '', max_age=current_app.config['COOKIE_MAX_AGE'])
     resp.set_cookie('show_manage_logs', '1', max_age=current_app.config['COOKIE_MAX_AGE'])
-    resp.set_cookie('show_develop_logs', '', max_age=current_app.config['COOKIE_MAX_AGE'])
-    resp.set_cookie('show_auth_logs', '', max_age=current_app.config['COOKIE_MAX_AGE'])
-    resp.set_cookie('show_access_logs', '', max_age=current_app.config['COOKIE_MAX_AGE'])
-    return resp
-
-
-@develop.route('/log/develop')
-@login_required
-@role_required('开发人员')
-def develop_logs():
-    '''develop.develop_logs()'''
-    resp = make_response(redirect(url_for('develop.log')))
-    resp.set_cookie('show_all_logs', '', max_age=current_app.config['COOKIE_MAX_AGE'])
-    resp.set_cookie('show_study_logs', '', max_age=current_app.config['COOKIE_MAX_AGE'])
-    resp.set_cookie('show_manage_logs', '', max_age=current_app.config['COOKIE_MAX_AGE'])
-    resp.set_cookie('show_develop_logs', '1', max_age=current_app.config['COOKIE_MAX_AGE'])
     resp.set_cookie('show_auth_logs', '', max_age=current_app.config['COOKIE_MAX_AGE'])
     resp.set_cookie('show_access_logs', '', max_age=current_app.config['COOKIE_MAX_AGE'])
     return resp
@@ -173,7 +148,6 @@ def auth_logs():
     resp.set_cookie('show_all_logs', '', max_age=current_app.config['COOKIE_MAX_AGE'])
     resp.set_cookie('show_study_logs', '', max_age=current_app.config['COOKIE_MAX_AGE'])
     resp.set_cookie('show_manage_logs', '', max_age=current_app.config['COOKIE_MAX_AGE'])
-    resp.set_cookie('show_develop_logs', '', max_age=current_app.config['COOKIE_MAX_AGE'])
     resp.set_cookie('show_auth_logs', '1', max_age=current_app.config['COOKIE_MAX_AGE'])
     resp.set_cookie('show_access_logs', '', max_age=current_app.config['COOKIE_MAX_AGE'])
     return resp
@@ -188,7 +162,6 @@ def access_logs():
     resp.set_cookie('show_all_logs', '', max_age=current_app.config['COOKIE_MAX_AGE'])
     resp.set_cookie('show_study_logs', '', max_age=current_app.config['COOKIE_MAX_AGE'])
     resp.set_cookie('show_manage_logs', '', max_age=current_app.config['COOKIE_MAX_AGE'])
-    resp.set_cookie('show_develop_logs', '', max_age=current_app.config['COOKIE_MAX_AGE'])
     resp.set_cookie('show_auth_logs', '', max_age=current_app.config['COOKIE_MAX_AGE'])
     resp.set_cookie('show_access_logs', '1', max_age=current_app.config['COOKIE_MAX_AGE'])
     return resp

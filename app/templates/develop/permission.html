@@ -13,6 +13,7 @@
 <div class="ui main vertical segment">
     <div class="ui container">
         <h3 class="ui header"><i class="user shield icon"></i>权限列表</h3>
+        {% if pagination.total > 0 %}
         <table class="ui sortable selectable celled table">
             <thead>
                 <tr>
@@ -41,7 +42,8 @@
                 {% endfor %}
             </tbody>
         </table>
-        {% if pagination %}{{ macros.pagination_widget(pagination, 'develop.permission') }}{% endif %}
+        {{ macros.pagination_widget(pagination, 'develop.permission') }}
+        {% else %}{{ macros.placeholder_widget() }}{% endif %}
     </div>
 </div>
 {% endblock %}

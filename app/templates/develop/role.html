@@ -13,6 +13,7 @@
 <div class="ui main vertical segment">
     <div class="ui container">
         <h3 class="ui header"><i class="users cog icon"></i>角色列表</h3>
+        {% if pagination.total > 0 %}
         <table class="ui sortable selectable celled table">
             <thead>
                 <tr>
@@ -49,7 +50,8 @@
                 {% endfor %}
             </tbody>
         </table>
-        {% if pagination %}{{ macros.pagination_widget(pagination, 'develop.role') }}{% endif %}
+        {{ macros.pagination_widget(pagination, 'develop.role') }}
+        {% else %}{{ macros.placeholder_widget() }}{% endif %}
     </div>
 </div>
 {% endblock %}

@@ -17,10 +17,10 @@
             <a class="item {% if show_all_logs %}active {% endif %}" href="{{ url_for('develop.all_logs') }}">全部</a>
             <a class="item {% if show_study_logs %}active {% endif %}" href="{{ url_for('develop.study_logs') }}">研修</a>
             <a class="item {% if show_manage_logs %}active {% endif %}" href="{{ url_for('develop.manage_logs') }}">管理</a>
-            <a class="item {% if show_develop_logs %}active {% endif %}" href="{{ url_for('develop.develop_logs') }}">开发</a>
             <a class="item {% if show_auth_logs %}active {% endif %}" href="{{ url_for('develop.auth_logs') }}">鉴权</a>
             <a class="item {% if show_access_logs %}active {% endif %}" href="{{ url_for('develop.access_logs') }}">访问</a>
         </div>
+        {% if pagination.total > 0 %}
         <div class="ui feed">
             {% for log in logs %}
             <div class="event">
@@ -34,7 +34,8 @@
             </div>
             {% endfor %}
         </div>
-        {% if pagination %}{{ macros.pagination_widget(pagination, 'develop.log') }}{% endif %}
+        {{ macros.pagination_widget(pagination, 'develop.log') }}
+        {% else %}{{ macros.placeholder_widget() }}{% endif %}
     </div>
 </div>
 {% endblock %}
