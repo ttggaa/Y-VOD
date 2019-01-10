@@ -1,13 +1,13 @@
 {% extends "base.html" %}
 {% import "_macros.html" as macros %}
 
-{% block title %}编辑设备信息：{{ device.alias2 }}{% endblock %}
+{% block title %}编辑设备信息：{{ device.alias_format }}{% endblock %}
 
 {% block content %}
 <div class="ui masthead vertical segment">
     <div class="ui container">
         {{ macros.message_widget() }}
-        <h1 class="ui center aligned header"><i class="edit icon"></i>编辑设备信息：{{ device.alias2 }}</h1>
+        <h1 class="ui center aligned header"><i class="edit icon"></i>编辑设备信息：{{ device.alias_format }}</h1>
     </div>
 </div>
 <div class="ui main vertical segment">

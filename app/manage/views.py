@@ -394,9 +394,9 @@ def suspended_staffs():
 #                 y_gre_lesson = Lesson.query.filter_by(name=data.get('y_gre_progress')).first()
 #                 if y_gre_lesson is not None:
 #                     user.punch_through(lesson=y_gre_lesson)
-#         flash('已导入用户：{}'.format(user.alias), category='success')
+#         flash('已导入用户：{}'.format(user.name_format), category='success')
 #         add_user_log(user=user, event='用户信息被导入', category='auth')
-#         add_user_log(user=current_user._get_current_object(), event='导入用户：{}'.format(user.alias), category='manage')
+#         add_user_log(user=current_user._get_current_object(), event='导入用户：{}'.format(user.name_format), category='manage')
 #         db.session.commit()
 #         return redirect(request.args.get('next') or url_for('manage.{}'.format(role.category)))
 #     return minify(render_template(
@@ -414,12 +414,12 @@ def suspend_user(id):
     if not current_user.can_manage(user=user):
         abort(403)
     if user.suspended:
-        flash('“{}”已处于挂起状态'.format(user.alias), category='warning')
+        flash('“{}”已处于挂起状态'.format(user.name_format), category='warning')
         return redirect(request.args.get('next') or url_for('profile.overview', id=user.id))
     user.suspend()
-    flash('已挂起用户：{}'.format(user.alias), category='success')
+    flash('已挂起用户：{}'.format(user.name_format), category='success')
     add_user_log(user=user, event='用户被挂起', category='auth')
-    add_user_log(user=current_user._get_current_object(), event='挂起用户：{}'.format(user.alias), category='manage')
+    add_user_log(user=current_user._get_current_object(), event='挂起用户：{}'.format(user.name_format), category='manage')
     db.session.commit()
     return redirect(request.args.get('next') or url_for('profile.overview', id=user.id))
 
@@ -433,12 +433,12 @@ def restore_user(id):
     if not current_user.can_manage(user=user):
         abort(403)
     if not user.suspended:
-        flash('“{}”未处于挂起状态'.format(user.alias), category='warning')
+        flash('“{}”未处于挂起状态'.format(user.name_format), category='warning')
         return redirect(request.args.get('next') or url_for('profile.overview', id=user.id))
     user.restore()
-    flash('已恢复用户：{}'.format(user.alias), category='success')
+    flash('已恢复用户：{}'.format(user.name_format), category='success')
     add_user_log(user=user, event='用户被恢复', category='auth')
-    add_user_log(user=current_user._get_current_object(), event='恢复用户：{}'.format(user.alias), category='manage')
+    add_user_log(user=current_user._get_current_object(), event='恢复用户：{}'.format(user.name_format), category='manage')
     db.session.commit()
     return redirect(request.args.get('next') or url_for('profile.overview', id=user.id))
 
@@ -645,8 +645,8 @@ def edit_device(id):
         for lesson_type_id in form.lesson_types.data:
             device.add_lesson_type(lesson_type=LessonType.query.get(int(lesson_type_id)))
         db.session.commit()
-        flash('已更新设备信息：{}'.format(device.alias2), category='success')
-        add_user_log(user=current_user._get_current_object(), event='更新设备信息：{}'.format(device.alias2), category='manage')
+        flash('已更新设备信息：{}'.format(device.alias_format), category='success')
+        add_user_log(user=current_user._get_current_object(), event='更新设备信息：{}'.format(device.alias_format), category='manage')
         db.session.commit()
         return redirect(request.args.get('next') or url_for('manage.device'))
     form.alias.data = device.alias
@@ -673,11 +673,11 @@ def toggle_device_obsolete(id):
         abort(403)
     device.toggle_obsolete(modified_by=current_user._get_current_object())
     if device.obsolete:
-        flash('已标记报废设备：{}'.format(device.alias2), category='success')
-        add_user_log(user=current_user._get_current_object(), event='标记报废设备：{}'.format(device.alias2), category='manage')
+        flash('已标记报废设备：{}'.format(device.alias_format), category='success')
+        add_user_log(user=current_user._get_current_object(), event='标记报废设备：{}'.format(device.alias_format), category='manage')
     else:
-        flash('已恢复使用设备：{}'.format(device.alias2), category='success')
-        add_user_log(user=current_user._get_current_object(), event='恢复使用设备：{}'.format(device.alias2), category='manage')
+        flash('已恢复使用设备：{}'.format(device.alias_format), category='success')
+        add_user_log(user=current_user._get_current_object(), event='恢复使用设备：{}'.format(device.alias_format), category='manage')
     db.session.commit()
     return redirect(request.args.get('next') or url_for('manage.device'))
 
@@ -692,8 +692,8 @@ def delete_device(id):
         abort(403)
     device.remove_all_lesson_types()
     db.session.delete(device)
-    flash('已删除设备：{}'.format(device.alias2), category='success')
-    add_user_log(user=current_user._get_current_object(), event='删除设备：{}'.format(device.alias2), category='manage')
+    flash('已删除设备：{}'.format(device.alias_format), category='success')
+    add_user_log(user=current_user._get_current_object(), event='删除设备：{}'.format(device.alias_format), category='manage')
     db.session.commit()
     return redirect(request.args.get('next') or url_for('manage.device'))
 

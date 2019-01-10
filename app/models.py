@@ -469,8 +469,8 @@ class User(UserMixin, db.Model):
             target.name_pinyin = name_pinyin
 
     @property
-    def alias(self):
-        '''User.alias(self)'''
+    def name_format(self):
+        '''User.name_format(self)'''
         return '[{}] {}'.format(self.role.name, self.name)
 
     @property
@@ -977,8 +977,8 @@ class Device(db.Model):
         db.session.add(self)
 
     @property
-    def alias2(self):
-        '''Device.alias2(self)'''
+    def alias_format(self):
+        '''Device.alias_format(self)'''
         return '{} [{}]'.format(self.alias, self.serial)
 
     def add_lesson_type(self, lesson_type):
@@ -1321,7 +1321,7 @@ class UserLog(db.Model):
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
 
     def to_csv(self):
-        '''to_csv(self)'''
+        '''UserLog.to_csv(self)'''
         entry_csv = [
             str(self.id),
             str(self.user_id),
@@ -1377,4 +1377,4 @@ class UserLog(db.Model):
             print('---> Write: {}'.format(csv_file))
 
     def __repr__(self):
-        return '<User Log {}, {}, {}, {}>'.format(self.user.alias, self.event, self.category, self.timestamp)
+        return '<User Log {}, {}, {}, {}>'.format(self.user.name_format, self.event, self.category, self.timestamp)
