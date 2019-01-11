@@ -394,9 +394,9 @@ def suspended_staffs():
 #                 y_gre_lesson = Lesson.query.filter_by(name=data.get('y_gre_progress')).first()
 #                 if y_gre_lesson is not None:
 #                     user.punch_through(lesson=y_gre_lesson)
-#         flash('已导入用户：{}'.format(user.name_format), category='success')
+#         flash('已导入用户：{}'.format(user.name_with_role), category='success')
 #         add_user_log(user=user, event='用户信息被导入', category='auth')
-#         add_user_log(user=current_user._get_current_object(), event='导入用户：{}'.format(user.name_format), category='manage')
+#         add_user_log(user=current_user._get_current_object(), event='导入用户：{}'.format(user.name_with_role), category='manage')
 #         db.session.commit()
 #         return redirect(request.args.get('next') or url_for('manage.{}'.format(role.category)))
 #     return minify(render_template(
@@ -414,12 +414,12 @@ def suspend_user(id):
     if not current_user.can_manage(user=user):
         abort(403)
     if user.suspended:
-        flash('“{}”已处于挂起状态'.format(user.name_format), category='warning')
+        flash('“{}”已处于挂起状态'.format(user.name_with_role), category='warning')
         return redirect(request.args.get('next') or url_for('profile.overview', id=user.id))
     user.suspend()
-    flash('已挂起用户：{}'.format(user.name_format), category='success')
+    flash('已挂起用户：{}'.format(user.name_with_role), category='success')
     add_user_log(user=user, event='用户被挂起', category='auth')
-    add_user_log(user=current_user._get_current_object(), event='挂起用户：{}'.format(user.name_format), category='manage')
+    add_user_log(user=current_user._get_current_object(), event='挂起用户：{}'.format(user.name_with_role), category='manage')
     db.session.commit()
     return redirect(request.args.get('next') or url_for('profile.overview', id=user.id))
 
@@ -433,12 +433,12 @@ def restore_user(id):
     if not current_user.can_manage(user=user):
         abort(403)
     if not user.suspended:
-        flash('“{}”未处于挂起状态'.format(user.name_format), category='warning')
+        flash('“{}”未处于挂起状态'.format(user.name_with_role), category='warning')
         return redirect(request.args.get('next') or url_for('profile.overview', id=user.id))
     user.restore()
-    flash('已恢复用户：{}'.format(user.name_format), category='success')
+    flash('已恢复用户：{}'.format(user.name_with_role), category='success')
     add_user_log(user=user, event='用户被恢复', category='auth')
-    add_user_log(user=current_user._get_current_object(), event='恢复用户：{}'.format(user.name_format), category='manage')
+    add_user_log(user=current_user._get_current_object(), event='恢复用户：{}'.format(user.name_with_role), category='manage')
     db.session.commit()
     return redirect(request.args.get('next') or url_for('profile.overview', id=user.id))
 

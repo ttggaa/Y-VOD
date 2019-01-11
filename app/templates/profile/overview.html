@@ -2,24 +2,8 @@
 
 {% block profile_title %}概览{% endblock %}
 
-{% block profile_prgress_bar %}
-{% if user.is_student %}<div id="page-loading-progress" class="ui top attached blue inverted progress">
-    <div class="bar"></div>
-</div>{% endif %}
-{% endblock %}
-
 {% block profile_content %}
-{% if user.is_student %}<div id="progress" class="ui vertical segment loading">
-    <div id="vb-progress" class="ui header disabled">VB研修进度：<span id="vb-progress-data">0</span>%</div>
-    <div id="vb-progress-bar" class="ui tiny progress disabled">
-        <div class="bar"></div>
-        <div id="vb-progress-label" class="label">N/A</div>
-    </div>
-    <div id="y-gre-progress" class="ui header disabled">Y-GRE研修进度：<span id="y-gre-progress-data">0</span>%</div>
-    <div id="y-gre-progress-bar" class="ui tiny progress disabled">
-        <div class="bar"></div>
-        <div id="y-gre-progress-label" class="label">N/A</div>
-    </div>
+<div class="ui vertical segment">
     <div class="ui header">课程研修进度</div>
     <table class="ui unstackable selectable celled table">
         <thead>
@@ -39,71 +23,5 @@
             {% endfor %}
         </tbody>
     </table>
-</div>{% endif %}
-{% if user.is_staff %}<div class="ui vertical segment">
-    {{ macros.placeholder_widget() }}
-</div>{% endif %}
-{% endblock %}
-
-{% block profile_js_lib %}
-{% if user.is_student %}<script type="text/javascript" src="{{ url_for('static', filename='assets/library/count/countUp.min.js') }}"></script>{% endif %}
-{% endblock %}
-{% block profile_js %}
-<script type="text/javascript">
-{% if user.is_student -%}
-$('#page-loading-progress').progress({
-    total: 1,
-    onSuccess: function () {
-        $('#page-loading-progress').fadeOut(1000, function () {
-            $('#page-loading-progress').remove();
-        });
-    }
-});
-
-var countUpOptions = {
-    useEasing: true,
-    useGrouping: true,
-    separator: ',',
-    decimal: '.',
-    prefix: '',
-    suffix: ''
-};
-var VBProgressCountUp = new CountUp('vb-progress-data', 0, 0, 0, 2.5, countUpOptions);
-var YGREProgressCountUp = new CountUp('y-gre-progress-data', 0, 0, 0, 2.5, countUpOptions);
-$.getJSON("{{ url_for('profile.overview_data', id=user.id) }}", function (data) {
-    $('#progress').removeClass('loading');
-    $('#vb-progress').removeClass('disabled');
-    $('#vb-progress-label').text(function () {
-        if (data.progress.vb.last_punch) {
-            return data.progress.vb.last_punch.video.name;
-        } else {
-            return 'N/A';
-        };
-    });
-    $('#vb-progress-bar').attr('class', 'ui blue tiny progress').progress({
-        total: data.progress.vb.total,
-        value: data.progress.vb.value,
-        onChange: function(percent) {
-            VBProgressCountUp.update(percent);
-        }
-    });
-    $('#y-gre-progress').removeClass('disabled');
-    $('#y-gre-progress-label').text(function () {
-        if (data.progress.y_gre.last_punch) {
-            return data.progress.y_gre.last_punch.video.name;
-        } else {
-            return 'N/A';
-        };
-    });
-    $('#y-gre-progress-bar').attr('class', 'ui teal tiny progress').progress({
-        total: data.progress.y_gre.total,
-        value: data.progress.y_gre.value,
-        onChange: function(percent) {
-            YGREProgressCountUp.update(percent);
-        }
-    });
-    $('#page-loading-progress').progress('increment');
-});
-{%- endif %}
-</script>
+</div>
 {% endblock %}

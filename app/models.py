@@ -469,8 +469,8 @@ class User(UserMixin, db.Model):
             target.name_pinyin = name_pinyin
 
     @property
-    def name_format(self):
-        '''User.name_format(self)'''
+    def name_with_role(self):
+        '''User.name_with_role(self)'''
         return '[{}] {}'.format(self.role.name, self.name)
 
     @property
@@ -562,52 +562,6 @@ class User(UserMixin, db.Model):
             .filter(Punch.user_id == self.id)\
             .order_by(Video.id.desc())\
             .first()
-
-    @property
-    def vb_progress_json(self):
-        '''User.vb_progress_json(self)'''
-        entry_json = {
-            'total': reduce(operator.add, [video.duration for video in Video.query\
-                .join(Lesson, Lesson.id == Video.lesson_id)\
-                .join(LessonType, LessonType.id == Lesson.type_id)\
-                .filter(LessonType.name == 'VB')\
-                .all()], timedelta()).total_seconds(),
-            'value': reduce(operator.add, [punch.play_time_trim for punch in Punch.query\
-                .join(Video, Video.id == Punch.video_id)\
-                .join(Lesson, Lesson.id == Video.lesson_id)\
-                .join(LessonType, LessonType.id == Lesson.type_id)\
-                .filter(LessonType.name == 'VB')\
-                .filter(Punch.user_id == self.id)\
-                .all()], timedelta()).total_seconds(),
-        }
-        if self.last_vb_punch is not None:
-            entry_json['last_punch'] = self.last_vb_punch.to_json()
-        else:
-            entry_json['last_punch'] = None
-        return entry_json
-
-    @property
-    def y_gre_progress_json(self):
-        '''User.y_gre_progress_json(self)'''
-        entry_json = {
-            'total': reduce(operator.add, [video.duration for video in Video.query\
-                .join(Lesson, Lesson.id == Video.lesson_id)\
-                .join(LessonType, LessonType.id == Lesson.type_id)\
-                .filter(LessonType.name == 'Y-GRE')\
-                .all()], timedelta()).total_seconds(),
-            'value': reduce(operator.add, [punch.play_time_trim for punch in Punch.query\
-                .join(Video, Video.id == Punch.video_id)\
-                .join(Lesson, Lesson.id == Video.lesson_id)\
-                .join(LessonType, LessonType.id == Lesson.type_id)\
-                .filter(LessonType.name == 'Y-GRE')\
-                .filter(Punch.user_id == self.id)\
-                .all()], timedelta()).total_seconds(),
-        }
-        if self.last_y_gre_punch is not None:
-            entry_json['last_punch'] = self.last_y_gre_punch.to_json()
-        else:
-            entry_json['last_punch'] = None
-        return entry_json
 
     def lesson_progress(self, lesson):
         '''User.lesson_progress(self, lesson)'''
@@ -1377,4 +1331,4 @@ class UserLog(db.Model):
             print('---> Write: {}'.format(csv_file))
 
     def __repr__(self):
-        return '<User Log {}, {}, {}, {}>'.format(self.user.name_format, self.event, self.category, self.timestamp)
+        return '<User Log {}, {}, {}, {}>'.format(self.user.name_with_role, self.event, self.category, self.timestamp)

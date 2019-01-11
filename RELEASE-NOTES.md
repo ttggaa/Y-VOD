@@ -1,6 +1,6 @@
 ## RELEASE NOTES
 
-### Version 1.0.1 - January 10, 2019
+### Version 1.0.1 - January 11, 2019
 
 **NEW**
 - **Model** - Add `demo` attribute to video data model #1
@@ -21,6 +21,7 @@
 - **Model** - Remove `restricted_permit` attribute from device data model #16
 - **Model** - Remove `restricted` attribute from video data model #17
 - **Model** - Remove `order` attribute from lesson data model #18
+- **Feature** - Simplify user profile overview page contents #22
 
 **FIXED**
 

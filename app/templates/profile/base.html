@@ -17,7 +17,6 @@
     </div>
 </div>
 <div class="ui main vertical segment">
-    {% block profile_prgress_bar %}{% endblock %}
     <div class="ui internally celled stackable grid container">
         <div class="row">
             <div class="four wide column">
@@ -42,7 +41,7 @@
                         <div class="ui labels">
                             {% if user.suspended %}<a id="suspension-trigger" class="ui green label"><i class="user check icon"></i>恢复</a>{% else %}<a id="suspension-trigger" class="ui orange label"><i class="user lock icon"></i>挂起</a>{% endif %}
                             <div id="suspension-modal" class="ui modal">
-                                <div class="header"><i class="exclamation triangle icon"></i>确定要{% if user.suspended %}恢复{% else %}挂起{% endif %}用户：{{ user.name_format }}？</div>
+                                <div class="header"><i class="exclamation triangle icon"></i>确定要{% if user.suspended %}恢复{% else %}挂起{% endif %}用户：{{ user.name_with_role }}？</div>
                                 <div class="actions">
                                     <div class="ui basic right pointing label">只需点击一次</div>
                                     {% if user.suspended %}<a class="ui green left labeled icon button" href="{{ url_for('manage.restore_user', id=user.id, next=user.profile_url(tab=profile_tab)) }}"><i class="user check icon"></i>恢复</a>{% else %}<a class="ui orange left labeled icon button" href="{{ url_for('manage.suspend_user', id=user.id, next=user.profile_url(tab=profile_tab)) }}"><i class="user lock icon"></i>挂起</a>{% endif %}
@@ -62,7 +61,6 @@
 {% endblock %}
 
 {% block js %}
-{% block profile_js_lib %}{% endblock %}
 <script type="text/javascript">
 {{ macros.close_message_js_snippet() }}
 
@@ -77,5 +75,4 @@ $('#suspension-hide-trigger').click(function () {
 });
 {%- endif %}
 </script>
-{% block profile_js %}{% endblock %}
 {% endblock %}
