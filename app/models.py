@@ -977,8 +977,8 @@ class Device(db.Model):
         db.session.add(self)
 
     @property
-    def alias_format(self):
-        '''Device.alias_format(self)'''
+    def alias_serial(self):
+        '''Device.alias_serial(self)'''
         return '{} [{}]'.format(self.alias, self.serial)
 
     def add_lesson_type(self, lesson_type):

@@ -645,8 +645,8 @@ def edit_device(id):
         for lesson_type_id in form.lesson_types.data:
             device.add_lesson_type(lesson_type=LessonType.query.get(int(lesson_type_id)))
         db.session.commit()
-        flash('已更新设备信息：{}'.format(device.alias_format), category='success')
-        add_user_log(user=current_user._get_current_object(), event='更新设备信息：{}'.format(device.alias_format), category='manage')
+        flash('已更新设备信息：{}'.format(device.alias_serial), category='success')
+        add_user_log(user=current_user._get_current_object(), event='更新设备信息：{}'.format(device.alias_serial), category='manage')
         db.session.commit()
         return redirect(request.args.get('next') or url_for('manage.device'))
     form.alias.data = device.alias
@@ -673,11 +673,11 @@ def toggle_device_obsolete(id):
         abort(403)
     device.toggle_obsolete(modified_by=current_user._get_current_object())
     if device.obsolete:
-        flash('已标记报废设备：{}'.format(device.alias_format), category='success')
-        add_user_log(user=current_user._get_current_object(), event='标记报废设备：{}'.format(device.alias_format), category='manage')
+        flash('已标记报废设备：{}'.format(device.alias_serial), category='success')
+        add_user_log(user=current_user._get_current_object(), event='标记报废设备：{}'.format(device.alias_serial), category='manage')
     else:
-        flash('已恢复使用设备：{}'.format(device.alias_format), category='success')
-        add_user_log(user=current_user._get_current_object(), event='恢复使用设备：{}'.format(device.alias_format), category='manage')
+        flash('已恢复使用设备：{}'.format(device.alias_serial), category='success')
+        add_user_log(user=current_user._get_current_object(), event='恢复使用设备：{}'.format(device.alias_serial), category='manage')
     db.session.commit()
     return redirect(request.args.get('next') or url_for('manage.device'))
 
@@ -692,8 +692,8 @@ def delete_device(id):
         abort(403)
     device.remove_all_lesson_types()
     db.session.delete(device)
-    flash('已删除设备：{}'.format(device.alias_format), category='success')
-    add_user_log(user=current_user._get_current_object(), event='删除设备：{}'.format(device.alias_format), category='manage')
+    flash('已删除设备：{}'.format(device.alias_serial), category='success')
+    add_user_log(user=current_user._get_current_object(), event='删除设备：{}'.format(device.alias_serial), category='manage')
     db.session.commit()
     return redirect(request.args.get('next') or url_for('manage.device'))
 
