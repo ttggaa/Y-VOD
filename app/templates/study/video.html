@@ -78,7 +78,7 @@ const videoPlayer = new Player({
 const acceleratingFactor = {{ config.VIDEO_ANALYTICS_ACCELERATING_FACTOR }};
 const granularity = {{ config.VIDEO_ANALYTICS_GRANULARITY }};
 const updateInterval = {{ config.VIDEO_ANALYTICS_UPDATE_PUNCH_INTERVAL }};
-const playTimeGranularity = granularity / 1000 * videoPlayer.video.playbackRate * acceleratingFactor;
+const basePlayTimeGranularity = granularity / 1000 * acceleratingFactor;
 var elapsedTime = 0;
 var playTime = {{ current_user.video_play_time(video=video).total_seconds() }};
 var lastVideoCurrentTime = null;
@@ -118,7 +118,7 @@ videoPlayer.on('error', function () {
 });
 setInterval(function () {
     if (!videoPlayer.video.paused && videoPlayer.video.currentTime !== lastVideoCurrentTime) {
-        playTime += playTimeGranularity;
+        playTime += basePlayTimeGranularity * videoPlayer.video.playbackRate;
         lastVideoCurrentTime = videoPlayer.video.currentTime;
     };
     elapsedTime += granularity;

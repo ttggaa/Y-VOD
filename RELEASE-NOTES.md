@@ -24,6 +24,7 @@
 - **Feature** - Simplify user profile overview page contents #22
 
 **FIXED**
+- **Feature** - Playback rate changes are not taken into account in total video play time calculation #23
 
 ### Version 1.0.0 - December 24, 2018
 
