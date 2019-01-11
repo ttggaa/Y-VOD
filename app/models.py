@@ -33,7 +33,7 @@ class Permission(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.Unicode(64), unique=True, index=True)
     category = db.Column(db.Unicode(64), index=True)
-    roles = db.relationship(
+    role_authorizations = db.relationship(
         'RolePermission',
         foreign_keys=[RolePermission.permission_id],
         backref=db.backref('permission', lazy='joined'),
@@ -41,30 +41,21 @@ class Permission(db.Model):
         cascade='all, delete-orphan'
     )
 
-    def roles_from_category(self, category=None):
-        '''Permission.roles_from_category(self, category=None)'''
-        if category is not None:
-            roles = Role.query\
-                .join(RolePermission, RolePermission.role_id == Role.id)\
-                .filter(RolePermission.permission_id == self.id)\
-                .filter(Role.category == category)\
-                .order_by(Role.id.asc())
-        else:
-            roles = Role.query\
-                .join(RolePermission, RolePermission.role_id == Role.id)\
-                .filter(RolePermission.permission_id == self.id)\
-                .order_by(Role.id.asc())
-        return roles
+    def roles_from_category(self, category):
+        '''Permission.roles_from_category(self, category)'''
+        return Role.query\
+            .join(RolePermission, RolePermission.role_id == Role.id)\
+            .filter(RolePermission.permission_id == self.id)\
+            .filter(Role.category == category)\
+            .order_by(Role.id.asc())
 
-    def roles_num(self, category=None):
-        '''Permission.roles_num(self, category=None)'''
-        if category is not None:
-            return Role.query\
-                .join(RolePermission, RolePermission.role_id == Role.id)\
-                .filter(RolePermission.permission_id == self.id)\
-                .filter(Role.category == category)\
-                .count()
-        return self.roles.count()
+    def role_quantity_from_category(self, category):
+        '''Permission.role_quantity_from_category(self, category)'''
+        return Role.query\
+            .join(RolePermission, RolePermission.role_id == Role.id)\
+            .filter(RolePermission.permission_id == self.id)\
+            .filter(Role.category == category)\
+            .count()
 
     @staticmethod
     def insert_entries(data, verbose=False):
@@ -97,7 +88,7 @@ class Role(db.Model):
     category = db.Column(db.Unicode(64), index=True)
     icon = db.Column(db.Unicode(64))
     level = db.Column(db.Integer, nullable=False)
-    permissions = db.relationship(
+    permission_authorizations = db.relationship(
         'RolePermission',
         foreign_keys=[RolePermission.role_id],
         backref=db.backref('role', lazy='joined'),
@@ -108,32 +99,23 @@ class Role(db.Model):
 
     def has_permission(self, permission):
         '''Role.has_permission(self, permission)'''
-        return self.permissions.filter_by(permission_id=permission.id).first() is not None
+        return self.permission_authorizations.filter_by(permission_id=permission.id).first() is not None
 
-    def permissions_from_category(self, category=None):
-        '''Role.permissions_from_category(self, category=None)'''
-        if category is not None:
-            permissions = Permission.query\
-                .join(RolePermission, RolePermission.permission_id == Permission.id)\
-                .filter(RolePermission.role_id == self.id)\
-                .filter(Permission.category == category)\
-                .order_by(Permission.id.asc())
-        else:
-            permissions = Permission.query\
-                .join(RolePermission, RolePermission.permission_id == Permission.id)\
-                .filter(RolePermission.role_id == self.id)\
-                .order_by(Permission.id.asc())
-        return permissions
+    def permissions_from_category(self, category):
+        '''Role.permissions_from_category(self, category)'''
+        return Permission.query\
+            .join(RolePermission, RolePermission.permission_id == Permission.id)\
+            .filter(RolePermission.role_id == self.id)\
+            .filter(Permission.category == category)\
+            .order_by(Permission.id.asc())
 
-    def permissions_num(self, category=None):
-        '''Role.permissions_num(self, category=None)'''
-        if category is not None:
-            return Permission.query\
-                .join(RolePermission, RolePermission.permission_id == Permission.id)\
-                .filter(RolePermission.role_id == self.id)\
-                .filter(Permission.category == category)\
-                .count()
-        return self.permissions.count()
+    def permission_quantity_from_category(self, category):
+        '''Role.permission_quantity_from_category(self, category)'''
+        return Permission.query\
+            .join(RolePermission, RolePermission.permission_id == Permission.id)\
+            .filter(RolePermission.role_id == self.id)\
+            .filter(Permission.category == category)\
+            .count()
 
     def is_superior_than(self, role):
         '''Role.is_superior_than(self, role)'''
@@ -348,70 +330,13 @@ class Punch(db.Model):
         return '<Punch {} {}>'.format(self.user.name, self.video.name, self.play_time)
 
 
-class UserCreation(db.Model):
-    '''Table: user_creations'''
-    __tablename__ = 'user_creations'
-    creator_id = db.Column(db.Integer, db.ForeignKey('users.id'), primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), primary_key=True)
-
-    def to_csv(self):
-        '''UserCreation.to_csv(self)'''
-        entry_csv = [
-            str(self.creator_id),
-            str(self.user_id),
-        ]
-        return entry_csv
-
-    @staticmethod
-    def insert_entries(data, verbose=False):
-        '''UserCreation.insert_entries(data, verbose=False)'''
-        csv_file = os.path.join(current_app.config['DATA_DIR'], data, 'user_creations.csv')
-        if os.path.exists(csv_file):
-            print('---> Read: {}'.format(csv_file))
-            with io.open(csv_file, 'rt', newline='') as f:
-                reader = CSVReader(f)
-                line_num = 0
-                for entry in reader:
-                    if line_num >= 1:
-                        user_creation = UserCreation(
-                            creator_id=int(entry[0]),
-                            user_id=int(entry[1])
-                        )
-                        db.session.add(user_creation)
-                        if verbose:
-                            print('导入用户创建人信息', entry[0], entry[1])
-                    line_num += 1
-                db.session.commit()
-        else:
-            print('文件不存在', csv_file)
-
-    @staticmethod
-    def backup_entries(data):
-        '''UserCreation.backup_entries(data)'''
-        csv_file = os.path.join(current_app.config['DATA_DIR'], data, 'user_creations.csv')
-        if os.path.exists(csv_file):
-            os.remove(csv_file)
-        with io.open(csv_file, 'wt', newline='') as f:
-            writer = CSVWriter(f)
-            writer.writerow([
-                'creator_id',
-                'user_id',
-            ])
-            for entry in UserCreation.query.all():
-                writer.writerow(entry.to_csv())
-            print('---> Write: {}'.format(csv_file))
-
-    def __repr__(self):
-        return '<User Creation {} {}>'.format(self.creator.name, self.user.name)
-
-
 class User(UserMixin, db.Model):
     '''Table: users'''
     __tablename__ = 'users'
     # basic properties
     id = db.Column(db.Integer, primary_key=True)
     role_id = db.Column(db.Integer, db.ForeignKey('roles.id'))
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    imported_at = db.Column(db.DateTime, default=datetime.utcnow)
     last_seen_at = db.Column(db.DateTime)
     last_seen_mac = db.Column(db.Unicode(64))
     suspended = db.Column(db.Boolean, default=False)
@@ -425,21 +350,6 @@ class User(UserMixin, db.Model):
     punches = db.relationship(
         'Punch',
         foreign_keys=[Punch.user_id],
-        backref=db.backref('user', lazy='joined'),
-        lazy='dynamic',
-        cascade='all, delete-orphan'
-    )
-    # user relationship properties
-    made_user_creations = db.relationship(
-        'UserCreation',
-        foreign_keys=[UserCreation.creator_id],
-        backref=db.backref('creator', lazy='joined'),
-        lazy='dynamic',
-        cascade='all, delete-orphan'
-    )
-    received_user_creations = db.relationship(
-        'UserCreation',
-        foreign_keys=[UserCreation.user_id],
         backref=db.backref('user', lazy='joined'),
         lazy='dynamic',
         cascade='all, delete-orphan'
@@ -506,7 +416,7 @@ class User(UserMixin, db.Model):
             return False
         permission = Permission.query.filter_by(name=permission_name).first()
         return permission is not None and \
-            self.role is not None and \
+            self.role_id is not None and \
             self.role.has_permission(permission=permission)
 
     def plays(self, role_name):
@@ -515,8 +425,8 @@ class User(UserMixin, db.Model):
             return False
         role = Role.query.filter_by(name=role_name).first()
         return role is not None and \
-            self.role is not None and \
-            (self.role.id == role.id or self.role.is_superior_than(role=role))
+            self.role_id is not None and \
+            (self.role_id == role.id or self.role.is_superior_than(role=role))
 
     @property
     def is_student(self):
@@ -559,8 +469,8 @@ class User(UserMixin, db.Model):
             target.name_pinyin = name_pinyin
 
     @property
-    def alias(self):
-        '''User.alias(self)'''
+    def name_with_role(self):
+        '''User.name_with_role(self)'''
         return '[{}] {}'.format(self.role.name, self.name)
 
     @property
@@ -603,27 +513,6 @@ class User(UserMixin, db.Model):
             return '{}{}{}'.format(self.id_number[:1], ''.join(['*' for x in self.id_number[1:-1]]), self.id_number[-1:])
         return '********'
 
-    def create_user(self, user):
-        '''User.create_user(self, user)'''
-        if not self.created_user(user=user):
-            user_creation = UserCreation(creator_id=self.id, user_id=user.id)
-            db.session.add(user_creation)
-
-    def uncreate_user(self, user):
-        '''User.uncreate_user(self, user)'''
-        user_creation = self.made_user_creations.filter_by(user_id=user.id).first()
-        if user_creation is not None:
-            db.session.delete(user_creation)
-
-    def created_user(self, user):
-        '''User.created_user(self, user)'''
-        return self.made_user_creations.filter_by(user_id=user.id).first() is not None
-
-    @property
-    def created_by(self):
-        '''User.created_by(self)'''
-        return self.received_user_creations.first().creator
-
     def punch(self, video, play_time=None):
         '''User.punch(self, video, play_time=None)'''
         punch = self.punches.filter_by(video_id=video.id).first()
@@ -640,20 +529,6 @@ class User(UserMixin, db.Model):
             else:
                 punch.play_time = timedelta(seconds=play_time)
         db.session.add(punch)
-
-    def punch_through(self, lesson):
-        '''User.punch_through(self, lesson)'''
-        for video in Video.query\
-            .join(Lesson, Lesson.id == Video.lesson_id)\
-            .join(LessonType, LessonType.id == Lesson.type_id)\
-            .filter(Lesson.type_id == lesson.type_id)\
-            .filter(and_(
-                Lesson.order > 0,
-                Lesson.order <= lesson.order
-            ))\
-            .filter(Video.restricted == False)\
-            .all():
-            self.punch(video=video, play_time=video.duration)
 
     def punched(self, video):
         '''User.punched(self, video)'''
@@ -672,8 +547,6 @@ class User(UserMixin, db.Model):
             .join(Lesson, Lesson.id == Video.lesson_id)\
             .join(LessonType, LessonType.id == Lesson.type_id)\
             .filter(LessonType.name == 'VB')\
-            .filter(Lesson.order > 0)\
-            .filter(Video.restricted == False)\
             .filter(Punch.user_id == self.id)\
             .order_by(Video.id.desc())\
             .first()
@@ -686,68 +559,15 @@ class User(UserMixin, db.Model):
             .join(Lesson, Lesson.id == Video.lesson_id)\
             .join(LessonType, LessonType.id == Lesson.type_id)\
             .filter(LessonType.name == 'Y-GRE')\
-            .filter(Lesson.order > 0)\
-            .filter(Video.restricted == False)\
             .filter(Punch.user_id == self.id)\
             .order_by(Video.id.desc())\
             .first()
-
-    @property
-    def vb_progress_json(self):
-        '''User.vb_progress_json(self)'''
-        entry_json = {
-            'total': reduce(operator.add, [video.duration for video in Video.query\
-                .join(Lesson, Lesson.id == Video.lesson_id)\
-                .join(LessonType, LessonType.id == Lesson.type_id)\
-                .filter(LessonType.name == 'VB')\
-                .filter(Video.restricted == False)\
-                .all()], timedelta()).total_seconds(),
-            'value': reduce(operator.add, [punch.play_time_trim for punch in Punch.query\
-                .join(Video, Video.id == Punch.video_id)\
-                .join(Lesson, Lesson.id == Video.lesson_id)\
-                .join(LessonType, LessonType.id == Lesson.type_id)\
-                .filter(LessonType.name == 'VB')\
-                .filter(Video.restricted == False)\
-                .filter(Punch.user_id == self.id)\
-                .all()], timedelta()).total_seconds(),
-        }
-        if self.last_vb_punch is not None:
-            entry_json['last_punch'] = self.last_vb_punch.to_json()
-        else:
-            entry_json['last_punch'] = None
-        return entry_json
-
-    @property
-    def y_gre_progress_json(self):
-        '''User.y_gre_progress_json(self)'''
-        entry_json = {
-            'total': reduce(operator.add, [video.duration for video in Video.query\
-                .join(Lesson, Lesson.id == Video.lesson_id)\
-                .join(LessonType, LessonType.id == Lesson.type_id)\
-                .filter(LessonType.name == 'Y-GRE')\
-                .filter(Video.restricted == False)\
-                .all()], timedelta()).total_seconds(),
-            'value': reduce(operator.add, [punch.play_time_trim for punch in Punch.query\
-                .join(Video, Video.id == Punch.video_id)\
-                .join(Lesson, Lesson.id == Video.lesson_id)\
-                .join(LessonType, LessonType.id == Lesson.type_id)\
-                .filter(LessonType.name == 'Y-GRE')\
-                .filter(Video.restricted == False)\
-                .filter(Punch.user_id == self.id)\
-                .all()], timedelta()).total_seconds(),
-        }
-        if self.last_y_gre_punch is not None:
-            entry_json['last_punch'] = self.last_y_gre_punch.to_json()
-        else:
-            entry_json['last_punch'] = None
-        return entry_json
 
     def lesson_progress(self, lesson):
         '''User.lesson_progress(self, lesson)'''
         return reduce(operator.add, [punch.play_time_trim for punch in Punch.query\
             .join(Video, Video.id == Punch.video_id)\
             .filter(Video.lesson_id == lesson.id)\
-            .filter(Video.restricted == False)\
             .filter(Punch.user_id == self.id)\
             .all()], timedelta()) / lesson.duration
 
@@ -760,7 +580,6 @@ class User(UserMixin, db.Model):
         return Punch.query\
             .join(Video, Video.id == Punch.video_id)\
             .filter(Video.lesson_id == lesson.id)\
-            .filter(Video.restricted == False)\
             .filter(Punch.user_id == self.id)\
             .order_by(Punch.timestamp.desc())\
             .first()
@@ -802,7 +621,6 @@ class User(UserMixin, db.Model):
                 Lesson.order > 0,
                 Lesson.order < lesson.order
             ))\
-            .filter(Video.restricted == False)\
             .all()], True)
 
     def can_play(self, video):
@@ -820,7 +638,7 @@ class User(UserMixin, db.Model):
         entry_csv = [
             str(self.id),
             self.role.name,
-            self.created_at.strftime(current_app.config['DATETIME_FORMAT']),
+            self.imported_at.strftime(current_app.config['DATETIME_FORMAT']),
             last_seen_at,
             self.last_seen_mac,
             str(int(self.suspended)),
@@ -834,7 +652,6 @@ class User(UserMixin, db.Model):
     @staticmethod
     def insert_entries(data, verbose=False):
         '''User.insert_entries(data, verbose=False)'''
-        csv_file = os.path.join(current_app.config['DATA_DIR'], data, 'users.csv')
         if data == 'initial':
             system_operator = User(
                 role_id=Role.query.filter_by(name='开发人员').first().id,
@@ -844,43 +661,17 @@ class User(UserMixin, db.Model):
             )
             db.session.add(system_operator)
             db.session.commit()
-            system_operator.create_user(user=system_operator)
-            db.session.commit()
             if verbose:
                 print('初始化系统管理员信息')
-        if os.path.exists(csv_file):
-            print('---> Read: {}'.format(csv_file))
-            with io.open(csv_file, 'rt', newline='') as f:
-                reader = CSVReader(f)
-                line_num = 0
-                for entry in reader:
-                    if line_num >= 1:
-                        if data == 'initial':
-                            if entry[5] is not None:
-                                entry[5] = Gender.query.filter_by(name=entry[5]).first().id
-                            user = User(
-                                id=int(entry[0]),
-                                role_id=Role.query.filter_by(name=entry[1]).first().id,
-                                name=entry[2],
-                                id_type_id=IDType.query.filter_by(name=entry[3]).first().id,
-                                id_number=entry[4],
-                                gender_id=entry[5]
-                            )
-                            db.session.add(user)
-                            db.session.commit()
-                            system_operator.create_user(user=user)
-                            if user.is_student:
-                                if entry[6] is not None:
-                                    vb_lesson = Lesson.query.filter_by(name=entry[6]).first()
-                                    if vb_lesson is not None:
-                                        user.punch_through(lesson=vb_lesson)
-                                if entry[7] is not None:
-                                    y_gre_lesson = Lesson.query.filter_by(name=entry[7]).first()
-                                    if y_gre_lesson is not None:
-                                        user.punch_through(lesson=y_gre_lesson)
-                            if verbose:
-                                print('导入用户信息', entry[1], entry[2])
-                        else:
+        else:
+            csv_file = os.path.join(current_app.config['DATA_DIR'], data, 'users.csv')
+            if os.path.exists(csv_file):
+                print('---> Read: {}'.format(csv_file))
+                with io.open(csv_file, 'rt', newline='') as f:
+                    reader = CSVReader(f)
+                    line_num = 0
+                    for entry in reader:
+                        if line_num >= 1:
                             if entry[3] is not None:
                                 entry[3] = datetime.strptime(entry[3], current_app.config['DATETIME_FORMAT'])
                             if entry[9] is not None:
@@ -888,7 +679,7 @@ class User(UserMixin, db.Model):
                             user = User(
                                 id=int(entry[0]),
                                 role_id=Role.query.filter_by(name=entry[1]).first().id,
-                                created_at=datetime.strptime(entry[2], current_app.config['DATETIME_FORMAT']),
+                                imported_at=datetime.strptime(entry[2], current_app.config['DATETIME_FORMAT']),
                                 last_seen_at=entry[3],
                                 last_seen_mac=entry[4],
                                 suspended=bool(int(entry[5])),
@@ -900,10 +691,10 @@ class User(UserMixin, db.Model):
                             db.session.add(user)
                             if verbose:
                                 print('导入用户信息', entry[1], entry[6])
-                    line_num += 1
-                db.session.commit()
-        else:
-            print('文件不存在', csv_file)
+                        line_num += 1
+                    db.session.commit()
+            else:
+                print('文件不存在', csv_file)
 
     @staticmethod
     def backup_entries(data):
@@ -916,7 +707,7 @@ class User(UserMixin, db.Model):
             writer.writerow([
                 'id',
                 'role',
-                'created_at',
+                'imported_at',
                 'last_seen_at',
                 'last_seen_mac',
                 'suspended',
@@ -990,6 +781,63 @@ def load_user(user_id):
     return User.query.get(int(user_id))
 
 
+class DeviceLessonType(db.Model):
+    '''Table: device_lesson_types'''
+    __tablename__ = 'device_lesson_types'
+    device_id = db.Column(db.Integer, db.ForeignKey('devices.id'), primary_key=True)
+    lesson_type_id = db.Column(db.Integer, db.ForeignKey('lesson_types.id'), primary_key=True)
+
+    def to_csv(self):
+        '''DeviceLessonType.to_csv(self)'''
+        entry_csv = [
+            str(self.device_id),
+            self.lesson_type.name,
+        ]
+        return entry_csv
+
+    @staticmethod
+    def insert_entries(data, verbose=False):
+        '''DeviceLessonType.insert_entries(data, verbose=False)'''
+        csv_file = os.path.join(current_app.config['DATA_DIR'], data, 'device_lesson_types.csv')
+        if os.path.exists(csv_file):
+            print('---> Read: {}'.format(csv_file))
+            with io.open(csv_file, 'rt', newline='') as f:
+                reader = CSVReader(f)
+                line_num = 0
+                for entry in reader:
+                    if line_num >= 1:
+                        device_lesson_type = DeviceLessonType(
+                            device_id=int(entry[0]),
+                            lesson_type_id=LessonType.query.filter_by(name=entry[1]).first().id
+                        )
+                        db.session.add(device_lesson_type)
+                        if verbose:
+                            print('导入设备课程类型授权信息', entry[0], entry[1])
+                    line_num += 1
+                db.session.commit()
+        else:
+            print('文件不存在', csv_file)
+
+    @staticmethod
+    def backup_entries(data):
+        '''DeviceLessonType.backup_entries(data)'''
+        csv_file = os.path.join(current_app.config['DATA_DIR'], data, 'device_lesson_types.csv')
+        if os.path.exists(csv_file):
+            os.remove(csv_file)
+        with io.open(csv_file, 'wt', newline='') as f:
+            writer = CSVWriter(f)
+            writer.writerow([
+                'device_id',
+                'lesson_type',
+            ])
+            for entry in DeviceLessonType.query.all():
+                writer.writerow(entry.to_csv())
+            print('---> Write: {}'.format(csv_file))
+
+    def __repr__(self):
+        return '<Device Lesson Type {} {}>'.format(self.device.name, self.lesson_type.name)
+
+
 class Room(db.Model):
     '''Table: rooms'''
     __tablename__ = 'rooms'
@@ -1057,12 +905,18 @@ class Device(db.Model):
     type_id = db.Column(db.Integer, db.ForeignKey('device_types.id'))
     room_id = db.Column(db.Integer, db.ForeignKey('rooms.id'))
     mac_address = db.Column(db.Unicode(64))
-    restricted_permit = db.Column(db.Boolean, default=False)
     category = db.Column(db.Unicode(64), default='production', index=True)
     obsolete = db.Column(db.Boolean, default=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    imported_at = db.Column(db.DateTime, default=datetime.utcnow)
     modified_at = db.Column(db.DateTime, default=datetime.utcnow)
     modified_by_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    lesson_type_authorizations = db.relationship(
+        'DeviceLessonType',
+        foreign_keys=[DeviceLessonType.device_id],
+        backref=db.backref('device', lazy='joined'),
+        lazy='dynamic',
+        cascade='all, delete-orphan'
+    )
 
     def ping(self, modified_by):
         '''Device.ping(self, modified_by)'''
@@ -1077,9 +931,31 @@ class Device(db.Model):
         db.session.add(self)
 
     @property
-    def alias2(self):
-        '''Device.alias2(self)'''
+    def alias_serial(self):
+        '''Device.alias_serial(self)'''
         return '{} [{}]'.format(self.alias, self.serial)
+
+    def add_lesson_type(self, lesson_type):
+        '''Device.add_lesson_type(self, lesson_type)'''
+        if not self.has_lesson_type(lesson_type=lesson_type):
+            device_lesson_type = DeviceLessonType(device_id=self.id, lesson_type_id=lesson_type.id)
+            db.session.add(device_lesson_type)
+
+    def has_lesson_type(self, lesson_type):
+        '''Device.has_lesson_type(self, lesson_type)'''
+        return self.lesson_type_authorizations.filter_by(lesson_type_id=lesson_type.id).first() is not None
+
+    def can_access_lesson_type(self, lesson_type):
+        '''Device.can_access_lesson_type(self, lesson_type)'''
+        if isinstance(lesson_type, str):
+            lesson_type = LessonType.query.filter_by(name=lesson_type).first()
+        return lesson_type is not None and \
+            self.lesson_type_authorizations.filter_by(lesson_type_id=lesson_type.id).first() is not None
+
+    def remove_all_lesson_types(self):
+        '''Device.remove_all_lesson_types(self)'''
+        for item in self.lesson_type_authorizations:
+            db.session.delete(item)
 
     def to_csv(self):
         '''Device.to_csv(self)'''
@@ -1094,9 +970,8 @@ class Device(db.Model):
             room,
             self.mac_address,
             self.category,
-            str(int(self.restricted_permit)),
             str(int(self.obsolete)),
-            self.created_at.strftime(current_app.config['DATETIME_FORMAT']),
+            self.imported_at.strftime(current_app.config['DATETIME_FORMAT']),
             self.modified_at.strftime(current_app.config['DATETIME_FORMAT']),
             str(self.modified_by_id),
         ]
@@ -1112,7 +987,6 @@ class Device(db.Model):
                 alias='Y-VOD Server',
                 type_id=DeviceType.query.filter_by(name='Server').first().id,
                 mac_address=current_app.config['SERVER_MAC_ADDRESS'],
-                restricted_permit=True,
                 category='development',
                 modified_by_id=User.query.get(1).id
             )
@@ -1136,13 +1010,12 @@ class Device(db.Model):
                                 type_id=DeviceType.query.filter_by(name=entry[2]).first().id,
                                 room_id=entry[3],
                                 mac_address=entry[4],
-                                restricted_permit=bool(int(entry[5])),
-                                category=entry[6],
+                                category=entry[5],
                                 modified_by_id=User.query.get(1).id
                             )
                             db.session.add(device)
                             if verbose:
-                                print('导入设备信息', entry[0], entry[1], entry[2], entry[4], entry[6])
+                                print('导入设备信息', entry[0], entry[1], entry[2], entry[4], entry[5])
                         else:
                             if entry[4] is not None:
                                 entry[4] = Room.query.filter_by(name=entry[4]).first().id
@@ -1153,16 +1026,15 @@ class Device(db.Model):
                                 type_id=DeviceType.query.filter_by(name=entry[3]).first().id,
                                 room_id=entry[4],
                                 mac_address=entry[5],
-                                restricted_permit=bool(int(entry[6])),
-                                category=entry[7],
-                                obsolete=bool(int(entry[8])),
-                                created_at=datetime.strptime(entry[9], current_app.config['DATETIME_FORMAT']),
-                                modified_at=datetime.strptime(entry[10], current_app.config['DATETIME_FORMAT']),
-                                modified_by_id=int(entry[11])
+                                category=entry[6],
+                                obsolete=bool(int(entry[7])),
+                                imported_at=datetime.strptime(entry[8], current_app.config['DATETIME_FORMAT']),
+                                modified_at=datetime.strptime(entry[9], current_app.config['DATETIME_FORMAT']),
+                                modified_by_id=int(entry[10])
                             )
                             db.session.add(device)
                             if verbose:
-                                print('导入设备信息', entry[2], entry[1], entry[3], entry[5], entry[7])
+                                print('导入设备信息', entry[2], entry[1], entry[3], entry[5], entry[6])
                     line_num += 1
                 db.session.commit()
         else:
@@ -1183,10 +1055,9 @@ class Device(db.Model):
                 'type',
                 'room',
                 'mac_address',
-                'restricted_permit',
                 'category',
                 'obsolete',
-                'created_at',
+                'imported_at',
                 'modified_at',
                 'modified_by_id',
             ])
@@ -1204,12 +1075,16 @@ class LessonType(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.Unicode(64), unique=True, index=True)
     color = db.Column(db.Unicode(64))
+    view_point = db.Column(db.Unicode(64))
+    login_required = db.Column(db.Boolean, default=True)
     lessons = db.relationship('Lesson', backref='type', lazy='dynamic')
-
-    @property
-    def name_snake_case(self):
-        '''LessonType.name_snake_case(self)'''
-        return self.name.lower().replace('-', '_')
+    device_authorizations = db.relationship(
+        'DeviceLessonType',
+        foreign_keys=[DeviceLessonType.lesson_type_id],
+        backref=db.backref('lesson_type', lazy='joined'),
+        lazy='dynamic',
+        cascade='all, delete-orphan'
+    )
 
     @staticmethod
     def insert_entries(data, verbose=False):
@@ -1221,11 +1096,13 @@ class LessonType(db.Model):
             for entry in entries:
                 lesson_type = LessonType(
                     name=entry['name'],
-                    color=entry['color']
+                    color=entry['color'],
+                    view_point=entry['view_point'],
+                    login_required=entry['login_required']
                 )
                 db.session.add(lesson_type)
                 if verbose:
-                    print('导入课程类型信息', entry['name'], entry['color'])
+                    print('导入课程类型信息', entry['name'], entry['color'], entry['view_point'])
             db.session.commit()
         else:
             print('文件不存在', yaml_file)
@@ -1241,46 +1118,17 @@ class Lesson(db.Model):
     name = db.Column(db.Unicode(64), unique=True, index=True)
     abbr = db.Column(db.Unicode(64))
     type_id = db.Column(db.Integer, db.ForeignKey('lesson_types.id'))
-    order = db.Column(db.Integer, default=0)
     videos = db.relationship('Video', backref='lesson', lazy='dynamic')
-
-    @property
-    def unrestricted_videos(self):
-        '''Lesson.unrestricted_videos(self)'''
-        return self.videos.filter_by(restricted=False)
-
-    @property
-    def restricted_videos(self):
-        '''Lesson.restricted_videos(self)'''
-        return self.videos.filter_by(restricted=True)
 
     @property
     def duration(self):
         '''Lesson.duration(self)'''
-        return reduce(operator.add, [video.duration for video in self.unrestricted_videos], timedelta())
+        return reduce(operator.add, [video.duration for video in self.videos], timedelta())
 
     @property
     def duration_format(self):
         '''Lesson.duration_format(self)'''
         return format_duration(duration=self.duration)
-
-    @property
-    def dependencies(self):
-        '''Lesson.dependencies(self)'''
-        return Lesson.query\
-            .filter(Lesson.type_id == self.type_id)\
-            .filter(and_(
-                Lesson.order > 0,
-                Lesson.order < self.order
-            ))\
-            .order_by(Lesson.order.asc())
-
-    @property
-    def dependencies_format(self):
-        '''Lesson.dependencies_format(self)'''
-        if self.dependencies.count():
-            return '、'.join([lesson.abbr for lesson in self.dependencies.all()])
-        return '无'
 
     def to_json(self):
         '''Lesson.to_json(self)'''
@@ -1302,8 +1150,7 @@ class Lesson(db.Model):
                 lesson = Lesson(
                     name='{} {}'.format(entry['lesson_type_name'], entry['abbr']),
                     abbr=entry['abbr'],
-                    type_id=LessonType.query.filter_by(name=entry['lesson_type_name']).first().id,
-                    order=entry['order']
+                    type_id=LessonType.query.filter_by(name=entry['lesson_type_name']).first().id
                 )
                 db.session.add(lesson)
                 if verbose:
@@ -1314,50 +1161,6 @@ class Lesson(db.Model):
 
     def __repr__(self):
         return '<Lesson {}>'.format(self.name)
-
-
-class VideoCollection(db.Model):
-    '''Table: video_collections'''
-    __tablename__ = 'video_collections'
-    collection_id = db.Column(db.Integer, db.ForeignKey('collections.id'), primary_key=True)
-    video_id = db.Column(db.Integer, db.ForeignKey('videos.id'), primary_key=True)
-
-
-class Collection(db.Model):
-    '''Table: collections'''
-    __tablename__ = 'collections'
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.Unicode(64), unique=True, index=True)
-    videos = db.relationship(
-        'VideoCollection',
-        foreign_keys=[VideoCollection.collection_id],
-        backref=db.backref('collection', lazy='joined'),
-        lazy='dynamic',
-        cascade='all, delete-orphan'
-    )
-
-    def has_video(self, video):
-        '''Collection.has_video(self, video)'''
-        return self.videos.filter_by(video_id=video.id).first() is not None
-
-    @staticmethod
-    def insert_entries(data, verbose=False):
-        '''Collection.insert_entries(data, verbose=False)'''
-        yaml_file = os.path.join(current_app.config['DATA_DIR'], data, 'collections.yml')
-        entries = load_yaml(yaml_file=yaml_file)
-        if entries is not None:
-            print('---> Read: {}'.format(yaml_file))
-            for entry in entries:
-                collection = Collection(name=entry['name'])
-                db.session.add(collection)
-                if verbose:
-                    print('导入视频选集信息', entry['name'])
-            db.session.commit()
-        else:
-            print('文件不存在', yaml_file)
-
-    def __repr__(self):
-        return '<Collection {}>'.format(self.name)
 
 
 class Video(db.Model):
@@ -1371,15 +1174,7 @@ class Video(db.Model):
     duration = db.Column(db.Interval, default=timedelta())
     file_name = db.Column(db.Unicode(64))
     hls_cache_file_name = db.Column(db.Unicode(64))
-    restricted = db.Column(db.Boolean, default=False)
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
-    collections = db.relationship(
-        'VideoCollection',
-        foreign_keys=[VideoCollection.video_id],
-        backref=db.backref('video', lazy='joined'),
-        lazy='dynamic',
-        cascade='all, delete-orphan'
-    )
     punches = db.relationship(
         'Punch',
         foreign_keys=[Punch.video_id],
@@ -1387,13 +1182,6 @@ class Video(db.Model):
         lazy='dynamic',
         cascade='all, delete-orphan'
     )
-
-    @property
-    def collections_format(self):
-        '''Video.collections_format(self)'''
-        if self.collections.count():
-            return '、'.join([item.collection.name for item in self.collections])
-        return 'N/A'
 
     @property
     def duration_format(self):
@@ -1462,21 +1250,11 @@ class Video(db.Model):
                         lesson_id=Lesson.query.filter_by(name=entry['lesson_name']).first().id,
                         duration=get_video_duration(video_file),
                         file_name=entry['file_name'],
-                        hls_cache_file_name=hls_cache_file_name,
-                        restricted=entry['restricted']
+                        hls_cache_file_name=hls_cache_file_name
                     )
                     db.session.add(video)
-                    db.session.commit()
                     if verbose:
                         print('导入视频信息', entry['lesson_name'], entry['abbr'], entry['file_name'])
-                    for collection in entry['collections']:
-                        video_collection = VideoCollection(
-                            collection_id=Collection.query.filter_by(name=collection).first().id,
-                            video_id=video.id
-                        )
-                        db.session.add(video_collection)
-                        if verbose:
-                            print('加入选集', collection, video.name)
                 else:
                     print('视频文件不存在', entry['lesson_name'], entry['abbr'], entry['file_name'])
             db.session.commit()
@@ -1497,7 +1275,7 @@ class UserLog(db.Model):
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
 
     def to_csv(self):
-        '''to_csv(self)'''
+        '''UserLog.to_csv(self)'''
         entry_csv = [
             str(self.id),
             str(self.user_id),
@@ -1553,4 +1331,4 @@ class UserLog(db.Model):
             print('---> Write: {}'.format(csv_file))
 
     def __repr__(self):
-        return '<User Log {}, {}, {}, {}>'.format(self.user.alias, self.event, self.category, self.timestamp)
+        return '<User Log {}, {}, {}, {}>'.format(self.user.name_with_role, self.event, self.category, self.timestamp)

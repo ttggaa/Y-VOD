@@ -2,17 +2,14 @@
 
 '''app/manage/views.py'''
 
-import operator
-from functools import reduce
 from htmlmin import minify
 from flask import render_template, redirect, request, make_response, url_for, abort, flash, current_app
 from flask_login import login_required, current_user
 from . import manage
-from .forms import ImportUserForm
 from .forms import NewDeviceForm, EditDeviceForm
 from .. import db
-from ..models import Role, User, IDType, Gender
-from ..models import Room, DeviceType, Device
+from ..models import Role, User
+from ..models import DeviceType, Device
 from ..models import LessonType, Lesson, Video
 from ..decorators import permission_required, role_required
 from ..utils2 import add_user_log
@@ -58,7 +55,7 @@ def student():
         return redirect(url_for('manage.vb_students'))
     users = pagination.items
     return minify(render_template(
-        'manage/user/student.html',
+        'manage/student.html',
         header=header,
         show_vb_students=show_vb_students,
         show_y_gre_students=show_y_gre_students,
@@ -196,7 +193,7 @@ def staff():
         return redirect(url_for('manage.clerks'))
     users = pagination.items
     return minify(render_template(
-        'manage/user/staff.html',
+        'manage/staff.html',
         header=header,
         show_clerks=show_clerks,
         show_assistants=show_assistants,
@@ -347,126 +344,65 @@ def suspended_staffs():
     return resp
 
 
-@manage.route('/user/import', methods=['GET', 'POST'])
-@login_required
-@permission_required('管理用户')
-def import_user():
-    '''manage.import_user()'''
-    form = ImportUserForm()
-    if form.validate_on_submit():
-        data = User.import_user(token=form.token.data)
-        if data is None or reduce(operator.or_, [data.get(key) is None for key in ['id', 'role', 'name', 'id_type', 'id_number']]):
-            flash('用户信息码有误', category='error')
-            return redirect(url_for('manage.import_user', next=request.args.get('next')))
-        if User.query.get(data.get('id')) is not None:
-            flash('该用户已存在', category='error')
-            return redirect(url_for('manage.import_user', next=request.args.get('next')))
-        role = Role.query.filter_by(name=data.get('role')).first()
-        if role is None:
-            flash('用户角色信息有误：{}'.format(data.get('role')), category='error')
-            return redirect(url_for('manage.import_user', next=request.args.get('next')))
-        if not current_user.role.can_manage(role=role):
-            flash('您无法创建该用户', category='error')
-            return redirect(url_for('manage.import_user', next=request.args.get('next')))
-        id_type = IDType.query.filter_by(name=data.get('id_type')).first()
-        if id_type is None:
-            flash('证件类型信息有误：{}'.format(data.get('id_type')), category='error')
-            return redirect(url_for('manage.import_user', next=request.args.get('next')))
-        user = User(
-            id=data.get('id'),
-            role_id=role.id,
-            name=data.get('name'),
-            id_type_id=id_type.id,
-            id_number=data.get('id_number')
-        )
-        if data.get('gender') is not None:
-            gender = Gender.query.filter_by(name=data.get('gender')).first()
-            if gender is None:
-                flash('性别信息有误：{}'.format(data.get('gender')), category='error')
-                return redirect(url_for('manage.import_user', next=request.args.get('next')))
-            user.gender_id = gender.id
-        db.session.add(user)
-        db.session.commit()
-        current_user.create_user(user=user)
-        if user.is_student:
-            if data.get('vb_progress') is not None:
-                vb_lesson = Lesson.query.filter_by(name=data.get('vb_progress')).first()
-                if vb_lesson is not None:
-                    user.punch_through(lesson=vb_lesson)
-            if data.get('y_gre_progress') is not None:
-                y_gre_lesson = Lesson.query.filter_by(name=data.get('y_gre_progress')).first()
-                if y_gre_lesson is not None:
-                    user.punch_through(lesson=y_gre_lesson)
-        flash('已导入用户：{}'.format(user.alias), category='success')
-        add_user_log(user=user, event='用户信息被导入', category='auth')
-        add_user_log(user=current_user._get_current_object(), event='导入用户：{}'.format(user.alias), category='manage')
-        db.session.commit()
-        return redirect(request.args.get('next') or url_for('manage.{}'.format(role.category)))
-    return minify(render_template(
-        'manage/user/import.html',
-        form=form
-    ))
-
-
-@manage.route('/user/reimport/<int:id>', methods=['GET', 'POST'])
-@login_required
-@permission_required('管理用户')
-def reimport_user(id):
-    '''manage.reimport_user(id)'''
-    user = User.query.get_or_404(id)
-    if not current_user.can_manage(user=user):
-        abort(403)
-    form = ImportUserForm()
-    if form.validate_on_submit():
-        data = User.import_user(token=form.token.data)
-        if data is None or reduce(operator.or_, [data.get(key) is None for key in ['id', 'role', 'name', 'id_type', 'id_number']]):
-            flash('用户信息码有误', category='error')
-            return redirect(url_for('manage.reimport_user', id=user.id, next=request.args.get('next')))
-        if data.get('id') != user.id:
-            flash('用户信息不匹配', category='error')
-            return redirect(url_for('manage.reimport_user', id=user.id, next=request.args.get('next')))
-        role = Role.query.filter_by(name=data.get('role')).first()
-        if role is None:
-            flash('用户角色信息有误：{}'.format(data.get('role')), category='error')
-            return redirect(url_for('manage.reimport_user', id=user.id, next=request.args.get('next')))
-        if not current_user.role.can_manage(role=role):
-            flash('您无法重新导入该用户', category='error')
-            return redirect(url_for('manage.reimport_user', id=user.id, next=request.args.get('next')))
-        id_type = IDType.query.filter_by(name=data.get('id_type')).first()
-        if id_type is None:
-            flash('证件类型信息有误：{}'.format(data.get('id_type')), category='error')
-            return redirect(url_for('manage.reimport_user', id=user.id, next=request.args.get('next')))
-        user.role_id = role.id
-        user.name = data.get('name')
-        user.id_type_id = id_type.id
-        user.id_number = data.get('id_number')
-        if data.get('gender') is not None:
-            gender = Gender.query.filter_by(name=data.get('gender')).first()
-            if gender is None:
-                flash('性别信息有误：{}'.format(data.get('gender')), category='error')
-                return redirect(url_for('manage.reimport_user', id=user.id, next=request.args.get('next')))
-            user.gender_id = gender.id
-        db.session.add(user)
-        db.session.commit()
-        if user.is_student:
-            if data.get('vb_progress') is not None:
-                vb_lesson = Lesson.query.filter_by(name=data.get('vb_progress')).first()
-                if vb_lesson is not None:
-                    user.punch_through(lesson=vb_lesson)
-            if data.get('y_gre_progress') is not None:
-                y_gre_lesson = Lesson.query.filter_by(name=data.get('y_gre_progress')).first()
-                if y_gre_lesson is not None:
-                    user.punch_through(lesson=y_gre_lesson)
-        flash('已重新导入用户：{}'.format(user.alias), category='success')
-        add_user_log(user=user, event='用户信息被重新导入', category='auth')
-        add_user_log(user=current_user._get_current_object(), event='重新导入用户：{}'.format(user.alias), category='manage')
-        db.session.commit()
-        return redirect(request.args.get('next') or url_for('manage.{}'.format(role.category)))
-    return minify(render_template(
-        'manage/user/reimport.html',
-        user=user,
-        form=form
-    ))
+# @manage.route('/user/import', methods=['GET', 'POST'])
+# @login_required
+# @permission_required('管理用户')
+# def import_user():
+#     '''manage.import_user()'''
+#     form = ImportUserForm()
+#     if form.validate_on_submit():
+#         data = User.import_user(token=form.token.data)
+#         if data is None or reduce(operator.or_, [data.get(key) is None for key in ['id', 'role', 'name', 'id_type', 'id_number']]):
+#             flash('用户信息码有误', category='error')
+#             return redirect(url_for('manage.import_user', next=request.args.get('next')))
+#         if User.query.get(data.get('id')) is not None:
+#             flash('该用户已存在', category='error')
+#             return redirect(url_for('manage.import_user', next=request.args.get('next')))
+#         role = Role.query.filter_by(name=data.get('role')).first()
+#         if role is None:
+#             flash('用户角色信息有误：{}'.format(data.get('role')), category='error')
+#             return redirect(url_for('manage.import_user', next=request.args.get('next')))
+#         if not current_user.role.can_manage(role=role):
+#             flash('您无法创建该用户', category='error')
+#             return redirect(url_for('manage.import_user', next=request.args.get('next')))
+#         id_type = IDType.query.filter_by(name=data.get('id_type')).first()
+#         if id_type is None:
+#             flash('证件类型信息有误：{}'.format(data.get('id_type')), category='error')
+#             return redirect(url_for('manage.import_user', next=request.args.get('next')))
+#         user = User(
+#             id=data.get('id'),
+#             role_id=role.id,
+#             name=data.get('name'),
+#             id_type_id=id_type.id,
+#             id_number=data.get('id_number')
+#         )
+#         if data.get('gender') is not None:
+#             gender = Gender.query.filter_by(name=data.get('gender')).first()
+#             if gender is None:
+#                 flash('性别信息有误：{}'.format(data.get('gender')), category='error')
+#                 return redirect(url_for('manage.import_user', next=request.args.get('next')))
+#             user.gender_id = gender.id
+#         db.session.add(user)
+#         db.session.commit()
+#         current_user.create_user(user=user)
+#         if user.is_student:
+#             if data.get('vb_progress') is not None:
+#                 vb_lesson = Lesson.query.filter_by(name=data.get('vb_progress')).first()
+#                 if vb_lesson is not None:
+#                     user.punch_through(lesson=vb_lesson)
+#             if data.get('y_gre_progress') is not None:
+#                 y_gre_lesson = Lesson.query.filter_by(name=data.get('y_gre_progress')).first()
+#                 if y_gre_lesson is not None:
+#                     user.punch_through(lesson=y_gre_lesson)
+#         flash('已导入用户：{}'.format(user.name_with_role), category='success')
+#         add_user_log(user=user, event='用户信息被导入', category='auth')
+#         add_user_log(user=current_user._get_current_object(), event='导入用户：{}'.format(user.name_with_role), category='manage')
+#         db.session.commit()
+#         return redirect(request.args.get('next') or url_for('manage.{}'.format(role.category)))
+#     return minify(render_template(
+#         'manage/user/import.html',
+#         form=form
+#     ))
 
 
 @manage.route('/user/suspend/<int:id>')
@@ -478,12 +414,12 @@ def suspend_user(id):
     if not current_user.can_manage(user=user):
         abort(403)
     if user.suspended:
-        flash('“{}”已处于挂起状态'.format(user.alias), category='warning')
+        flash('“{}”已处于挂起状态'.format(user.name_with_role), category='warning')
         return redirect(request.args.get('next') or url_for('profile.overview', id=user.id))
     user.suspend()
-    flash('已挂起用户：{}'.format(user.alias), category='success')
+    flash('已挂起用户：{}'.format(user.name_with_role), category='success')
     add_user_log(user=user, event='用户被挂起', category='auth')
-    add_user_log(user=current_user._get_current_object(), event='挂起用户：{}'.format(user.alias), category='manage')
+    add_user_log(user=current_user._get_current_object(), event='挂起用户：{}'.format(user.name_with_role), category='manage')
     db.session.commit()
     return redirect(request.args.get('next') or url_for('profile.overview', id=user.id))
 
@@ -497,12 +433,12 @@ def restore_user(id):
     if not current_user.can_manage(user=user):
         abort(403)
     if not user.suspended:
-        flash('“{}”未处于挂起状态'.format(user.alias), category='warning')
+        flash('“{}”未处于挂起状态'.format(user.name_with_role), category='warning')
         return redirect(request.args.get('next') or url_for('profile.overview', id=user.id))
     user.restore()
-    flash('已恢复用户：{}'.format(user.alias), category='success')
+    flash('已恢复用户：{}'.format(user.name_with_role), category='success')
     add_user_log(user=user, event='用户被恢复', category='auth')
-    add_user_log(user=current_user._get_current_object(), event='恢复用户：{}'.format(user.alias), category='manage')
+    add_user_log(user=current_user._get_current_object(), event='恢复用户：{}'.format(user.name_with_role), category='manage')
     db.session.commit()
     return redirect(request.args.get('next') or url_for('profile.overview', id=user.id))
 
@@ -524,11 +460,13 @@ def device():
             type_id=int(form.device_type.data),
             room_id=(None if int(form.room.data) == 0 else int(form.room.data)),
             mac_address=(None if form.mac_address.data == '' else form.mac_address.data),
-            restricted_permit=form.restricted_permit.data,
             category=('development' if form.development_machine.data and current_user.is_developer else 'production'),
             modified_by_id=current_user.id
         )
         db.session.add(device)
+        db.session.commit()
+        for lesson_type_id in form.lesson_types.data:
+            device.add_lesson_type(lesson_type=LessonType.query.get(int(lesson_type_id)))
         db.session.commit()
         flash('已添加设备：{} [{}]'.format(device.alias, device.serial), category='success')
         add_user_log(user=current_user._get_current_object(), event='添加设备：{} [{}]'.format(device.alias, device.serial), category='manage')
@@ -701,12 +639,14 @@ def edit_device(id):
         device.type_id = int(form.device_type.data)
         device.room_id = (None if int(form.room.data) == 0 else int(form.room.data))
         device.mac_address = (None if form.mac_address.data == '' else form.mac_address.data)
-        device.restricted_permit = form.restricted_permit.data
         device.category = ('development' if form.development_machine.data and current_user.is_developer else 'production')
         db.session.add(device)
+        device.remove_all_lesson_types()
+        for lesson_type_id in form.lesson_types.data:
+            device.add_lesson_type(lesson_type=LessonType.query.get(int(lesson_type_id)))
         db.session.commit()
-        flash('已更新设备信息：{}'.format(device.alias2), category='success')
-        add_user_log(user=current_user._get_current_object(), event='更新设备信息：{}'.format(device.alias2), category='manage')
+        flash('已更新设备信息：{}'.format(device.alias_serial), category='success')
+        add_user_log(user=current_user._get_current_object(), event='更新设备信息：{}'.format(device.alias_serial), category='manage')
         db.session.commit()
         return redirect(request.args.get('next') or url_for('manage.device'))
     form.alias.data = device.alias
@@ -714,7 +654,7 @@ def edit_device(id):
     form.device_type.data = str(device.type_id)
     form.room.data = ('0' if device.room_id == None else str(device.room_id))
     form.mac_address.data = device.mac_address
-    form.restricted_permit.data = device.restricted_permit
+    form.lesson_types.data = [str(item.lesson_type_id) for item in device.lesson_type_authorizations]
     form.development_machine.data = (device.category == 'development')
     return minify(render_template(
         'manage/edit_device.html',
@@ -733,11 +673,11 @@ def toggle_device_obsolete(id):
         abort(403)
     device.toggle_obsolete(modified_by=current_user._get_current_object())
     if device.obsolete:
-        flash('已标记报废设备：{}'.format(device.alias2), category='success')
-        add_user_log(user=current_user._get_current_object(), event='标记报废设备：{}'.format(device.alias2), category='manage')
+        flash('已标记报废设备：{}'.format(device.alias_serial), category='success')
+        add_user_log(user=current_user._get_current_object(), event='标记报废设备：{}'.format(device.alias_serial), category='manage')
     else:
-        flash('已恢复使用设备：{}'.format(device.alias2), category='success')
-        add_user_log(user=current_user._get_current_object(), event='恢复使用设备：{}'.format(device.alias2), category='manage')
+        flash('已恢复使用设备：{}'.format(device.alias_serial), category='success')
+        add_user_log(user=current_user._get_current_object(), event='恢复使用设备：{}'.format(device.alias_serial), category='manage')
     db.session.commit()
     return redirect(request.args.get('next') or url_for('manage.device'))
 
@@ -750,9 +690,10 @@ def delete_device(id):
     device = Device.query.get_or_404(id)
     if device.category == 'development' and not current_user.is_developer:
         abort(403)
+    device.remove_all_lesson_types()
     db.session.delete(device)
-    flash('已恢删除设备：{}'.format(device.alias2), category='success')
-    add_user_log(user=current_user._get_current_object(), event='删除设备：{}'.format(device.alias2), category='manage')
+    flash('已删除设备：{}'.format(device.alias_serial), category='success')
+    add_user_log(user=current_user._get_current_object(), event='删除设备：{}'.format(device.alias_serial), category='manage')
     db.session.commit()
     return redirect(request.args.get('next') or url_for('manage.device'))
 
@@ -764,32 +705,43 @@ def lesson():
     '''manage.lesson()'''
     show_vb_lessons = True
     show_y_gre_lessons = False
+    show_y_gre_aw_lessons = False
+    show_test_review_lessons = False
+    show_demo_lessons = False
     if current_user.is_authenticated:
         show_vb_lessons = bool(request.cookies.get('show_vb_lessons', '1'))
         show_y_gre_lessons = bool(request.cookies.get('show_y_gre_lessons', ''))
+        show_y_gre_aw_lessons = bool(request.cookies.get('show_y_gre_aw_lessons', ''))
+        show_test_review_lessons = bool(request.cookies.get('show_test_review_lessons', ''))
+        show_demo_lessons = bool(request.cookies.get('show_demo_lessons', ''))
     if show_vb_lessons:
-        header = 'VB研修课程'
-        query = Lesson.query\
-            .join(LessonType, LessonType.id == Lesson.type_id)\
-            .filter(LessonType.name == 'VB')\
-            .order_by(Lesson.id.asc())
+        lesson_type = 'VB'
     if show_y_gre_lessons:
-        header = 'Y-GRE研修课程'
-        query = Lesson.query\
-            .join(LessonType, LessonType.id == Lesson.type_id)\
-            .filter(LessonType.name == 'Y-GRE')\
-            .order_by(Lesson.id.asc())
+        lesson_type = 'Y-GRE'
+    if show_y_gre_aw_lessons:
+        lesson_type = 'Y-GRE AW'
+    if show_test_review_lessons:
+        lesson_type = '考试讲解'
+    if show_demo_lessons:
+        lesson_type = '体验课程'
     page = request.args.get('page', 1, type=int)
     try:
+        query = Lesson.query\
+            .join(LessonType, LessonType.id == Lesson.type_id)\
+            .filter(LessonType.name == lesson_type)\
+            .order_by(Lesson.id.asc())
         pagination = query.paginate(page, per_page=current_app.config['RECORD_PER_PAGE'], error_out=False)
     except NameError:
         return redirect(url_for('manage.vb_lessons'))
     lessons = pagination.items
     return minify(render_template(
         'manage/lesson.html',
-        header=header,
+        header=lesson_type,
         show_vb_lessons=show_vb_lessons,
         show_y_gre_lessons=show_y_gre_lessons,
+        show_y_gre_aw_lessons=show_y_gre_aw_lessons,
+        show_test_review_lessons=show_test_review_lessons,
+        show_demo_lessons=show_demo_lessons,
         pagination=pagination,
         lessons=lessons
     ))
@@ -803,6 +755,9 @@ def vb_lessons():
     resp = make_response(redirect(url_for('manage.lesson')))
     resp.set_cookie('show_vb_lessons', '1', max_age=current_app.config['COOKIE_MAX_AGE'])
     resp.set_cookie('show_y_gre_lessons', '', max_age=current_app.config['COOKIE_MAX_AGE'])
+    resp.set_cookie('show_y_gre_aw_lessons', '', max_age=current_app.config['COOKIE_MAX_AGE'])
+    resp.set_cookie('show_test_review_lessons', '', max_age=current_app.config['COOKIE_MAX_AGE'])
+    resp.set_cookie('show_demo_lessons', '', max_age=current_app.config['COOKIE_MAX_AGE'])
     return resp
 
 
@@ -814,6 +769,51 @@ def y_gre_lessons():
     resp = make_response(redirect(url_for('manage.lesson')))
     resp.set_cookie('show_vb_lessons', '', max_age=current_app.config['COOKIE_MAX_AGE'])
     resp.set_cookie('show_y_gre_lessons', '1', max_age=current_app.config['COOKIE_MAX_AGE'])
+    resp.set_cookie('show_y_gre_aw_lessons', '', max_age=current_app.config['COOKIE_MAX_AGE'])
+    resp.set_cookie('show_test_review_lessons', '', max_age=current_app.config['COOKIE_MAX_AGE'])
+    resp.set_cookie('show_demo_lessons', '', max_age=current_app.config['COOKIE_MAX_AGE'])
+    return resp
+
+
+@manage.route('/lesson/y-gre-aw')
+@login_required
+@permission_required('管理')
+def y_gre_aw_lessons():
+    '''manage.y_gre_aw_lessons()'''
+    resp = make_response(redirect(url_for('manage.lesson')))
+    resp.set_cookie('show_vb_lessons', '', max_age=current_app.config['COOKIE_MAX_AGE'])
+    resp.set_cookie('show_y_gre_lessons', '', max_age=current_app.config['COOKIE_MAX_AGE'])
+    resp.set_cookie('show_y_gre_aw_lessons', '1', max_age=current_app.config['COOKIE_MAX_AGE'])
+    resp.set_cookie('show_test_review_lessons', '', max_age=current_app.config['COOKIE_MAX_AGE'])
+    resp.set_cookie('show_demo_lessons', '', max_age=current_app.config['COOKIE_MAX_AGE'])
+    return resp
+
+
+@manage.route('/lesson/test-review')
+@login_required
+@permission_required('管理')
+def test_review_lessons():
+    '''manage.test_review_lessons()'''
+    resp = make_response(redirect(url_for('manage.lesson')))
+    resp.set_cookie('show_vb_lessons', '', max_age=current_app.config['COOKIE_MAX_AGE'])
+    resp.set_cookie('show_y_gre_lessons', '', max_age=current_app.config['COOKIE_MAX_AGE'])
+    resp.set_cookie('show_y_gre_aw_lessons', '', max_age=current_app.config['COOKIE_MAX_AGE'])
+    resp.set_cookie('show_test_review_lessons', '1', max_age=current_app.config['COOKIE_MAX_AGE'])
+    resp.set_cookie('show_demo_lessons', '', max_age=current_app.config['COOKIE_MAX_AGE'])
+    return resp
+
+
+@manage.route('/lesson/demo')
+@login_required
+@permission_required('管理')
+def demo_lessons():
+    '''manage.demo_lessons()'''
+    resp = make_response(redirect(url_for('manage.lesson')))
+    resp.set_cookie('show_vb_lessons', '', max_age=current_app.config['COOKIE_MAX_AGE'])
+    resp.set_cookie('show_y_gre_lessons', '', max_age=current_app.config['COOKIE_MAX_AGE'])
+    resp.set_cookie('show_y_gre_aw_lessons', '', max_age=current_app.config['COOKIE_MAX_AGE'])
+    resp.set_cookie('show_test_review_lessons', '', max_age=current_app.config['COOKIE_MAX_AGE'])
+    resp.set_cookie('show_demo_lessons', '1', max_age=current_app.config['COOKIE_MAX_AGE'])
     return resp
 
 

@@ -17,6 +17,13 @@
 {%- endmacro %}
 
 
+{% macro placeholder_widget() -%}
+<div class="ui placeholder segment">
+    <div class="ui icon header"><i class="ban icon"></i>无</div>
+</div>
+{%- endmacro %}
+
+
 {% macro message_widget() -%}
 {% with messages = get_flashed_messages(with_categories=true) %}{% if messages %}<div id="message-container">
     {% for category, message in messages %}<div class="ui {% if category == 'message' %}info{% else %}{{ category }}{% endif %} message">

@@ -13,6 +13,7 @@
 <div class="ui main vertical segment">
     <div class="ui container">
         <h3 class="ui header"><i class="users cog icon"></i>角色列表</h3>
+        {% if pagination.total > 0 %}
         <table class="ui sortable selectable celled table">
             <thead>
                 <tr>
@@ -26,7 +27,7 @@
             </thead>
             <tbody>
                 {% for role in roles %}
-                <tr{% if role.permissions_num(category='study') > 1 or role.permissions_num(category='manage') > 1 or role.permissions_num(category='develop') > 1 %} class="top aligned"{% endif %}>
+                <tr{% if role.permission_quantity_from_category(category='study') > 1 or role.permission_quantity_from_category(category='manage') > 1 or role.permission_quantity_from_category(category='develop') > 1 %} class="top aligned"{% endif %}>
                     <td><i class="{{ role.icon }} icon"></i>{{ role.name }}</td>
                     <td>{{ role.level }} 级</td>
                     <td>{{ role.users.count() }}</td>
@@ -49,7 +50,8 @@
                 {% endfor %}
             </tbody>
         </table>
-        {% if pagination %}{{ macros.pagination_widget(pagination, 'develop.role') }}{% endif %}
+        {{ macros.pagination_widget(pagination, 'develop.role') }}
+        {% else %}{{ macros.placeholder_widget() }}{% endif %}
     </div>
 </div>
 {% endblock %}

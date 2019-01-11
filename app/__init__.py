@@ -39,8 +39,11 @@ def create_app(config_name):
     from .profile import profile as profile_blueprint
     app.register_blueprint(profile_blueprint, url_prefix='/profile')
 
-    from .study import study as video_blueprint
-    app.register_blueprint(video_blueprint, url_prefix='/study')
+    from .study import study as study_blueprint
+    app.register_blueprint(study_blueprint, url_prefix='/study')
+
+    from .demo import demo as demo_blueprint
+    app.register_blueprint(demo_blueprint, url_prefix='/demo')
 
     from .status import status as status_blueprint
     app.register_blueprint(status_blueprint, url_prefix='/status')

@@ -20,7 +20,7 @@
     <div class="ui container">
         <h3 class="ui header">
             <i class="user tie icon"></i>
-            <div class="content">员工列表{% if pagination %}<div class="sub header">{{ header }}：共 {{ pagination.total }} 人</div>{% endif %}</div>
+            <div class="content">员工列表<div class="sub header">{{ header }}：共 {{ pagination.total }} 人</div></div>
         </h3>
         <div class="ui secondary stackable menu">
             <a class="item {% if show_clerks %}active {% endif %}" href="{{ url_for('manage.clerks') }}">值守</a>
@@ -31,9 +31,6 @@
             {% if current_user.plays('管理员') %}<a class="item {% if show_administrators %}active {% endif %}" href="{{ url_for('manage.administrators') }}">管理员</a>{% endif %}
             {% if current_user.is_developer %}<a class="item {% if show_developers %}active {% endif %}" href="{{ url_for('manage.developers') }}">开发人员</a>{% endif %}
             <a class="item {% if show_suspended_staffs %}active {% endif %}" href="{{ url_for('manage.suspended_staffs') }}">挂起</a>
-            <div class="right menu">
-                <a class="item" href="{{ url_for('manage.import_user', next=url_for('manage.staff')) }}"><i class="file import icon"></i>导入</a>
-            </div>
         </div>
         {% if pagination.total > 0 %}
         <table class="ui sortable selectable celled table">
@@ -42,8 +39,7 @@
                     <th>姓名</th>
                     <th>研修权限</th>
                     <th>上次登录</th>
-                    <th>创建时间</th>
-                    <th>创建人</th>
+                    <th>导入时间</th>
                 </tr>
             </thead>
             <tbody>
@@ -52,18 +48,13 @@
                     <td class="single line">{{ macros.user_url_gender_widget(user, user.id == current_user.id) }}</td>
                     <td>{% if user.suspended %}<div class="ui horizontal label">挂起</div>{% endif %}{{ user.role.name }}</td>
                     <td>{{ macros.from_now_widget(user.last_seen_at) }}</td>
-                    <td>{{ macros.from_now_widget(user.created_at) }}</td>
-                    <td>{{ macros.user_url_widget(user.created_by, user.created_by.id == current_user.id) }}</td>
+                    <td>{{ macros.from_now_widget(user.imported_at) }}</td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
-        {% if pagination %}{{ macros.pagination_widget(pagination, 'manage.student') }}{% endif %}
-        {% else %}
-        <div class="ui placeholder segment">
-            <div class="ui icon header"><i class="user slash icon"></i>{{ header }}：共 0 人</div>
-        </div>
-        {% endif %}
+        {{ macros.pagination_widget(pagination, 'manage.student') }}
+        {% else %}{{ macros.placeholder_widget() }}{% endif %}
     </div>
 </div>
 {% endblock %}
