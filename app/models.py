@@ -838,7 +838,7 @@ class DeviceLessonType(db.Model):
             print('---> Write: {}'.format(csv_file))
 
     def __repr__(self):
-        return '<Device Lesson Type {} {}>'.format(self.device.name, self.lesson_type.name)
+        return '<Device Lesson Type {} {}>'.format(self.device.alias_serial, self.lesson_type.name)
 
 
 class Room(db.Model):
