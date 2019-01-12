@@ -85,6 +85,9 @@ class DevelopmentConfig(Config):
     # HLS
     HLS_ENABLE = False
 
+    # Y-System
+    YSYS_URI = os.getenv('YVOD_DEV_YSYS_URI')
+
 
 class ProductionConfig(Config):
     '''ProductionConfig(Config)'''
@@ -105,6 +108,9 @@ class ProductionConfig(Config):
 
     # HLS
     HLS_ENABLE = True
+
+    # Y-System
+    YSYS_URI = os.getenv('YVOD_PROD_YSYS_URI')
 
 
 config = {
