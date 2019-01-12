@@ -985,7 +985,7 @@ class Device(db.Model):
         '''Device.insert_entries(data, verbose=False)'''
         csv_file = os.path.join(current_app.config['DATA_DIR'], data, 'devices.csv')
         if data == 'initial':
-            y_vod_server = Device(
+            server = Device(
                 serial=current_app.config['SERVER_SERIAL'],
                 alias='Y-VOD Server',
                 type_id=DeviceType.query.filter_by(name='Server').first().id,
@@ -993,10 +993,15 @@ class Device(db.Model):
                 category='development',
                 modified_by_id=User.query.get(1).id
             )
-            db.session.add(y_vod_server)
+            db.session.add(server)
             db.session.commit()
             if verbose:
                 print('初始化服务器设备信息')
+            for lesson_type in LessonType.query.all():
+                server.add_lesson_type(lesson_type=lesson_type)
+                if verbose:
+                    print('授权课程类型', lesson_type.name)
+            db.session.commit()
         if os.path.exists(csv_file):
             print('---> Read: {}'.format(csv_file))
             with io.open(csv_file, 'rt', newline='') as f:
