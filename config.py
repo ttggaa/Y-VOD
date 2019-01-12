@@ -60,7 +60,7 @@ class Config:
 
     @staticmethod
     def init_app(app):
-        '''init_app(app)'''
+        '''Config.init_app(app)'''
         pass
 
 
