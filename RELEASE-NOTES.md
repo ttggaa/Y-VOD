@@ -1,6 +1,6 @@
 ## RELEASE NOTES
 
-### Version 1.0.1 - January 12, 2019
+### Version 1.0.1 - January 13, 2019
 
 **NEW**
 - **Model** - Add `demo` attribute to video data model #1
@@ -22,6 +22,7 @@
 - **Model** - Remove `restricted` attribute from video data model #17
 - **Model** - Remove `order` attribute from lesson data model #18
 - **Feature** - Simplify user profile overview page contents #22
+- **Template** - Adopt static assets from static.y-english.cn #25
 
 **FIXED**
 - **Feature** - Playback rate changes are not taken into account in total video play time calculation #23
