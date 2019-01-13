@@ -35,7 +35,7 @@
                         {% if current_user.is_developer %}<div>设备MAC地址：{{ user.last_seen_mac }}</div>{% endif %}
                     </div>
                     {% if current_user.is_staff %}<div class="ui vertical segment">
-                        <div>创建时间：{{ macros.from_now_widget(user.imported_at) }}</div>
+                        <div>导入时间：{{ macros.from_now_widget(user.imported_at) }}</div>
                     </div>{% endif %}
                     {% if current_user.can_manage(user=user) %}<div class="ui vertical segment">
                         <div class="ui labels">

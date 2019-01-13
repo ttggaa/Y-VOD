@@ -4,7 +4,7 @@
 {% block title %}{{ video.abbr }} &middot; {{ video.lesson.name }}{% endblock %}
 
 {% block css %}
-<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='assets/library/player/player.min.css') }}">
+<link rel="stylesheet" type="text/css" href="//static.y-english.cn/assets/player/player.min.css">
 {% endblock %}
 
 {% block content %}
@@ -40,8 +40,8 @@
 {% endblock %}
 
 {% block js %}
-{% if config.HLS_ENABLE %}<script type="text/javascript" src="{{ url_for('static', filename='assets/library/hls/hls.min.js') }}"></script>{% endif %}
-<script type="text/javascript" src="{{ url_for('static', filename='assets/library/player/player.min.js') }}"></script>
+{% if config.HLS_ENABLE %}<script type="text/javascript" src="//static.y-english.cn/assets/hls/hls.min.css"></script>{% endif %}
+<script type="text/javascript" src="//static.y-english.cn/assets/player/player.min.js"></script>
 <script type="text/javascript">
 {{ macros.close_message_js_snippet() }}
 

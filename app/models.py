@@ -26,6 +26,9 @@ class RolePermission(db.Model):
     role_id = db.Column(db.Integer, db.ForeignKey('roles.id'), primary_key=True)
     permission_id = db.Column(db.Integer, db.ForeignKey('permissions.id'), primary_key=True)
 
+    def __repr__(self):
+        return '<Role Permission {} {}>'.format(self.role.name, self.permission.name)
+
 
 class Permission(db.Model):
     '''Table: permissions'''
@@ -835,7 +838,7 @@ class DeviceLessonType(db.Model):
             print('---> Write: {}'.format(csv_file))
 
     def __repr__(self):
-        return '<Device Lesson Type {} {}>'.format(self.device.name, self.lesson_type.name)
+        return '<Device Lesson Type {} {}>'.format(self.device.alias_serial, self.lesson_type.name)
 
 
 class Room(db.Model):
@@ -907,7 +910,7 @@ class Device(db.Model):
     mac_address = db.Column(db.Unicode(64))
     category = db.Column(db.Unicode(64), default='production', index=True)
     obsolete = db.Column(db.Boolean, default=False)
-    imported_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
     modified_at = db.Column(db.DateTime, default=datetime.utcnow)
     modified_by_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     lesson_type_authorizations = db.relationship(
@@ -971,7 +974,7 @@ class Device(db.Model):
             self.mac_address,
             self.category,
             str(int(self.obsolete)),
-            self.imported_at.strftime(current_app.config['DATETIME_FORMAT']),
+            self.created_at.strftime(current_app.config['DATETIME_FORMAT']),
             self.modified_at.strftime(current_app.config['DATETIME_FORMAT']),
             str(self.modified_by_id),
         ]
@@ -982,7 +985,7 @@ class Device(db.Model):
         '''Device.insert_entries(data, verbose=False)'''
         csv_file = os.path.join(current_app.config['DATA_DIR'], data, 'devices.csv')
         if data == 'initial':
-            y_vod_server = Device(
+            server = Device(
                 serial=current_app.config['SERVER_SERIAL'],
                 alias='Y-VOD Server',
                 type_id=DeviceType.query.filter_by(name='Server').first().id,
@@ -990,10 +993,15 @@ class Device(db.Model):
                 category='development',
                 modified_by_id=User.query.get(1).id
             )
-            db.session.add(y_vod_server)
+            db.session.add(server)
             db.session.commit()
             if verbose:
                 print('初始化服务器设备信息')
+            for lesson_type in LessonType.query.all():
+                server.add_lesson_type(lesson_type=lesson_type)
+                if verbose:
+                    print('授权课程类型', lesson_type.name)
+            db.session.commit()
         if os.path.exists(csv_file):
             print('---> Read: {}'.format(csv_file))
             with io.open(csv_file, 'rt', newline='') as f:
@@ -1028,7 +1036,7 @@ class Device(db.Model):
                                 mac_address=entry[5],
                                 category=entry[6],
                                 obsolete=bool(int(entry[7])),
-                                imported_at=datetime.strptime(entry[8], current_app.config['DATETIME_FORMAT']),
+                                created_at=datetime.strptime(entry[8], current_app.config['DATETIME_FORMAT']),
                                 modified_at=datetime.strptime(entry[9], current_app.config['DATETIME_FORMAT']),
                                 modified_by_id=int(entry[10])
                             )
@@ -1057,7 +1065,7 @@ class Device(db.Model):
                 'mac_address',
                 'category',
                 'obsolete',
-                'imported_at',
+                'created_at',
                 'modified_at',
                 'modified_by_id',
             ])
@@ -1066,7 +1074,7 @@ class Device(db.Model):
             print('---> Write: {}'.format(csv_file))
 
     def __repr__(self):
-        return '<Device {} {} {}>'.format(self.serial, self.alias, self.type.name)
+        return '<Device {} {}>'.format(self.alias_serial, self.type.name)
 
 
 class LessonType(db.Model):
@@ -1331,4 +1339,4 @@ class UserLog(db.Model):
             print('---> Write: {}'.format(csv_file))
 
     def __repr__(self):
-        return '<User Log {}, {}, {}, {}>'.format(self.user.name_with_role, self.event, self.category, self.timestamp)
+        return '<User Log {} {} {} {}>'.format(self.user.name_with_role, self.event, self.category, self.timestamp)
