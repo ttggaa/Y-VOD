@@ -76,6 +76,7 @@ def load_yaml(yaml_file):
     if os.path.exists(yaml_file):
         with io.open(yaml_file, 'rt', newline='') as f:
             return yaml.load(f)
+    return None
 
 
 def get_mac_address_from_ip(ip_address):
@@ -92,6 +93,7 @@ def get_video_duration(video_file):
     if os.path.exists(video_file):
         media_info = MediaInfo.parse(video_file)
         return timedelta(milliseconds=media_info.tracks[0].duration)
+    return None
 
 
 def send_video_file(video_file, request, mimetype='video/mp4'):

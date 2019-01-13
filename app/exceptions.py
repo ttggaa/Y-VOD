@@ -3,5 +3,5 @@
 '''app/exceptions.py'''
 
 class ValidationError(ValueError):
-    '''ValidationError(ValueError)'''
+    '''exceptions.ValidationError(ValueError)'''
     pass
