@@ -1,6 +1,6 @@
 ## RELEASE NOTES
 
-### Version 1.0.1 - January 13, 2019
+### Version 1.0.1 - January 14, 2019
 
 **NEW**
 - **Model** - Add `demo` attribute to video data model #1
