@@ -22,7 +22,7 @@
 - **Model** - Remove `restricted` attribute from video data model #17
 - **Model** - Remove `order` attribute from lesson data model #18
 - **Feature** - Simplify user profile overview page contents #22
-- **Template** - Adopt static assets from static.y-english.cn #25
+- **Template** - Adopt static assets hosted on static.y-english.cn #25
 
 **FIXED**
 - **Feature** - Playback rate changes are not taken into account in total video play time calculation #23
