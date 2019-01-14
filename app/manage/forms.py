@@ -5,8 +5,8 @@
 from flask_wtf import FlaskForm
 from wtforms import StringField, BooleanField, SelectField, SelectMultipleField, SubmitField
 from wtforms.validators import InputRequired, Optional, MacAddress
-from ..models import Room, DeviceType
-from ..models import LessonType
+from app.models import Room, DeviceType
+from app.models import LessonType
 
 
 class NewDeviceForm(FlaskForm):

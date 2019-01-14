@@ -18,6 +18,3 @@ class LoginForm(FlaskForm):
         super(LoginForm, self).__init__(*args, **kwargs)
         self.auth_token.label.text = '授权码（{}位）'.format(auth_token_length)
         self.auth_token.validators = [InputRequired(), Length(auth_token_length, auth_token_length)]
-
-    # def validate_auth_token(form, field):
-    #     pass

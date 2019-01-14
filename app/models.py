@@ -16,8 +16,8 @@ from werkzeug.routing import BuildError
 from itsdangerous import TimedJSONWebSignatureSerializer, BadSignature, SignatureExpired
 from flask import current_app, url_for
 from flask_login import UserMixin, AnonymousUserMixin
-from . import db, login_manager
-from .utils import makedirs, date_now, date_then, CSVReader, CSVWriter, load_yaml, get_video_duration, format_duration, to_pinyin
+from app import db, login_manager
+from app.utils import makedirs, date_now, date_then, CSVReader, CSVWriter, load_yaml, get_video_duration, format_duration, to_pinyin
 
 
 class RolePermission(db.Model):

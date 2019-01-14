@@ -2,8 +2,8 @@
 
 '''app/utils2.py'''
 
-from . import db
-from .models import Device, UserLog
+from app import db
+from app.models import Device, UserLog
 
 
 def get_device_info(mac_address, show_mac=False):
