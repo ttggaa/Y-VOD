@@ -2,8 +2,7 @@
 
 '''app/main/views.py'''
 
-from htmlmin import minify
-from flask import render_template, redirect, request, url_for, abort, current_app
+from flask import redirect, request, url_for, abort, current_app
 from flask_login import current_user
 from flask_sqlalchemy import get_debug_queries
 from . import main
@@ -38,9 +37,3 @@ def home():
             return redirect(request.args.get('next') or url_for('status.home'))
         return redirect(request.args.get('next') or url_for('profile.overview', id=current_user.id))
     return redirect(url_for('auth.login'))
-
-
-@main.route('/terms')
-def terms():
-    '''main.terms()'''
-    return minify(render_template('terms.html'))
