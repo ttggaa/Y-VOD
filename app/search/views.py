@@ -5,9 +5,9 @@
 from sqlalchemy import or_
 from flask import request, current_app, jsonify
 from flask_login import login_required, current_user
-from . import search
 from app.models import User
 from app.decorators import permission_required
+from . import search
 
 
 @search.route('/profile')

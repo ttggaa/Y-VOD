@@ -5,14 +5,14 @@
 from htmlmin import minify
 from flask import render_template, redirect, request, make_response, url_for, abort, flash, current_app
 from flask_login import login_required, current_user
-from . import manage
-from .forms import NewDeviceForm, EditDeviceForm
 from app import db
 from app.models import Role, User
 from app.models import DeviceType, Device
 from app.models import LessonType, Lesson, Video
 from app.decorators import permission_required, role_required
 from app.utils2 import add_user_log
+from . import manage
+from .forms import NewDeviceForm, EditDeviceForm
 
 
 @manage.route('/student')

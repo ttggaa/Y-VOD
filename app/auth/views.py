@@ -5,13 +5,13 @@
 from htmlmin import minify
 from flask import render_template, redirect, request, url_for, flash, current_app
 from flask_login import login_user, logout_user, login_required, current_user
-from . import auth
-from .forms import LoginForm
 from app import db
 from app.models import User
 from app.models import Device
 from app.utils import get_mac_address_from_ip
 from app.utils2 import get_device_info, add_user_log
+from . import auth
+from .forms import LoginForm
 
 
 @auth.before_app_request

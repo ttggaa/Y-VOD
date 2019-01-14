@@ -5,13 +5,13 @@
 from htmlmin import minify
 from flask import render_template, jsonify, redirect, request, url_for, abort, flash
 from flask_login import login_required, current_user
-from . import study
 from app import db
 from app.models import Device
 from app.models import LessonType, Lesson, Video
 from app.decorators import permission_required
 from app.utils import get_mac_address_from_ip
 from app.utils2 import add_user_log
+from . import study
 
 
 @study.route('/vb')

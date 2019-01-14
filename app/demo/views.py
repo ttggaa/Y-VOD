@@ -4,10 +4,10 @@
 
 from htmlmin import minify
 from flask import render_template, redirect, request, url_for, flash
-from . import demo
 from app.models import Device
 from app.models import LessonType, Lesson, Video
 from app.utils import get_mac_address_from_ip
+from . import demo
 
 
 @demo.route('/')
