@@ -1,3 +1,3 @@
 # -*- coding: utf-8 -*-
 
-'''app/forms/__init__.py'''
+'''app/view/__init__.py'''
