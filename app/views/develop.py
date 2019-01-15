@@ -1,15 +1,17 @@
 # -*- coding: utf-8 -*-
 
-'''app/develop/views.py'''
+'''app/views/develop.py'''
 
 from htmlmin import minify
-from flask import render_template, redirect, request, make_response, url_for, current_app
+from flask import Blueprint, render_template, redirect, request, make_response, url_for, current_app
 from flask_login import login_required, current_user
 from app.models import Role
 from app.models import Permission
 from app.models import UserLog
 from app.decorators import role_required
-from . import develop
+
+
+develop = Blueprint('develop', __name__)
 
 
 @develop.route('/role')

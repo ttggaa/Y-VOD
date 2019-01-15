@@ -1,14 +1,16 @@
 # -*- coding: utf-8 -*-
 
-'''app/profile/views.py'''
+'''app/views/profile.py'''
 
 from htmlmin import minify
-from flask import render_template, request, abort, current_app
+from flask import Blueprint, render_template, request, abort, current_app
 from flask_login import login_required, current_user
 from app.models import User
 from app.models import UserLog
 from app.models import LessonType, Lesson
-from . import profile
+
+
+profile = Blueprint('profile', __name__)
 
 
 @profile.route('/<int:id>/overview')

@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
-'''app/manage/views.py'''
+'''app/views/manage.py'''
 
 from htmlmin import minify
-from flask import render_template, redirect, request, make_response, url_for, abort, flash, current_app
+from flask import Blueprint, render_template, redirect, request, make_response, url_for, abort, flash, current_app
 from flask_login import login_required, current_user
 from app import db
 from app.models import Role, User
@@ -12,7 +12,9 @@ from app.models import LessonType, Lesson, Video
 from app.decorators import permission_required, role_required
 from app.utils2 import add_user_log
 from app.forms.manage import DeviceForm
-from . import manage
+
+
+manage = Blueprint('manage', __name__)
 
 
 @manage.route('/student')
