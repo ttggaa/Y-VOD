@@ -1,15 +1,17 @@
 # -*- coding: utf-8 -*-
 
-'''app/resource/views.py'''
+'''app/views/resource.py'''
 
 import os
-from flask import send_file, redirect, request, url_for, abort, current_app
+from flask import Blueprint, send_file, redirect, request, url_for, abort, current_app
 from flask_login import login_required, current_user
-from . import resource
-from ..models import Device
-from ..models import Video
-from ..utils import get_mac_address_from_ip, send_video_file
-from ..decorators import permission_required
+from app.models import Device
+from app.models import Video
+from app.decorators import permission_required
+from app.utils import get_mac_address_from_ip, send_video_file
+
+
+resource = Blueprint('resource', __name__)
 
 
 @resource.route('/video/<int:id>')

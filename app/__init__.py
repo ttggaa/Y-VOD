@@ -20,7 +20,7 @@ csrf = CSRFProtect()
 
 
 def create_app(config_name):
-    '''create_app(config_name)'''
+    '''__init__.create_app(config_name)'''
 
     app = Flask(__name__)
     app.config.from_object(config[config_name])
@@ -30,34 +30,34 @@ def create_app(config_name):
     login_manager.init_app(app)
     csrf.init_app(app)
 
-    from .main import main as main_blueprint
+    from app.views.main import main as main_blueprint
     app.register_blueprint(main_blueprint)
 
-    from .auth import auth as auth_blueprint
+    from app.views.auth import auth as auth_blueprint
     app.register_blueprint(auth_blueprint, url_prefix='/auth')
 
-    from .profile import profile as profile_blueprint
+    from app.views.profile import profile as profile_blueprint
     app.register_blueprint(profile_blueprint, url_prefix='/profile')
 
-    from .study import study as study_blueprint
+    from app.views.study import study as study_blueprint
     app.register_blueprint(study_blueprint, url_prefix='/study')
 
-    from .demo import demo as demo_blueprint
+    from app.views.demo import demo as demo_blueprint
     app.register_blueprint(demo_blueprint, url_prefix='/demo')
 
-    from .status import status as status_blueprint
+    from app.views.status import status as status_blueprint
     app.register_blueprint(status_blueprint, url_prefix='/status')
 
-    from .manage import manage as manage_blueprint
+    from app.views.manage import manage as manage_blueprint
     app.register_blueprint(manage_blueprint, url_prefix='/manage')
 
-    from .resource import resource as resource_blueprint
+    from app.views.resource import resource as resource_blueprint
     app.register_blueprint(resource_blueprint, url_prefix='/resource')
 
-    from .develop import develop as develop_blueprint
+    from app.views.develop import develop as develop_blueprint
     app.register_blueprint(develop_blueprint, url_prefix='/develop')
 
-    from .search import search as search_blueprint
+    from app.views.search import search as search_blueprint
     app.register_blueprint(search_blueprint, url_prefix='/search')
 
     return app

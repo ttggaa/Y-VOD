@@ -1,15 +1,17 @@
 # -*- coding: utf-8 -*-
 
-'''app/status/views.py'''
+'''app/views/status.py'''
 
 from datetime import datetime, timedelta
 from htmlmin import minify
-from flask import render_template, current_app
+from flask import Blueprint, render_template, current_app
 from flask_login import login_required, current_user
-from . import status
-from ..models import Role, User
-from ..models import Punch
-from ..decorators import permission_required
+from app.models import Role, User
+from app.models import Punch
+from app.decorators import permission_required
+
+
+status = Blueprint('status', __name__)
 
 
 @status.route('/')

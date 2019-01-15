@@ -16,12 +16,12 @@ from werkzeug.routing import BuildError
 from itsdangerous import TimedJSONWebSignatureSerializer, BadSignature, SignatureExpired
 from flask import current_app, url_for
 from flask_login import UserMixin, AnonymousUserMixin
-from . import db, login_manager
-from .utils import makedirs, date_now, date_then, CSVReader, CSVWriter, load_yaml, get_video_duration, format_duration, to_pinyin
+from app import db, login_manager
+from app.utils import makedirs, date_now, date_then, CSVReader, CSVWriter, load_yaml, get_video_duration, format_duration, to_pinyin
 
 
 class RolePermission(db.Model):
-    '''Table: role_permissions'''
+    '''models.RolePermission(db.Model)'''
     __tablename__ = 'role_permissions'
     role_id = db.Column(db.Integer, db.ForeignKey('roles.id'), primary_key=True)
     permission_id = db.Column(db.Integer, db.ForeignKey('permissions.id'), primary_key=True)
@@ -31,7 +31,7 @@ class RolePermission(db.Model):
 
 
 class Permission(db.Model):
-    '''Table: permissions'''
+    '''models.Permission(db.Model)'''
     __tablename__ = 'permissions'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.Unicode(64), unique=True, index=True)
@@ -84,7 +84,7 @@ class Permission(db.Model):
 
 
 class Role(db.Model):
-    '''Table: roles'''
+    '''models.Role(db.Model)'''
     __tablename__ = 'roles'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.Unicode(64), unique=True, index=True)
@@ -168,7 +168,7 @@ class Role(db.Model):
 
 
 class IDType(db.Model):
-    '''Table: id_types'''
+    '''models.IDType(db.Model)'''
     __tablename__ = 'id_types'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.Unicode(64), unique=True, index=True)
@@ -195,7 +195,7 @@ class IDType(db.Model):
 
 
 class Gender(db.Model):
-    '''Table: genders'''
+    '''models.Gender(db.Model)'''
     __tablename__ = 'genders'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.Unicode(64), unique=True, index=True)
@@ -264,7 +264,7 @@ class Punch(db.Model):
 
     def to_json(self):
         '''Punch.to_json(self)'''
-        entry_json = {
+        json_entry = {
             'user': self.user.name,
             'video': self.video.to_json(),
             'play_time': {
@@ -274,17 +274,17 @@ class Punch(db.Model):
             'progress': self.progress_trim,
             'punched_at': self.timestamp.strftime(current_app.config['DATETIME_FORMAT_ISO']),
         }
-        return entry_json
+        return json_entry
 
     def to_csv(self):
         '''Punch.to_csv(self)'''
-        entry_csv = [
+        csv_entry = [
             str(self.user_id),
             str(self.video_id),
             str(self.play_time.total_seconds()),
             self.timestamp.strftime(current_app.config['DATETIME_FORMAT']),
         ]
-        return entry_csv
+        return csv_entry
 
     @staticmethod
     def insert_entries(data, verbose=False):
@@ -330,11 +330,11 @@ class Punch(db.Model):
             print('---> Write: {}'.format(csv_file))
 
     def __repr__(self):
-        return '<Punch {} {}>'.format(self.user.name, self.video.name, self.play_time)
+        return '<Punch {} {} {}>'.format(self.user.name, self.video.name, self.play_time)
 
 
 class User(UserMixin, db.Model):
-    '''Table: users'''
+    '''models.User(UserMixin, db.Model)'''
     __tablename__ = 'users'
     # basic properties
     id = db.Column(db.Integer, primary_key=True)
@@ -499,15 +499,15 @@ class User(UserMixin, db.Model):
 
     def profile_json(self, url_tab=None):
         '''User.profile_json(self, url_tab=None)'''
-        entry_json = {
+        json_entry = {
             'title': self.name,
             'url': self.profile_url(tab=url_tab),
         }
         if self.suspended:
-            entry_json['description'] = '[挂起] {}'.format(self.role.name)
+            json_entry['description'] = '[挂起] {}'.format(self.role.name)
         else:
-            entry_json['description'] = self.role.name
-        return entry_json
+            json_entry['description'] = self.role.name
+        return json_entry
 
     @property
     def id_number_censored(self):
@@ -638,7 +638,7 @@ class User(UserMixin, db.Model):
         gender = ''
         if self.gender_id is not None:
             gender = self.gender.name
-        entry_csv = [
+        csv_entry = [
             str(self.id),
             self.role.name,
             self.imported_at.strftime(current_app.config['DATETIME_FORMAT']),
@@ -650,7 +650,7 @@ class User(UserMixin, db.Model):
             self.id_number,
             gender,
         ]
-        return entry_csv
+        return csv_entry
 
     @staticmethod
     def insert_entries(data, verbose=False):
@@ -724,7 +724,7 @@ class User(UserMixin, db.Model):
             print('---> Write: {}'.format(csv_file))
 
     def __repr__(self):
-        return '<User {}>'.format(self.name)
+        return '<User {}>'.format(self.name_with_role)
 
 
 db.event.listen(User.name, 'set', User.on_changed_name)
@@ -780,23 +780,23 @@ login_manager.anonymous_user = AnonymousUser
 
 @login_manager.user_loader
 def load_user(user_id):
-    '''load_user(user_id)'''
+    '''models.load_user(user_id)'''
     return User.query.get(int(user_id))
 
 
 class DeviceLessonType(db.Model):
-    '''Table: device_lesson_types'''
+    '''models.DeviceLessonType(db.Model)'''
     __tablename__ = 'device_lesson_types'
     device_id = db.Column(db.Integer, db.ForeignKey('devices.id'), primary_key=True)
     lesson_type_id = db.Column(db.Integer, db.ForeignKey('lesson_types.id'), primary_key=True)
 
     def to_csv(self):
         '''DeviceLessonType.to_csv(self)'''
-        entry_csv = [
+        csv_entry = [
             str(self.device_id),
             self.lesson_type.name,
         ]
-        return entry_csv
+        return csv_entry
 
     @staticmethod
     def insert_entries(data, verbose=False):
@@ -842,7 +842,7 @@ class DeviceLessonType(db.Model):
 
 
 class Room(db.Model):
-    '''Table: rooms'''
+    '''models.Room(db.Model)'''
     __tablename__ = 'rooms'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.Unicode(64), unique=True, index=True)
@@ -869,7 +869,7 @@ class Room(db.Model):
 
 
 class DeviceType(db.Model):
-    '''Table: device_types'''
+    '''models.DeviceType(db.Model)'''
     __tablename__ = 'device_types'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.Unicode(64), unique=True, index=True)
@@ -900,7 +900,7 @@ class DeviceType(db.Model):
 
 
 class Device(db.Model):
-    '''Table: devices'''
+    '''models.Device(db.Model)'''
     __tablename__ = 'devices'
     id = db.Column(db.Integer, primary_key=True)
     serial = db.Column(db.Unicode(64), unique=True, index=True)
@@ -965,7 +965,7 @@ class Device(db.Model):
         room = ''
         if self.room_id is not None:
             room = self.room.name
-        entry_csv = [
+        csv_entry = [
             str(self.id),
             self.serial,
             self.alias,
@@ -978,7 +978,7 @@ class Device(db.Model):
             self.modified_at.strftime(current_app.config['DATETIME_FORMAT']),
             str(self.modified_by_id),
         ]
-        return entry_csv
+        return csv_entry
 
     @staticmethod
     def insert_entries(data, verbose=False):
@@ -1078,7 +1078,7 @@ class Device(db.Model):
 
 
 class LessonType(db.Model):
-    '''Table: lesson_types'''
+    '''models.LessonType(db.Model)'''
     __tablename__ = 'lesson_types'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.Unicode(64), unique=True, index=True)
@@ -1120,7 +1120,7 @@ class LessonType(db.Model):
 
 
 class Lesson(db.Model):
-    '''Table: lessons'''
+    '''models.Lesson(db.Model)'''
     __tablename__ = 'lessons'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.Unicode(64), unique=True, index=True)
@@ -1140,12 +1140,12 @@ class Lesson(db.Model):
 
     def to_json(self):
         '''Lesson.to_json(self)'''
-        entry_json = {
+        json_entry = {
             'name': self.name,
             'abbr': self.abbr,
             'type': self.type.name,
         }
-        return entry_json
+        return json_entry
 
     @staticmethod
     def insert_entries(data, verbose=False):
@@ -1172,7 +1172,7 @@ class Lesson(db.Model):
 
 
 class Video(db.Model):
-    '''Table: videos'''
+    '''models.Video(db.Model)'''
     __tablename__ = 'videos'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.Unicode(64), index=True)
@@ -1226,7 +1226,7 @@ class Video(db.Model):
 
     def to_json(self):
         '''Video.to_json(self)'''
-        entry_json = {
+        json_entry = {
             'name': self.name,
             'abbr': self.abbr,
             'description': self.description,
@@ -1236,7 +1236,7 @@ class Video(db.Model):
                 'seconds': self.duration.total_seconds(),
             },
         }
-        return entry_json
+        return json_entry
 
     @staticmethod
     def insert_entries(data, verbose=False):
@@ -1274,7 +1274,7 @@ class Video(db.Model):
 
 
 class UserLog(db.Model):
-    '''Table: user_logs'''
+    '''models.UserLog(db.Model)'''
     __tablename__ = 'user_logs'
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
@@ -1284,14 +1284,14 @@ class UserLog(db.Model):
 
     def to_csv(self):
         '''UserLog.to_csv(self)'''
-        entry_csv = [
+        csv_entry = [
             str(self.id),
             str(self.user_id),
             self.event,
             self.category,
             self.timestamp.strftime(current_app.config['DATETIME_FORMAT']),
         ]
-        return entry_csv
+        return csv_entry
 
     @staticmethod
     def insert_entries(data, verbose=False):

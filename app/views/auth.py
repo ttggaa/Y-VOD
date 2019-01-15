@@ -1,17 +1,19 @@
 # -*- coding: utf-8 -*-
 
-'''app/auth/views.py'''
+'''app/views/auth.py'''
 
 from htmlmin import minify
-from flask import render_template, redirect, request, url_for, flash, current_app
+from flask import Blueprint, render_template, redirect, request, url_for, flash, current_app
 from flask_login import login_user, logout_user, login_required, current_user
-from . import auth
-from .forms import LoginForm
-from .. import db
-from ..models import User
-from ..models import Device
-from ..utils import get_mac_address_from_ip
-from ..utils2 import get_device_info, add_user_log
+from app import db
+from app.models import User
+from app.models import Device
+from app.utils import get_mac_address_from_ip
+from app.utils2 import get_device_info, add_user_log
+from app.forms.auth import LoginForm
+
+
+auth = Blueprint('auth', __name__)
 
 
 @auth.before_app_request
@@ -56,7 +58,10 @@ def login():
             flash('登录失败：用户信息无效', category='error')
             flash('初次登录时，请联系工作人员确认用户信息已被导入。', category='info')
         return redirect(url_for('auth.login', next=request.args.get('next')))
-    return minify(render_template('auth/login.html', form=form))
+    return minify(render_template(
+        'auth/login.html',
+        form=form
+    ))
 
 
 @auth.route('/logout')

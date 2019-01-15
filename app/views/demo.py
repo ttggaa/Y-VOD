@@ -1,13 +1,15 @@
 # -*- coding: utf-8 -*-
 
-'''app/demo/views.py'''
+'''app/views/demo.py'''
 
 from htmlmin import minify
-from flask import render_template, redirect, request, url_for, flash
-from . import demo
-from ..models import Device
-from ..models import LessonType, Lesson, Video
-from ..utils import get_mac_address_from_ip
+from flask import Blueprint, render_template, redirect, request, url_for, flash
+from app.models import Device
+from app.models import LessonType, Lesson, Video
+from app.utils import get_mac_address_from_ip
+
+
+demo = Blueprint('demo', __name__)
 
 
 @demo.route('/')

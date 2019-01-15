@@ -1,18 +1,20 @@
 # -*- coding: utf-8 -*-
 
-'''app/manage/views.py'''
+'''app/views/manage.py'''
 
 from htmlmin import minify
-from flask import render_template, redirect, request, make_response, url_for, abort, flash, current_app
+from flask import Blueprint, render_template, redirect, request, make_response, url_for, abort, flash, current_app
 from flask_login import login_required, current_user
-from . import manage
-from .forms import NewDeviceForm, EditDeviceForm
-from .. import db
-from ..models import Role, User
-from ..models import DeviceType, Device
-from ..models import LessonType, Lesson, Video
-from ..decorators import permission_required, role_required
-from ..utils2 import add_user_log
+from app import db
+from app.models import Role, User
+from app.models import DeviceType, Device
+from app.models import LessonType, Lesson, Video
+from app.decorators import permission_required, role_required
+from app.utils2 import add_user_log
+from app.forms.manage import DeviceForm
+
+
+manage = Blueprint('manage', __name__)
 
 
 @manage.route('/student')
@@ -448,7 +450,7 @@ def restore_user(id):
 @permission_required('管理设备')
 def device():
     '''manage.device()'''
-    form = NewDeviceForm(current_user=current_user._get_current_object())
+    form = DeviceForm(is_developer=current_user.is_developer)
     if form.validate_on_submit():
         serial = form.serial.data.upper()
         if Device.query.filter_by(serial=serial).first() is not None:
@@ -625,7 +627,7 @@ def edit_device(id):
     device = Device.query.get_or_404(id)
     if device.category == 'development' and not current_user.is_developer:
         abort(403)
-    form = EditDeviceForm(current_user=current_user._get_current_object())
+    form = DeviceForm(is_developer=current_user.is_developer)
     if form.validate_on_submit():
         serial = form.serial.data.upper()
         if Device.query\
