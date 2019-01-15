@@ -8,7 +8,7 @@ from wtforms.validators import InputRequired, Length
 
 
 class LoginForm(FlaskForm):
-    '''auth.forms.LoginForm(FlaskForm)'''
+    '''auth.LoginForm(FlaskForm)'''
     name = StringField('姓名', validators=[InputRequired(), Length(1, 64)])
     id_number = StringField('证件号码（后6位）', validators=[InputRequired(), Length(6, 6)])
     auth_token = StringField('授权码', validators=[InputRequired()])
