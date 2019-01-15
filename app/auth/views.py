@@ -10,8 +10,8 @@ from app.models import User
 from app.models import Device
 from app.utils import get_mac_address_from_ip
 from app.utils2 import get_device_info, add_user_log
+from app.forms.auth import LoginForm
 from . import auth
-from .forms import LoginForm
 
 
 @auth.before_app_request

@@ -11,8 +11,8 @@ from app.models import DeviceType, Device
 from app.models import LessonType, Lesson, Video
 from app.decorators import permission_required, role_required
 from app.utils2 import add_user_log
+from app.forms.manage import DeviceForm
 from . import manage
-from .forms import DeviceForm
 
 
 @manage.route('/student')

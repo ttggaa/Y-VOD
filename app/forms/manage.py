@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-'''app/manage/forms.py'''
+'''app/forms/manage.py'''
 
 from flask_wtf import FlaskForm
 from wtforms import StringField, BooleanField, SelectField, SelectMultipleField, SubmitField

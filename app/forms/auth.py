@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-'''app/auth/forms.py'''
+'''app/forms/auth.py'''
 
 from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField
