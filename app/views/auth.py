@@ -14,6 +14,7 @@ from app import db
 from app.models import Role, User
 from app.models import IDType, Gender
 from app.models import Device
+from app.models import LessonType, Lesson, Video
 from app.utils import get_mac_address_from_ip
 from app.utils2 import get_device_info, add_user_log
 from app.forms.auth import LoginForm
@@ -81,9 +82,13 @@ def login():
             flash('登录失败：用户信息无效', category='error')
             flash('初次登录时，请确认Y-System账号已经激活。', category='info')
             return redirect(url_for('auth.login', next=request.args.get('next')))
+        role = Role.query.filter_by(name=user_data.get('role')).first()
+        if role is None:
+            flash('登录失败：无效的用户角色“{}”'.format(user_data.get('role')), category='error')
+            return redirect(url_for('auth.login', next=request.args.get('next')))
         user = User(
             id=user_data.get('id'),
-            role_id=Role.query.filter_by(name=user_data.get('role')).first().id,
+            role_id=role.id,
             name=user_data.get('name'),
             id_type_id=IDType.query.filter_by(name=user_data.get('id_type')).first().id,
             id_number=user_data.get('id_number')
@@ -92,6 +97,28 @@ def login():
             user.gender_id = Gender.query.filter_by(name=user_data.get('gender')).first().id
         db.session.add(user)
         db.session.commit()
+        if user_data.get('vb_progress') is not None:
+            vb_video = Video.query.filter_by(name=user_data.get('vb_progress')).first()
+            if vb_video is not None:
+                for video in Video.query\
+                    .join(Lesson, Lesson.id == Video.lesson_id)\
+                    .join(LessonType, LessonType.id == Lesson.type_id)\
+                    .filter(LessonType.name == 'VB')\
+                    .filter(Video.id <= vb_video.id)\
+                    .order_by(Video.id.asc())\
+                    .all():
+                    user.punch(video=video, play_time=video.duration)
+        if user_data.get('y_gre_progress') is not None:
+            y_gre_lesson = Lesson.query.filter_by(name=user_data.get('y_gre_progress')).first()
+            if y_gre_lesson is not None:
+                for video in Video.query\
+                    .join(Lesson, Lesson.id == Video.lesson_id)\
+                    .join(LessonType, LessonType.id == Lesson.type_id)\
+                    .filter(LessonType.name == 'Y-GRE')\
+                    .filter(Lesson.id <= y_gre_lesson.id)\
+                    .order_by(Video.id.asc())\
+                    .all():
+                    user.punch(video=video, play_time=video.duration)
         login_user(user, remember=current_app.config['AUTH_REMEMBER_LOGIN'])
         add_user_log(user=user, event='导入用户信息', category='auth')
         add_user_log(user=user, event='登录系统', category='auth')

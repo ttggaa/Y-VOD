@@ -503,13 +503,6 @@ class User(UserMixin, db.Model):
             json_entry['description'] = self.role.name
         return json_entry
 
-    @property
-    def id_number_censored(self):
-        '''User.id_number_censored(self)'''
-        if self.id_number is not None and len(self.id_number) >= 8:
-            return '{}{}{}'.format(self.id_number[:1], ''.join(['*' for x in self.id_number[1:-1]]), self.id_number[-1:])
-        return '********'
-
     def punch(self, video, play_time=None):
         '''User.punch(self, video, play_time=None)'''
         punch = self.punches.filter_by(video_id=video.id).first()
