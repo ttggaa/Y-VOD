@@ -44,6 +44,8 @@ class Config:
     UTC_OFFSET = 8 # hours
     COOKIE_MAX_AGE = 30 * 24 * 60 * 60 # 30 days
     STATUS_EXPIRATION_CHECK_INTERVAL = 1000 # milliseconds (1 second)
+    TOKEN_EXPIRATION = 3600 # seconds
+    REQUEST_TIMEOUT = 15 # seconds
 
     # Video Analytics
     VIDEO_ANALYTICS_ACCELERATING_FACTOR = 1.25 # speedup
@@ -86,7 +88,7 @@ class DevelopmentConfig(Config):
     HLS_ENABLE = False
 
     # Y-System
-    YSYS_URI = os.getenv('YVOD_DEV_YSYS_URI')
+    YSYS_URI = os.getenv('YVOD_DEV_YSYS_URL')
 
 
 class ProductionConfig(Config):
@@ -110,7 +112,7 @@ class ProductionConfig(Config):
     HLS_ENABLE = True
 
     # Y-System
-    YSYS_URI = os.getenv('YVOD_PROD_YSYS_URI')
+    YSYS_URI = os.getenv('YVOD_PROD_YSYS_URL')
 
 
 config = {

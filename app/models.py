@@ -13,7 +13,6 @@ from secrets import token_urlsafe
 from functools import reduce
 from sqlalchemy import and_
 from werkzeug.routing import BuildError
-from itsdangerous import TimedJSONWebSignatureSerializer, BadSignature, SignatureExpired
 from flask import current_app, url_for
 from flask_login import UserMixin, AnonymousUserMixin
 from app import db, login_manager
@@ -396,20 +395,17 @@ class User(UserMixin, db.Model):
         self.suspended = False
         db.session.add(self)
 
-    @staticmethod
-    def import_user(token):
-        '''User.import_user(self, token)'''
-        serial = TimedJSONWebSignatureSerializer(current_app.config['AUTH_TOKEN_SECRET_KEY'])
-        try:
-            data = serial.loads(token)
-        except (SignatureExpired, BadSignature):
-            return None
-        return data
-
     def verify_auth_token(self, token):
         '''User.verify_auth_token(self, token)'''
-        string = 'id={}&name={}&id_number={}&date={}&secret={}'.format(self.id, self.name, self.id_number, date_now(utc_offset=current_app.config['UTC_OFFSET']).isoformat(), current_app.config['AUTH_TOKEN_SECRET_KEY'])
-        return token.lower() == b64encode(md5(string.encode('utf-8')).digest()).decode('utf-8').replace('+', '').replace('/', '').replace('=', '').lower()[-current_app.config['AUTH_TOKEN_LENGTH']:]
+        string = 'id={}&name={}&id_number={}&date={}&secret={}'.format(
+            self.id,
+            self.name,
+            self.id_number,
+            date_now(utc_offset=current_app.config['UTC_OFFSET']).isoformat(),
+            current_app.config['AUTH_TOKEN_SECRET_KEY']
+        )
+        return token.lower() == b64encode(md5(string.encode('utf-8')).digest()).decode('utf-8')\
+            .replace('+', '').replace('/', '').replace('=', '').lower()[-current_app.config['AUTH_TOKEN_LENGTH']:]
 
     def can(self, permission_name):
         '''User.can(self, permission_name)'''

@@ -2,11 +2,17 @@
 
 '''app/views/auth.py'''
 
+import operator
+from functools import reduce
+import requests
+from requests.exceptions import RequestException
 from htmlmin import minify
+from itsdangerous import TimedJSONWebSignatureSerializer
 from flask import Blueprint, render_template, redirect, request, url_for, flash, current_app
 from flask_login import login_user, logout_user, login_required, current_user
 from app import db
-from app.models import User
+from app.models import Role, User
+from app.models import IDType, Gender
 from app.models import Device
 from app.utils import get_mac_address_from_ip
 from app.utils2 import get_device_info, add_user_log
@@ -53,11 +59,44 @@ def login():
                     add_user_log(user=user, event='登录系统', category='auth')
                     db.session.commit()
                     return redirect(request.args.get('next') or user.index_url)
-            flash('登录失败：授权码错误', category='error')
-        else:
+        # migrate user from Y-System
+        serial = TimedJSONWebSignatureSerializer(
+            secret_key=current_app.config['AUTH_TOKEN_SECRET_KEY'],
+            expires_in=current_app.config['TOKEN_EXPIRATION']
+        )
+        try:
+            migration_request = requests.get(
+                '{}/auth/migrate/{}'.format(current_app.config['YSYS_URI'], serial.dumps({
+                    'name': form.name.data,
+                    'id_number': form.id_number.data.upper(),
+                    'auth_token': form.auth_token.data,
+                }).decode('ascii')),
+                timeout=current_app.config['REQUEST_TIMEOUT']
+            )
+            user_data = migration_request.json()
+        except RequestException:
+            flash('网络通信故障', category='error')
+            return redirect(url_for('auth.login', next=request.args.get('next')))
+        if user_data is None or reduce(operator.or_, [user_data.get(key) is None for key in ['id', 'role', 'name', 'id_type', 'id_number']]):
             flash('登录失败：用户信息无效', category='error')
-            flash('初次登录时，请联系工作人员确认用户信息已被导入。', category='info')
-        return redirect(url_for('auth.login', next=request.args.get('next')))
+            flash('初次登录时，请确认Y-System账号已经激活。', category='info')
+            return redirect(url_for('auth.login', next=request.args.get('next')))
+        user = User(
+            id=user_data.get('id'),
+            role_id=Role.query.filter_by(name=user_data.get('role')).first().id,
+            name=user_data.get('name'),
+            id_type_id=IDType.query.filter_by(name=user_data.get('id_type')).first().id,
+            id_number=user_data.get('id_number')
+        )
+        if user_data.get('gender') is not None:
+            user.gender_id = Gender.query.filter_by(name=user_data.get('gender')).first().id
+        db.session.add(user)
+        db.session.commit()
+        login_user(user, remember=current_app.config['AUTH_REMEMBER_LOGIN'])
+        add_user_log(user=user, event='导入用户信息', category='auth')
+        add_user_log(user=user, event='登录系统', category='auth')
+        db.session.commit()
+        return redirect(request.args.get('next') or user.index_url)
     return minify(render_template(
         'auth/login.html',
         form=form
