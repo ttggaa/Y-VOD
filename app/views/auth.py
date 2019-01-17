@@ -70,7 +70,7 @@ def login():
                 '{}/auth/migrate/{}'.format(current_app.config['YSYS_URI'], serial.dumps({
                     'name': form.name.data,
                     'id_number': form.id_number.data.upper(),
-                    'auth_token': form.auth_token.data,
+                    'auth_token': form.auth_token.data.lower(),
                 }).decode('ascii')),
                 timeout=current_app.config['REQUEST_TIMEOUT']
             )
