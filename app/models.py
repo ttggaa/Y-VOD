@@ -402,9 +402,7 @@ class User(UserMixin, db.Model):
         serial = TimedJSONWebSignatureSerializer(current_app.config['AUTH_TOKEN_SECRET_KEY'])
         try:
             data = serial.loads(token)
-        except SignatureExpired:
-            return None
-        except BadSignature:
+        except (SignatureExpired, BadSignature):
             return None
         return data
 
