@@ -6,8 +6,8 @@ import operator
 from functools import reduce
 import requests
 from requests.exceptions import RequestException
-from htmlmin import minify
 from itsdangerous import TimedJSONWebSignatureSerializer
+from htmlmin import minify
 from flask import Blueprint, render_template, redirect, request, url_for, flash, current_app
 from flask_login import login_user, logout_user, login_required, current_user
 from app import db
@@ -67,38 +67,38 @@ def login():
         )
         try:
             migration_request = requests.get(
-                '{}/auth/migrate/{}'.format(current_app.config['YSYS_URI'], serial.dumps({
+                '{}/api/user/migrate/{}'.format(current_app.config['YSYS_URI'], serial.dumps({
                     'name': form.name.data,
                     'id_number': form.id_number.data.upper(),
                     'auth_token': form.auth_token.data.lower(),
                 }).decode('ascii')),
                 timeout=current_app.config['REQUEST_TIMEOUT']
             )
-            user_data = migration_request.json()
+            data = migration_request.json()
         except RequestException:
             flash('网络通信故障', category='error')
             return redirect(url_for('auth.login', next=request.args.get('next')))
-        if user_data is None or reduce(operator.or_, [user_data.get(key) is None for key in ['id', 'role', 'name', 'id_type', 'id_number']]):
+        if data is None or reduce(operator.or_, [data.get(key) is None for key in ['id', 'role', 'name', 'id_type', 'id_number']]):
             flash('登录失败：用户信息无效', category='error')
             flash('初次登录时，请确认Y-System账号已经激活。', category='info')
             return redirect(url_for('auth.login', next=request.args.get('next')))
-        role = Role.query.filter_by(name=user_data.get('role')).first()
+        role = Role.query.filter_by(name=data.get('role')).first()
         if role is None:
-            flash('登录失败：无效的用户角色“{}”'.format(user_data.get('role')), category='error')
+            flash('登录失败：无效的用户角色“{}”'.format(data.get('role')), category='error')
             return redirect(url_for('auth.login', next=request.args.get('next')))
         user = User(
-            id=user_data.get('id'),
+            id=data.get('id'),
             role_id=role.id,
-            name=user_data.get('name'),
-            id_type_id=IDType.query.filter_by(name=user_data.get('id_type')).first().id,
-            id_number=user_data.get('id_number')
+            name=data.get('name'),
+            id_type_id=IDType.query.filter_by(name=data.get('id_type')).first().id,
+            id_number=data.get('id_number')
         )
-        if user_data.get('gender') is not None:
-            user.gender_id = Gender.query.filter_by(name=user_data.get('gender')).first().id
+        if data.get('gender') is not None:
+            user.gender_id = Gender.query.filter_by(name=data.get('gender')).first().id
         db.session.add(user)
         db.session.commit()
-        if user_data.get('vb_progress') is not None:
-            vb_video = Video.query.filter_by(name=user_data.get('vb_progress')).first()
+        if data.get('vb_progress') is not None:
+            vb_video = Video.query.filter_by(name=data.get('vb_progress')).first()
             if vb_video is not None:
                 for video in Video.query\
                     .join(Lesson, Lesson.id == Video.lesson_id)\
@@ -108,8 +108,8 @@ def login():
                     .order_by(Video.id.asc())\
                     .all():
                     user.punch(video=video, play_time=video.duration)
-        if user_data.get('y_gre_progress') is not None:
-            y_gre_lesson = Lesson.query.filter_by(name=user_data.get('y_gre_progress')).first()
+        if data.get('y_gre_progress') is not None:
+            y_gre_lesson = Lesson.query.filter_by(name=data.get('y_gre_progress')).first()
             if y_gre_lesson is not None:
                 for video in Video.query\
                     .join(Lesson, Lesson.id == Video.lesson_id)\

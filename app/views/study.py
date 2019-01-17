@@ -2,6 +2,9 @@
 
 '''app/views/study.py'''
 
+import requests
+from requests.exceptions import RequestException
+from itsdangerous import TimedJSONWebSignatureSerializer
 from htmlmin import minify
 from flask import Blueprint, render_template, jsonify, redirect, request, url_for, abort, flash
 from flask_login import login_required, current_user
@@ -158,4 +161,16 @@ def punch(id):
         abort(500)
     current_user.punch(video=video, play_time=request.json.get('play_time'))
     db.session.commit()
+    if video.lesson.type.name in ['VB', 'Y-GRE', 'Y-GRE AW']:
+        try:
+            punch_request = requests.get(
+                '{}/api/punch/{}'.format(current_app.config['YSYS_URI'], serial.dumps({
+                    'user_id': current_user.id,
+                    'section': video.name if video.lesson.type.name == 'VB' else '{} 视频研修'.format(video.lesson.name),
+                }).decode('ascii')),
+                timeout=current_app.config['REQUEST_TIMEOUT']
+            )
+            user_data = punch_request.json()
+        except RequestException:
+            pass
     return jsonify(current_user.video_punch(video=video).to_json())
