@@ -11,7 +11,6 @@ from hashlib import md5
 from base64 import b64encode
 from secrets import token_urlsafe
 from functools import reduce
-from sqlalchemy import and_
 from werkzeug.routing import BuildError
 from flask import current_app, url_for
 from flask_login import UserMixin, AnonymousUserMixin
@@ -607,10 +606,7 @@ class User(UserMixin, db.Model):
             .join(Lesson, Lesson.id == Video.lesson_id)\
             .join(LessonType, LessonType.id == Lesson.type_id)\
             .filter(Lesson.type_id == lesson.type_id)\
-            .filter(and_(
-                Lesson.order > 0,
-                Lesson.order < lesson.order
-            ))\
+            .filter(Lesson.id < lesson.id)\
             .all()], True)
 
     def can_play(self, video):

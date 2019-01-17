@@ -67,7 +67,7 @@ def login():
         )
         try:
             migration_request = requests.get(
-                '{}/api/user/migrate/{}'.format(current_app.config['YSYS_URI'], serial.dumps({
+                '{}/api/migrate-user/{}'.format(current_app.config['YSYS_URI'], serial.dumps({
                     'name': form.name.data,
                     'id_number': form.id_number.data.upper(),
                     'auth_token': form.auth_token.data.lower(),
@@ -120,7 +120,7 @@ def login():
                     .all():
                     user.punch(video=video, play_time=video.duration)
         login_user(user, remember=current_app.config['AUTH_REMEMBER_LOGIN'])
-        add_user_log(user=user, event='导入用户信息', category='auth')
+        add_user_log(user=user, event='从Y-System导入用户信息', category='auth')
         add_user_log(user=user, event='登录系统', category='auth')
         db.session.commit()
         return redirect(request.args.get('next') or user.index_url)

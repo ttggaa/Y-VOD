@@ -6,7 +6,7 @@ import requests
 from requests.exceptions import RequestException
 from itsdangerous import TimedJSONWebSignatureSerializer
 from htmlmin import minify
-from flask import Blueprint, render_template, jsonify, redirect, request, url_for, abort, flash
+from flask import Blueprint, render_template, jsonify, redirect, request, url_for, abort, flash, current_app
 from flask_login import login_required, current_user
 from app import db
 from app.models import Device
@@ -162,6 +162,10 @@ def punch(id):
     current_user.punch(video=video, play_time=request.json.get('play_time'))
     db.session.commit()
     if video.lesson.type.name in ['VB', 'Y-GRE', 'Y-GRE AW']:
+        serial = TimedJSONWebSignatureSerializer(
+            secret_key=current_app.config['AUTH_TOKEN_SECRET_KEY'],
+            expires_in=current_app.config['TOKEN_EXPIRATION']
+        )
         try:
             punch_request = requests.get(
                 '{}/api/punch/{}'.format(current_app.config['YSYS_URI'], serial.dumps({
