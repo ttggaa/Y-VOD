@@ -602,16 +602,28 @@ class User(UserMixin, db.Model):
 
     def can_study(self, lesson):
         '''User.can_study(self, lesson)'''
-        return self.plays(role_name='协调员') or reduce(operator.and_, [self.complete_video(video=video) for video in Video.query\
-            .join(Lesson, Lesson.id == Video.lesson_id)\
-            .join(LessonType, LessonType.id == Lesson.type_id)\
-            .filter(Lesson.type_id == lesson.type_id)\
-            .filter(Lesson.id < lesson.id)\
-            .all()], True)
+        if lesson.type.name in ['VB', 'Y-GRE', 'Y-GRE AW']:
+            return self.plays(role_name='协调员') or \
+                reduce(operator.and_, [self.complete_video(video=video) for video in Video.query\
+                    .join(Lesson, Lesson.id == Video.lesson_id)\
+                    .join(LessonType, LessonType.id == Lesson.type_id)\
+                    .filter(Lesson.type_id == lesson.type_id)\
+                    .filter(Lesson.id < lesson.id)\
+                    .all()], True)
+        return True
 
     def can_play(self, video):
         '''User.can_play(self, video)'''
-        return self.can_study(lesson=video.lesson)
+        if video.lesson.type.name == 'VB':
+            return self.plays(role_name='协调员') or \
+                reduce(operator.and_, [self.complete_video(video=video) for video in Video.query\
+                    .join(Lesson, Lesson.id == Video.lesson_id)\
+                    .filter(Lesson.type_id == video.lesson.type_id)\
+                    .filter(Video.id < video.id)\
+                    .all()], True)
+        elif video.lesson.type.name in ['Y-GRE', 'Y-GRE AW']:
+            return self.can_study(lesson=video.lesson)
+        return True
 
     def to_csv(self):
         '''User.to_csv(self)'''

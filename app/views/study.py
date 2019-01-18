@@ -171,6 +171,7 @@ def punch(id):
                 '{}/api/punch/{}'.format(current_app.config['YSYS_URI'], serial.dumps({
                     'user_id': current_user.id,
                     'section': video.name if video.lesson.type.name == 'VB' else '{} 视频研修'.format(video.lesson.name),
+                    'progress': current_user.video_progress(video=video) if video.lesson.type.name == 'VB' else current_user.lesson_progress(lesson=video.lesson),
                 }).decode('ascii')),
                 timeout=current_app.config['REQUEST_TIMEOUT']
             )
