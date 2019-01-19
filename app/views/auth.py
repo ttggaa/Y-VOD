@@ -59,8 +59,9 @@ def login():
         data = y_system_api_request(api='login-user', token_data={
             'email': form.email.data.strip().lower(),
             'password': form.password.data,
-            'device': device.alias_serial,
+            'device': device.alias,
         })
+        print(data)
         if data is None:
             flash('网络通信故障', category='error')
             return redirect(url_for('auth.login', next=request.args.get('next')))
@@ -75,7 +76,7 @@ def login():
         if user is None:
             # migrate user from Y-System
             data = y_system_api_request(api='migrate-user', token_data={
-                'user_id': user.id,
+                'user_id': data.get('user_id'),
             })
             if data is None:
                 flash('网络通信故障', category='error')
@@ -92,7 +93,7 @@ def login():
                 flash('登录失败：无效的用户角色“{}”'.format(data.get('role')), category='error')
                 return redirect(url_for('auth.login', next=request.args.get('next')))
             user = User(
-                id=data.get('id'),
+                id=data.get('user_id'),
                 role_id=role.id,
                 name=data.get('name')
             )
