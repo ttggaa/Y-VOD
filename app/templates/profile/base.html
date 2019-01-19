@@ -24,7 +24,7 @@
                     <div class="ui vertical segment">
                         <h1 class="ui header">
                             <div class="content">
-                                {{ macros.user_gender_widget(user) }}
+                                {{ user.name }}
                                 <div class="sub header">{% if user.suspended %}[挂起] {% endif %}{{ user.role.name }}</div>
                             </div>
                         </h1>

@@ -40,8 +40,8 @@
             <tbody>
                 {% for user in users %}
                 <tr>
-                    <td class="single line">{{ macros.user_url_gender_widget(user, user.id == current_user.id) }}</td>
-                    <td>{% if user.suspended %}<div class="ui horizontal label">挂起</div>{% endif %}{{ user.role.name }}</td>
+                    <td class="single line">{{ macros.user_widget(user, user.id == current_user.id, current_user.can_access_profile(user=user)) }}</td>
+                    <td>{{ macros.user_role_widget(user) }}</td>
                     <td>{{ macros.from_now_widget(user.last_seen_at) }}</td>
                     <td>{{ macros.from_now_widget(user.imported_at) }}</td>
                 </tr>

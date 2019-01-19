@@ -51,23 +51,18 @@ if ($(window).width() >= 768) {
 {%- endmacro %}
 
 
-{% macro user_gender_widget(user, is_current_user=False) -%}
-{% if is_current_user %}<i class="yellow star icon"></i>{% endif %}{{ user.name }}{% if user.gender_id %}<i class="{{ user.gender.icon }} icon"></i>{% endif %}
+{% macro user_widget(user, is_self=False, show_url=False) -%}
+{% if is_self %}<i class="yellow star icon"></i>{% endif %}{% if show_url %}<a href="{{ user.url }}" target="_blank">{{ user.name }}</a>{% else %}{{ user.name }}{% endif %}
 {%- endmacro %}
 
 
-{% macro user_url_widget(user, is_current_user=False) -%}
-{% if is_current_user %}<i class="yellow star icon"></i>{% endif %}<a href="{{ user.url }}" target="_blank">{{ user.name }}</a>
+{% macro user_role_widget(user) -%}
+{% if user.suspended %}<div class="ui horizontal label">挂起</div>{% endif %}{{ user.role.name }}
 {%- endmacro %}
 
 
-{% macro user_url_gender_widget(user, is_current_user=False) -%}
-{{ user_url_widget(user, is_current_user) }}{% if user.gender_id %}<i class="{{ user.gender.icon }} icon"></i>{% endif %}
-{%- endmacro %}
-
-
-{% macro user_log_widget(log, is_current_user=False, show_role=False, show_category=False) -%}
-{% if show_category %}<div class="ui grey horizontal label">{{ log.category }}</div>{% endif %}{% if show_role %}<div class="ui horizontal label">{{ log.user.role.name }}</div>{% endif %}{% if is_current_user %}我{% else %}{{ user_url_widget(log.user) }}{% endif %} {{ log.event }}
+{% macro user_log_widget(log, is_self=False, show_role=False, show_category=False) -%}
+{% if show_category %}<div class="ui grey horizontal label">{{ log.category }}</div>{% endif %}{% if show_role %}<div class="ui horizontal label">{{ log.user.role.name }}</div>{% endif %}{% if is_self %}我{% else %}{{ user_url_widget(log.user) }}{% endif %} {{ log.event }}
 {%- endmacro %}
 
 
@@ -82,5 +77,5 @@ if ($(window).width() >= 768) {
 
 
 {% macro video_label_widget(video) -%}
-{{ lesson_label_widget(lesson=video.lesson) }}{{ video.abbr }}{% if video.description %} <span class="text-grey">{{ video.description }}</span>{% endif %}
+{{ lesson_label_widget(video.lesson) }}{{ video.abbr }}{% if video.description %} <span class="text-grey">{{ video.description }}</span>{% endif %}
 {%- endmacro %}

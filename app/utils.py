@@ -5,13 +5,19 @@
 import os
 import io
 import re
+import operator
+from functools import reduce
 from shutil import rmtree
 from datetime import datetime, timedelta
 import csv
 import yaml
 from getmac import get_mac_address
 from pymediainfo import MediaInfo
+import requests
+from requests.exceptions import RequestException
+from itsdangerous import TimedJSONWebSignatureSerializer
 from flask import Response
+from flask import current_app
 from pypinyin import slug, Style
 
 
@@ -112,7 +118,12 @@ def send_video_file(video_file, request, mimetype='video/mp4'):
     with open(video_file, 'rb') as f:
         f.seek(start)
         video_file_chunk = f.read(length)
-    resp = Response(response=video_file_chunk, status=206, mimetype=mimetype, direct_passthrough=True)
+    resp = Response(
+        response=video_file_chunk,
+        status=206,
+        mimetype=mimetype,
+        direct_passthrough=True
+    )
     resp.headers['Content-Range'] = 'bytes {}-{}/{}'.format(start, end, file_size)
     resp.headers['Accept-Ranges'] = 'bytes'
     return resp
@@ -123,6 +134,30 @@ def format_duration(duration):
     hours, duration = divmod(duration, timedelta(hours=1))
     minutes, duration = divmod(duration, timedelta(minutes=1))
     return '{:02.0f}:{:02.0f}:{:02.0f}'.format(hours, minutes, duration.total_seconds())
+
+
+def y_system_api_request(api, token_data):
+    '''utils.y_system_api_request(api, token_data)'''
+    serial = TimedJSONWebSignatureSerializer(
+        secret_key=current_app.config['AUTH_TOKEN_SECRET_KEY'],
+        expires_in=current_app.config['TOKEN_EXPIRATION']
+    )
+    try:
+        api_request = requests.get('{}/api/{}/{}'.format(
+            current_app.config['YSYS_URI'],
+            api,
+            serial.dumps(token_data).decode('ascii')
+        ), timeout=current_app.config['REQUEST_TIMEOUT'])
+        data = api_request.json()
+    except RequestException:
+        data = None
+    return data
+
+
+def verify_data_keys(data, keys):
+    '''utils.verify_data_keys(data, keys)'''
+    return data is not None and \
+        reduce(operator.and_, [data.get(key) is not None for key in keys])
 
 
 def to_pinyin(hans, initials=False):

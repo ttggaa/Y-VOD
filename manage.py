@@ -84,12 +84,6 @@ def deploy():
     from app.models import Role
     Role.insert_entries(data=data, verbose=verbose)
 
-    from app.models import IDType
-    IDType.insert_entries(data=data, verbose=verbose)
-
-    from app.models import Gender
-    Gender.insert_entries(data=data, verbose=verbose)
-
     from app.models import Room
     Room.insert_entries(data=data, verbose=verbose)
 

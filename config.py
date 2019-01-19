@@ -25,7 +25,6 @@ class Config:
 
     # Security
     AUTH_TOKEN_SECRET_KEY = os.getenv('YVOD_AUTH_TOKEN_SECRET_KEY')
-    AUTH_TOKEN_LENGTH = 4
     AUTH_REMEMBER_LOGIN = True
 
     # SQLAlchemy

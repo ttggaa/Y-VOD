@@ -3,7 +3,9 @@
 '''app/views/profile.py'''
 
 from htmlmin import minify
-from flask import Blueprint, render_template, request, abort, current_app
+from flask import Blueprint
+from flask import render_template, request, abort
+from flask import current_app
 from flask_login import login_required, current_user
 from app.models import User
 from app.models import UserLog
@@ -19,7 +21,7 @@ def overview(id):
     '''profile.overview(id)'''
     tab = 'overview'
     user = User.query.get_or_404(id)
-    if (user.id != current_user.id and not current_user.is_staff) or user.is_superior_than(user=current_user._get_current_object()):
+    if not current_user.can_access_profile(user=user):
         abort(403)
     lessons = Lesson.query\
         .join(LessonType, LessonType.id == Lesson.type_id)\
@@ -39,7 +41,7 @@ def timeline(id):
     '''profile.timeline(id)'''
     tab = 'timeline'
     user = User.query.get_or_404(id)
-    if (user.id != current_user.id and not current_user.is_staff) or user.is_superior_than(user=current_user._get_current_object()):
+    if not current_user.can_access_profile(user=user):
         abort(403)
     if current_user.is_developer:
         query = UserLog.query\
@@ -51,7 +53,11 @@ def timeline(id):
             .filter(UserLog.category.notin_(['auth', 'access']))\
             .order_by(UserLog.timestamp.desc())
     page = request.args.get('page', 1, type=int)
-    pagination = query.paginate(page, per_page=current_app.config['RECORD_PER_PAGE'], error_out=False)
+    pagination = query.paginate(
+        page,
+        per_page=current_app.config['RECORD_PER_PAGE'],
+        error_out=False
+    )
     logs = pagination.items
     return minify(render_template(
         'profile/timeline.html',

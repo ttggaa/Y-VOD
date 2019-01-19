@@ -3,7 +3,9 @@
 '''app/views/main.py'''
 
 from htmlmin import minify
-from flask import Blueprint, render_template, jsonify, redirect, request, url_for, abort, current_app
+from flask import Blueprint
+from flask import render_template, jsonify, redirect, request, url_for, abort
+from flask import current_app
 from flask_login import current_user
 from flask_sqlalchemy import get_debug_queries
 from flask_wtf.csrf import CSRFError
@@ -57,7 +59,13 @@ def after_request(response):
     '''main.after_request(response)'''
     for query in get_debug_queries():
         if query.duration >= current_app.config['SLOW_DB_QUERY_TIME']:
-            current_app.logger.warning('Slow query: {}\nParameters: {}\nDuration: {:f}s\nContext: {}\n'.format(query.statement, query.parameters, query.duration, query.context))
+            current_app.logger\
+                .warning('Slow query: {}\nParameters: {}\nDuration: {:f}s\nContext: {}\n'.format(
+                    query.statement,
+                    query.parameters,
+                    query.duration,
+                    query.context
+                ))
     return response
 
 

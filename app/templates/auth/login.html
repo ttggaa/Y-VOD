@@ -11,27 +11,18 @@
             {{ form.hidden_tag() }}
             <div class="field">
                 <div class="ui large left icon input">
-                    <i class="user icon"></i>
-                    {{ form.name(placeholder='姓名') }}
+                    <i class="at icon"></i>
+                    {{ form.email(placeholder='邮箱') }}
                 </div>
             </div>
             <div class="field">
                 <div class="ui large left icon input">
-                    <i class="id card icon"></i>
-                    {{ form.id_number(placeholder='证件号码（后6位）') }}
-                </div>
-            </div>
-            <div class="field">
-                <div class="ui large left icon input">
-                    <i class="key icon"></i>
-                    {{ form.auth_token(placeholder='授权码（{}位）'.format(config.AUTH_TOKEN_LENGTH)) }}
+                    <i class="lock icon"></i>
+                    {{ form.password(placeholder='密码') }}
                 </div>
             </div>
             {{ form.submit(class='ui large primary fluid button') }}
         </form>
-        <div class="ui message">
-            <i class="info icon"></i>Y-VOD授权码（{{ config.AUTH_TOKEN_LENGTH }}位）在Y-System个人档案页面获取。</a>
-        </div>
         {{ macros.message_widget() }}
     </div>
 </div>
@@ -45,38 +36,25 @@ $('#login').form({
     inline: true,
     on: 'blur',
     fields: {
-        name: {
-            identifier: 'name',
+        email: {
+            identifier: 'email',
             rules: [
                 {
                     type: 'empty',
-                    prompt: '请输入您的姓名'
+                    prompt: '请输入您的电子邮箱地址'
+                },
+                {
+                    type: 'email',
+                    prompt: '请输入一个有效的电子邮箱地址'
                 }
             ]
         },
-        id_number: {
-            identifier: 'id_number',
+        password: {
+            identifier: 'password',
             rules: [
                 {
                     type: 'empty',
-                    prompt: '请输入您的证件号码（后6位）'
-                },
-                {
-                    type: 'exactLength[6]',
-                    prompt: '证件号码（后6位）位数有误'
-                }
-            ]
-        },
-        auth_token: {
-            identifier: 'auth_token',
-            rules: [
-                {
-                    type: 'empty',
-                    prompt: '请输入您的授权码（{{ config.AUTH_TOKEN_LENGTH }}位）'
-                },
-                {
-                    type: 'exactLength[{{ config.AUTH_TOKEN_LENGTH }}]',
-                    prompt: '授权码（{{ config.AUTH_TOKEN_LENGTH }}位）位数有误'
+                    prompt: '请输入您的密码'
                 }
             ]
         }

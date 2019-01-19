@@ -35,7 +35,7 @@
             <tbody>
                 {% for lesson in lessons %}
                 <tr>
-                    <td>{{ macros.lesson_label_widget(lesson=lesson) }}</td>
+                    <td>{{ macros.lesson_label_widget(lesson) }}</td>
                     <td><code>{{ lesson.duration_format }}</code></td>
                     <td><a href="{{ url_for('manage.video', lesson_id=lesson.id) }}" data-tooltip="查看" data-position="top center" data-inverted="">{{ lesson.videos.count() }} 个</a></td>
                 </tr>

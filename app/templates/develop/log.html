@@ -27,7 +27,7 @@
                 <div class="label"><i class="user {% if log.user.is_developer %}secret{% elif log.user.is_student %}graduate{% elif log.user.is_staff %}tie{% else %}circle{% endif %} icon"></i></div>
                 <div class="content">
                     <div class="summary">
-                        {{ macros.user_log_widget(log, log.user.id == current_user.id, show_role=current_user.is_developer, show_category=show_all_logs) }}
+                        {{ macros.user_log_widget(log, log.user.id == current_user.id, current_user.is_developer, show_all_logs) }}
                         <div class="date">{{ macros.from_now_widget(log.timestamp) }}</div>
                     </div>
                 </div>

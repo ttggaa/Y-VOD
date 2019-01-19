@@ -35,11 +35,11 @@
             <tbody>
                 {% for user in users %}
                 <tr>
-                    <td class="single line">{{ macros.user_url_gender_widget(user, user.id == current_user.id) }}</td>
-                    <td>{% if user.suspended %}<div class="ui horizontal label">挂起</div>{% endif %}{{ user.role.name }}</td>
-                    <td>{% with punch = user.last_vb_punch %}{% if punch %}{{ macros.lesson_label_widget(lesson=punch.video.lesson) }}{% else %}N/A{% endif %}{% endwith %}</td>
-                    <td>{% with punch = user.last_y_gre_punch %}{% if punch %}{{ macros.lesson_label_widget(lesson=punch.video.lesson) }}{% else %}N/A{% endif %}{% endwith %}</td>
-                    <td>{% with punch = user.latest_punch %}{% if punch %}{{ macros.video_label_widget(video=punch.video) }} ({{ punch.progress_percentage }}){% else %}N/A{% endif %}{% endwith %}</td>
+                    <td class="single line">{{ macros.user_widget(user, user.id == current_user.id, current_user.can_access_profile(user=user)) }}</td>
+                    <td>{{ macros.user_role_widget(user) }}</td>
+                    <td>{% with punch = user.last_vb_punch %}{% if punch %}{{ macros.lesson_label_widget(punch.video.lesson) }}{% else %}N/A{% endif %}{% endwith %}</td>
+                    <td>{% with punch = user.last_y_gre_punch %}{% if punch %}{{ macros.lesson_label_widget(punch.video.lesson) }}{% else %}N/A{% endif %}{% endwith %}</td>
+                    <td>{% with punch = user.latest_punch %}{% if punch %}{{ macros.video_label_widget(punch.video) }} ({{ punch.progress_percentage }}){% else %}N/A{% endif %}{% endwith %}</td>
                     <td>{% with device = user.last_login_device %}{% if device %}{% if device.room_id %}<div class="ui horizontal label">{{ device.room.name }}</div>{% endif %}<i class="{{ device.type.icon }} icon"></i>{{ device.alias }}{% else %}<i class="ban icon"></i>未授权设备{% endif %}{% endwith %}</td>
                     <td>{% with punch = user.latest_punch %}{% if punch %}{{ macros.from_now_widget(punch.timestamp) }}{% else %}N/A{% endif %}{% endwith %}</td>
                 </tr>

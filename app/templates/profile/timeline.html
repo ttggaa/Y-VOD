@@ -11,7 +11,7 @@
         <div class="event">
             <div class="content">
                 <div class="summary">
-                    {{ macros.user_log_widget(log, log.user_id == current_user.id, show_category=current_user.is_developer) }}
+                    {{ macros.user_log_widget(log, log.user_id == current_user.id, current_user.is_developer) }}
                     <div class="date">{{ macros.from_now_widget(log.timestamp) }}</div>
                 </div>
             </div>
