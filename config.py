@@ -108,9 +108,6 @@ class ProductionConfig(Config):
     # HLS
     HLS_ENABLE = True
 
-    # Y-System
-    YSYS_URI = os.getenv('YVOD_PROD_YSYS_URL')
-
     @classmethod
     def init_app(cls, app):
         '''ProductionConfig.init_app(cls, app)'''
