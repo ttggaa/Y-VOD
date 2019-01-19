@@ -409,6 +409,12 @@ class User(UserMixin, db.Model):
         return '[{}] {}'.format(self.role.name, self.name)
 
     @property
+    def role_name(self):
+        if self.suspended:
+            return '[挂起] {}'.format(self.role.name)
+        return self.role.name
+
+    @property
     def url(self):
         '''User.url(self)'''
         return url_for('profile.overview', id=self.id)
@@ -434,11 +440,8 @@ class User(UserMixin, db.Model):
         json_entry = {
             'title': self.name,
             'url': self.profile_url(tab=url_tab),
+            'description': self.role_name,
         }
-        if self.suspended:
-            json_entry['description'] = '[挂起] {}'.format(self.role.name)
-        else:
-            json_entry['description'] = self.role.name
         return json_entry
 
     def punch(self, video, play_time=None):
