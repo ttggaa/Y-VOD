@@ -17,6 +17,7 @@
 - **Feature** - Adopt Y-System progress report API #31
 - **Feature** - Adopt Y-System user authentication API #32
 - **Feature** - Authenticate user via Y-System #37
+- **Feature** - Email production server errors to system operator #39
 
 **IMPROVED**
 - **Model** - Change `demo` attribute of video data model to `restricted` #7

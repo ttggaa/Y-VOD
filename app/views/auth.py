@@ -57,8 +57,9 @@ def login():
             return redirect(url_for('auth.login', next=request.args.get('next')))
         # authenticate user via Y-System
         data = y_system_api_request(api='login-user', token_data={
-            'email': form.email.data,
+            'email': form.email.data.strip().lower(),
             'password': form.password.data,
+            'device': device.alias_serial,
         })
         if data is None:
             flash('网络通信故障', category='error')
