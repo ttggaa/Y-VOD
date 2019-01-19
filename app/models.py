@@ -7,17 +7,17 @@ import io
 import operator
 from shutil import copyfile
 from datetime import datetime, timedelta
-from hashlib import md5
-from base64 import b64encode
 from secrets import token_urlsafe
 from functools import reduce
-from sqlalchemy import and_
 from werkzeug.routing import BuildError
-from itsdangerous import TimedJSONWebSignatureSerializer, BadSignature, SignatureExpired
 from flask import current_app, url_for
 from flask_login import UserMixin, AnonymousUserMixin
 from app import db, login_manager
-from app.utils import makedirs, date_now, date_then, CSVReader, CSVWriter, load_yaml, get_video_duration, format_duration, to_pinyin
+from app.utils import makedirs
+from app.utils import date_now, date_then
+from app.utils import CSVReader, CSVWriter, load_yaml
+from app.utils import get_video_duration, format_duration
+from app.utils import to_pinyin
 
 
 class RolePermission(db.Model):
@@ -102,7 +102,9 @@ class Role(db.Model):
 
     def has_permission(self, permission):
         '''Role.has_permission(self, permission)'''
-        return self.permission_authorizations.filter_by(permission_id=permission.id).first() is not None
+        return self.permission_authorizations\
+            .filter_by(permission_id=permission.id)\
+            .first() is not None
 
     def permissions_from_category(self, category):
         '''Role.permissions_from_category(self, category)'''
@@ -165,64 +167,6 @@ class Role(db.Model):
 
     def __repr__(self):
         return '<Role {}>'.format(self.name)
-
-
-class IDType(db.Model):
-    '''models.IDType(db.Model)'''
-    __tablename__ = 'id_types'
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.Unicode(64), unique=True, index=True)
-    users = db.relationship('User', backref='id_type', lazy='dynamic')
-
-    @staticmethod
-    def insert_entries(data, verbose=False):
-        '''IDType.insert_entries(data, verbose=False)'''
-        yaml_file = os.path.join(current_app.config['DATA_DIR'], data, 'id_types.yml')
-        entries = load_yaml(yaml_file=yaml_file)
-        if entries is not None:
-            print('---> Read: {}'.format(yaml_file))
-            for entry in entries:
-                id_type = IDType(name=entry['name'])
-                db.session.add(id_type)
-                if verbose:
-                    print('导入ID类型信息', entry['name'])
-            db.session.commit()
-        else:
-            print('文件不存在', yaml_file)
-
-    def __repr__(self):
-        return '<ID Type {}>'.format(self.name)
-
-
-class Gender(db.Model):
-    '''models.Gender(db.Model)'''
-    __tablename__ = 'genders'
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.Unicode(64), unique=True, index=True)
-    icon = db.Column(db.Unicode(64))
-    users = db.relationship('User', backref='gender', lazy='dynamic')
-
-    @staticmethod
-    def insert_entries(data, verbose=False):
-        '''Gender.insert_entries(data, verbose=False)'''
-        yaml_file = os.path.join(current_app.config['DATA_DIR'], data, 'genders.yml')
-        entries = load_yaml(yaml_file=yaml_file)
-        if entries is not None:
-            print('---> Read: {}'.format(yaml_file))
-            for entry in entries:
-                gender = Gender(
-                    name=entry['name'],
-                    icon=entry['icon']
-                )
-                db.session.add(gender)
-                if verbose:
-                    print('导入性别类型信息', entry['name'])
-            db.session.commit()
-        else:
-            print('文件不存在', yaml_file)
-
-    def __repr__(self):
-        return '<Gender {}>'.format(self.name)
 
 
 class Punch(db.Model):
@@ -301,7 +245,10 @@ class Punch(db.Model):
                             user_id=int(entry[0]),
                             video_id=int(entry[1]),
                             play_time=timedelta(seconds=float(entry[2])),
-                            timestamp=datetime.strptime(entry[3], current_app.config['DATETIME_FORMAT'])
+                            timestamp=datetime.strptime(
+                                entry[3],
+                                current_app.config['DATETIME_FORMAT']
+                            )
                         )
                         db.session.add(punch)
                         if verbose:
@@ -346,9 +293,6 @@ class User(UserMixin, db.Model):
     # profile properties
     name = db.Column(db.Unicode(64), index=True)
     name_pinyin = db.Column(db.Unicode(64), index=True)
-    id_type_id = db.Column(db.Integer, db.ForeignKey('id_types.id'))
-    id_number = db.Column(db.Unicode(64), index=True)
-    gender_id = db.Column(db.Integer, db.ForeignKey('genders.id'))
     # study properties
     punches = db.relationship(
         'Punch',
@@ -395,23 +339,6 @@ class User(UserMixin, db.Model):
         '''User.restore(self)'''
         self.suspended = False
         db.session.add(self)
-
-    @staticmethod
-    def import_user(token):
-        '''User.import_user(self, token)'''
-        serial = TimedJSONWebSignatureSerializer(current_app.config['AUTH_TOKEN_SECRET_KEY'])
-        try:
-            data = serial.loads(token)
-        except SignatureExpired:
-            return None
-        except BadSignature:
-            return None
-        return data
-
-    def verify_auth_token(self, token):
-        '''User.verify_auth_token(self, token)'''
-        string = 'id={}&name={}&id_number={}&date={}&secret={}'.format(self.id, self.name, self.id_number, date_now(utc_offset=current_app.config['UTC_OFFSET']).isoformat(), current_app.config['AUTH_TOKEN_SECRET_KEY'])
-        return token.lower() == b64encode(md5(string.encode('utf-8')).digest()).decode('utf-8').replace('+', '').replace('/', '').replace('=', '').lower()[-current_app.config['AUTH_TOKEN_LENGTH']:]
 
     def can(self, permission_name):
         '''User.can(self, permission_name)'''
@@ -464,6 +391,11 @@ class User(UserMixin, db.Model):
         '''User.can_manage(self, user)'''
         return not self.suspended and self.role.can_manage(role=user.role)
 
+    def can_access_profile(self, user):
+        '''User.can_access_profile(self, user)'''
+        return user.id == self.id or \
+            (self.is_staff and not user.is_superior_than(user=self))
+
     @staticmethod
     def on_changed_name(target, value, oldvalue, initiator):
         '''User.on_changed_name(target, value, oldvalue, initiator)'''
@@ -508,13 +440,6 @@ class User(UserMixin, db.Model):
         else:
             json_entry['description'] = self.role.name
         return json_entry
-
-    @property
-    def id_number_censored(self):
-        '''User.id_number_censored(self)'''
-        if self.id_number is not None and len(self.id_number) >= 8:
-            return '{}{}{}'.format(self.id_number[:1], ''.join(['*' for x in self.id_number[1:-1]]), self.id_number[-1:])
-        return '********'
 
     def punch(self, video, play_time=None):
         '''User.punch(self, video, play_time=None)'''
@@ -616,39 +541,40 @@ class User(UserMixin, db.Model):
 
     def can_study(self, lesson):
         '''User.can_study(self, lesson)'''
-        return self.plays(role_name='协调员') or reduce(operator.and_, [self.complete_video(video=video) for video in Video.query\
-            .join(Lesson, Lesson.id == Video.lesson_id)\
-            .join(LessonType, LessonType.id == Lesson.type_id)\
-            .filter(Lesson.type_id == lesson.type_id)\
-            .filter(and_(
-                Lesson.order > 0,
-                Lesson.order < lesson.order
-            ))\
-            .all()], True)
+        if lesson.type.name in ['VB', 'Y-GRE', 'Y-GRE AW']:
+            return self.plays(role_name='协调员') or \
+                reduce(operator.and_, [self.complete_video(video=video) for video in Video.query\
+                    .join(Lesson, Lesson.id == Video.lesson_id)\
+                    .join(LessonType, LessonType.id == Lesson.type_id)\
+                    .filter(Lesson.type_id == lesson.type_id)\
+                    .filter(Lesson.id < lesson.id)\
+                    .all()], True)
+        return True
 
     def can_play(self, video):
         '''User.can_play(self, video)'''
-        return self.can_study(lesson=video.lesson)
+        if video.lesson.type.name == 'VB':
+            return self.plays(role_name='协调员') or \
+                reduce(operator.and_, [self.complete_video(video=video) for video in Video.query\
+                    .join(Lesson, Lesson.id == Video.lesson_id)\
+                    .filter(Lesson.type_id == video.lesson.type_id)\
+                    .filter(Video.id < video.id)\
+                    .all()], True)
+        if video.lesson.type.name in ['Y-GRE', 'Y-GRE AW']:
+            return self.can_study(lesson=video.lesson)
+        return True
 
     def to_csv(self):
         '''User.to_csv(self)'''
-        last_seen_at = ''
-        if self.last_seen_at is not None:
-            last_seen_at = self.last_seen_at.strftime(current_app.config['DATETIME_FORMAT'])
-        gender = ''
-        if self.gender_id is not None:
-            gender = self.gender.name
         csv_entry = [
             str(self.id),
             self.role.name,
             self.imported_at.strftime(current_app.config['DATETIME_FORMAT']),
-            last_seen_at,
+            '' if self.last_seen_at is None \
+                else self.last_seen_at.strftime(current_app.config['DATETIME_FORMAT']),
             self.last_seen_mac,
             str(int(self.suspended)),
             self.name,
-            self.id_type.name,
-            self.id_number,
-            gender,
         ]
         return csv_entry
 
@@ -658,9 +584,7 @@ class User(UserMixin, db.Model):
         if data == 'initial':
             system_operator = User(
                 role_id=Role.query.filter_by(name='开发人员').first().id,
-                name=current_app.config['SYSTEM_OPERATOR_NAME'],
-                id_type_id=IDType.query.filter_by(name='其它').first().id,
-                id_number=current_app.config['SYSTEM_OPERATOR_TOKEN']
+                name=current_app.config['SYSTEM_OPERATOR_NAME']
             )
             db.session.add(system_operator)
             db.session.commit()
@@ -675,21 +599,20 @@ class User(UserMixin, db.Model):
                     line_num = 0
                     for entry in reader:
                         if line_num >= 1:
-                            if entry[3] is not None:
-                                entry[3] = datetime.strptime(entry[3], current_app.config['DATETIME_FORMAT'])
-                            if entry[9] is not None:
-                                entry[9] = Gender.query.filter_by(name=entry[9]).first().id
                             user = User(
                                 id=int(entry[0]),
                                 role_id=Role.query.filter_by(name=entry[1]).first().id,
-                                imported_at=datetime.strptime(entry[2], current_app.config['DATETIME_FORMAT']),
-                                last_seen_at=entry[3],
+                                imported_at=datetime.strptime(
+                                    entry[2],
+                                    current_app.config['DATETIME_FORMAT']
+                                ),
+                                last_seen_at=(None if entry[3] is None else datetime.strptime(
+                                    entry[3],
+                                    current_app.config['DATETIME_FORMAT']
+                                )),
                                 last_seen_mac=entry[4],
                                 suspended=bool(int(entry[5])),
-                                name=entry[6],
-                                id_type_id=IDType.query.filter_by(name=entry[7]).first().id,
-                                id_number=entry[8],
-                                gender_id=entry[9]
+                                name=entry[6]
                             )
                             db.session.add(user)
                             if verbose:
@@ -715,9 +638,6 @@ class User(UserMixin, db.Model):
                 'last_seen_mac',
                 'suspended',
                 'name',
-                'id_type',
-                'id_number',
-                'gender',
             ])
             for entry in User.query.all():
                 writer.writerow(entry.to_csv())
@@ -946,14 +866,17 @@ class Device(db.Model):
 
     def has_lesson_type(self, lesson_type):
         '''Device.has_lesson_type(self, lesson_type)'''
-        return self.lesson_type_authorizations.filter_by(lesson_type_id=lesson_type.id).first() is not None
+        return self.lesson_type_authorizations\
+            .filter_by(lesson_type_id=lesson_type.id)\
+            .first() is not None
 
     def can_access_lesson_type(self, lesson_type):
         '''Device.can_access_lesson_type(self, lesson_type)'''
         if isinstance(lesson_type, str):
             lesson_type = LessonType.query.filter_by(name=lesson_type).first()
-        return lesson_type is not None and \
-            self.lesson_type_authorizations.filter_by(lesson_type_id=lesson_type.id).first() is not None
+        return lesson_type is not None and self.lesson_type_authorizations\
+            .filter_by(lesson_type_id=lesson_type.id)\
+            .first() is not None
 
     def remove_all_lesson_types(self):
         '''Device.remove_all_lesson_types(self)'''
@@ -962,15 +885,12 @@ class Device(db.Model):
 
     def to_csv(self):
         '''Device.to_csv(self)'''
-        room = ''
-        if self.room_id is not None:
-            room = self.room.name
         csv_entry = [
             str(self.id),
             self.serial,
             self.alias,
             self.type.name,
-            room,
+            '' if self.room_id is None else self.room.name,
             self.mac_address,
             self.category,
             str(int(self.obsolete)),
@@ -1010,13 +930,12 @@ class Device(db.Model):
                 for entry in reader:
                     if line_num >= 1:
                         if data == 'initial':
-                            if entry[3] is not None:
-                                entry[3] = Room.query.filter_by(name=entry[3]).first().id
                             device = Device(
                                 serial=entry[1].upper(),
                                 alias=entry[0],
                                 type_id=DeviceType.query.filter_by(name=entry[2]).first().id,
-                                room_id=entry[3],
+                                room_id=None if entry[3] is None \
+                                    else Room.query.filter_by(name=entry[3]).first().id,
                                 mac_address=entry[4],
                                 category=entry[5],
                                 modified_by_id=User.query.get(1).id
@@ -1025,19 +944,24 @@ class Device(db.Model):
                             if verbose:
                                 print('导入设备信息', entry[0], entry[1], entry[2], entry[4], entry[5])
                         else:
-                            if entry[4] is not None:
-                                entry[4] = Room.query.filter_by(name=entry[4]).first().id
                             device = Device(
                                 id=int(entry[0]),
                                 serial=entry[1],
                                 alias=entry[2],
                                 type_id=DeviceType.query.filter_by(name=entry[3]).first().id,
-                                room_id=entry[4],
+                                room_id=None if entry[4] is None \
+                                    else Room.query.filter_by(name=entry[4]).first().id,
                                 mac_address=entry[5],
                                 category=entry[6],
                                 obsolete=bool(int(entry[7])),
-                                created_at=datetime.strptime(entry[8], current_app.config['DATETIME_FORMAT']),
-                                modified_at=datetime.strptime(entry[9], current_app.config['DATETIME_FORMAT']),
+                                created_at=datetime.strptime(
+                                    entry[8],
+                                    current_app.config['DATETIME_FORMAT']
+                                ),
+                                modified_at=datetime.strptime(
+                                    entry[9],
+                                    current_app.config['DATETIME_FORMAT']
+                                ),
                                 modified_by_id=int(entry[10])
                             )
                             db.session.add(device)
@@ -1208,7 +1132,8 @@ class Video(db.Model):
     def hls_cache_invalid(self):
         '''Video.hls_cache_invalid(self)'''
         return not os.path.exists(os.path.join(current_app.config['HLS_DIR'], self.hls_cache_file_name)) or \
-            date_then(timestamp=self.timestamp, utc_offset=current_app.config['UTC_OFFSET']) != date_now(utc_offset=current_app.config['UTC_OFFSET'])
+            date_then(timestamp=self.timestamp, utc_offset=current_app.config['UTC_OFFSET']) != \
+            date_now(utc_offset=current_app.config['UTC_OFFSET'])
 
     def refresh_hls_cache(self):
         '''Video.refresh_hls_cache(self)'''
@@ -1309,7 +1234,10 @@ class UserLog(db.Model):
                             user_id=int(entry[1]),
                             event=entry[2],
                             category=entry[3],
-                            timestamp=datetime.strptime(entry[4], current_app.config['DATETIME_FORMAT'])
+                            timestamp=datetime.strptime(
+                                entry[4],
+                                current_app.config['DATETIME_FORMAT']
+                            )
                         )
                         db.session.add(user_log)
                         if verbose:
@@ -1339,4 +1267,9 @@ class UserLog(db.Model):
             print('---> Write: {}'.format(csv_file))
 
     def __repr__(self):
-        return '<User Log {} {} {} {}>'.format(self.user.name_with_role, self.event, self.category, self.timestamp)
+        return '<User Log {} {} {} {}>'.format(
+            self.user.name_with_role,
+            self.event,
+            self.category,
+            self.timestamp
+        )

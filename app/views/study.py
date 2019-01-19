@@ -3,13 +3,15 @@
 '''app/views/study.py'''
 
 from htmlmin import minify
-from flask import Blueprint, render_template, jsonify, redirect, request, url_for, abort, flash
+from flask import Blueprint
+from flask import render_template, jsonify, redirect, request, url_for, abort, flash
 from flask_login import login_required, current_user
 from app import db
 from app.models import Device
 from app.models import LessonType, Lesson, Video
 from app.decorators import permission_required
 from app.utils import get_mac_address_from_ip
+from app.utils import y_system_api_request
 from app.utils2 import add_user_log
 
 
@@ -21,7 +23,8 @@ study = Blueprint('study', __name__)
 @permission_required('研修VB')
 def vb():
     '''study.vb()'''
-    mac_address = get_mac_address_from_ip(ip_address=request.headers.get('X-Forwarded-For', request.remote_addr))
+    mac_address = get_mac_address_from_ip(ip_address=request.headers\
+        .get('X-Forwarded-For', request.remote_addr))
     if mac_address is None:
         flash('无法获取设备信息', category='error')
         return redirect(url_for('auth.login'))
@@ -49,7 +52,8 @@ def vb():
 @permission_required('研修Y-GRE')
 def y_gre():
     '''study.y_gre()'''
-    mac_address = get_mac_address_from_ip(ip_address=request.headers.get('X-Forwarded-For', request.remote_addr))
+    mac_address = get_mac_address_from_ip(ip_address=request.headers\
+        .get('X-Forwarded-For', request.remote_addr))
     if mac_address is None:
         flash('无法获取设备信息', category='error')
         return redirect(url_for('auth.login'))
@@ -77,7 +81,8 @@ def y_gre():
 @permission_required('研修Y-GRE')
 def y_gre_aw():
     '''study.y_gre_aw()'''
-    mac_address = get_mac_address_from_ip(ip_address=request.headers.get('X-Forwarded-For', request.remote_addr))
+    mac_address = get_mac_address_from_ip(ip_address=request.headers\
+        .get('X-Forwarded-For', request.remote_addr))
     if mac_address is None:
         flash('无法获取设备信息', category='error')
         return redirect(url_for('auth.login'))
@@ -105,7 +110,8 @@ def y_gre_aw():
 @permission_required('研修Y-GRE')
 def test_review():
     '''study.test_review()'''
-    mac_address = get_mac_address_from_ip(ip_address=request.headers.get('X-Forwarded-For', request.remote_addr))
+    mac_address = get_mac_address_from_ip(ip_address=request.headers\
+        .get('X-Forwarded-For', request.remote_addr))
     if mac_address is None:
         flash('无法获取设备信息', category='error')
         return redirect(url_for('auth.login'))
@@ -138,7 +144,11 @@ def video(id):
         flash('请先完成本课程的前序内容！', category='warning')
         return redirect(url_for('study.{}'.format(video.lesson.type.view_point)))
     if not current_user.punched(video=video):
-        add_user_log(user=current_user._get_current_object(), event='视频研修：{}'.format(video.name), category='study')
+        add_user_log(
+            user=current_user._get_current_object(),
+            event='视频研修：{}'.format(video.name),
+            category='study'
+        )
         db.session.commit()
     return minify(render_template(
         'study/video.html',
@@ -152,10 +162,20 @@ def video(id):
 def punch(id):
     '''study.punch(id)'''
     video = Video.query.get_or_404(id)
-    if not current_user.can('研修{}'.format(video.lesson.type.name)) or not current_user.can_study(lesson=video.lesson):
+    if not current_user.can('研修{}'.format(video.lesson.type.name)) or \
+        not current_user.can_study(lesson=video.lesson):
         abort(403)
     if request.json is None:
         abort(500)
     current_user.punch(video=video, play_time=request.json.get('play_time'))
     db.session.commit()
+    if video.lesson.type.name in ['VB', 'Y-GRE', 'Y-GRE AW']:
+        y_system_api_request(api='punch', token_data={
+            'user_id': current_user.id,
+            'section': video.name if video.lesson.type.name == 'VB' \
+                else '{} 视频研修'.format(video.lesson.name),
+            'progress': current_user.video_progress(video=video) \
+                if video.lesson.type.name == 'VB' \
+                else current_user.lesson_progress(lesson=video.lesson),
+        })
     return jsonify(current_user.video_punch(video=video).to_json())

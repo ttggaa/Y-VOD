@@ -3,7 +3,9 @@
 '''app/views/search.py'''
 
 from sqlalchemy import or_
-from flask import Blueprint, request, current_app, jsonify
+from flask import Blueprint
+from flask import request, jsonify
+from flask import current_app
 from flask_login import login_required, current_user
 from app.models import User
 from app.decorators import permission_required
@@ -29,4 +31,5 @@ def profile():
             .limit(current_app.config['RECORD_PER_QUERY'])\
             .all()
     tab = request.args.get('tab')
-    return jsonify({'results': [user.profile_json(url_tab=tab) for user in users if not user.is_superior_than(user=current_user._get_current_object())]})
+    return jsonify({'results': [user.profile_json(url_tab=tab) \
+        for user in users if current_user.can_access_profile(user=user)]})

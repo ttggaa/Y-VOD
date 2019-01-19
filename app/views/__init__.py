@@ -1,3 +1,3 @@
 # -*- coding: utf-8 -*-
 
-'''app/view/__init__.py'''
+'''app/views/__init__.py'''

@@ -1,6 +1,6 @@
 ## RELEASE NOTES
 
-### Version 1.0.1 - January 16, 2019
+### Version 1.0.1 - January 19, 2019
 
 **NEW**
 - **Model** - Add `demo` attribute to video data model #1
@@ -13,6 +13,10 @@
 - **Model** - Add `view_point` attribute to lesson type data model #19
 - **Model** - Add `login_required` attribute to lesson type data model #20
 - **Template** - Add template macro `placeholder_widget()` #21
+- **Feature** - Adopt Y-System user migration API #30
+- **Feature** - Adopt Y-System progress report API #31
+- **Feature** - Adopt Y-System user authentication API #32
+- **Feature** - Authenticate user via Y-System #37
 
 **IMPROVED**
 - **Model** - Change `demo` attribute of video data model to `restricted` #7
@@ -25,6 +29,10 @@
 - **Template** - Adopt static assets hosted on static.y-english.cn #25
 - **Form** - Rearrange form modules #27
 - **View** - Rearrange view modules #28
+- **Model** - Remove ID type data model #33
+- **Model** - Remove gender data model #34
+- **Model** - Remove `id_number`, `id_type_id` and `gender_id` attributes from user data model #35
+- **Feature** - Remove Y-VOD token authentication feature #36
 
 **FIXED**
 - **Feature** - Playback rate changes are not taken into account in total video play time calculation #23

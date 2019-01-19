@@ -4,6 +4,7 @@
 
 from htmlmin import minify
 from flask import Blueprint, render_template, redirect, request, url_for, flash
+from flask_login import current_user
 from app.models import Device
 from app.models import LessonType, Lesson, Video
 from app.utils import get_mac_address_from_ip
@@ -15,7 +16,10 @@ demo = Blueprint('demo', __name__)
 @demo.route('/')
 def lesson():
     '''demo.lesson()'''
-    mac_address = get_mac_address_from_ip(ip_address=request.headers.get('X-Forwarded-For', request.remote_addr))
+    if current_user.is_authenticated:
+        return redirect(request.args.get('next') or current_user.index_url)
+    mac_address = get_mac_address_from_ip(ip_address=request.headers\
+        .get('X-Forwarded-For', request.remote_addr))
     if mac_address is None:
         flash('无法获取设备信息', category='error')
         return redirect(url_for('auth.login'))
@@ -41,7 +45,10 @@ def lesson():
 @demo.route('/video/<int:id>')
 def video(id):
     '''demo.video(id)'''
-    mac_address = get_mac_address_from_ip(ip_address=request.headers.get('X-Forwarded-For', request.remote_addr))
+    if current_user.is_authenticated:
+        return redirect(request.args.get('next') or current_user.index_url)
+    mac_address = get_mac_address_from_ip(ip_address=request.headers\
+        .get('X-Forwarded-For', request.remote_addr))
     if mac_address is None:
         flash('无法获取设备信息', category='error')
         return redirect(url_for('auth.login'))

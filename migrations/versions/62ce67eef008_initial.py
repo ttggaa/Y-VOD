@@ -1,8 +1,8 @@
 """initial
 
-Revision ID: 36710a1c47ee
+Revision ID: 62ce67eef008
 Revises: 
-Create Date: 2019-01-12 19:57:05.328322
+Create Date: 2019-01-20 00:30:02.040428
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '36710a1c47ee'
+revision = '62ce67eef008'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -25,19 +25,6 @@ def upgrade():
     sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_device_types_name'), 'device_types', ['name'], unique=True)
-    op.create_table('genders',
-    sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('name', sa.Unicode(length=64), nullable=True),
-    sa.Column('icon', sa.Unicode(length=64), nullable=True),
-    sa.PrimaryKeyConstraint('id')
-    )
-    op.create_index(op.f('ix_genders_name'), 'genders', ['name'], unique=True)
-    op.create_table('id_types',
-    sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('name', sa.Unicode(length=64), nullable=True),
-    sa.PrimaryKeyConstraint('id')
-    )
-    op.create_index(op.f('ix_id_types_name'), 'id_types', ['name'], unique=True)
     op.create_table('lesson_types',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('name', sa.Unicode(length=64), nullable=True),
@@ -96,15 +83,9 @@ def upgrade():
     sa.Column('suspended', sa.Boolean(), nullable=True),
     sa.Column('name', sa.Unicode(length=64), nullable=True),
     sa.Column('name_pinyin', sa.Unicode(length=64), nullable=True),
-    sa.Column('id_type_id', sa.Integer(), nullable=True),
-    sa.Column('id_number', sa.Unicode(length=64), nullable=True),
-    sa.Column('gender_id', sa.Integer(), nullable=True),
-    sa.ForeignKeyConstraint(['gender_id'], ['genders.id'], ),
-    sa.ForeignKeyConstraint(['id_type_id'], ['id_types.id'], ),
     sa.ForeignKeyConstraint(['role_id'], ['roles.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
-    op.create_index(op.f('ix_users_id_number'), 'users', ['id_number'], unique=False)
     op.create_index(op.f('ix_users_name'), 'users', ['name'], unique=False)
     op.create_index(op.f('ix_users_name_pinyin'), 'users', ['name_pinyin'], unique=False)
     op.create_table('devices',
@@ -182,7 +163,6 @@ def downgrade():
     op.drop_table('devices')
     op.drop_index(op.f('ix_users_name_pinyin'), table_name='users')
     op.drop_index(op.f('ix_users_name'), table_name='users')
-    op.drop_index(op.f('ix_users_id_number'), table_name='users')
     op.drop_table('users')
     op.drop_table('role_permissions')
     op.drop_index(op.f('ix_lessons_name'), table_name='lessons')
@@ -197,10 +177,6 @@ def downgrade():
     op.drop_table('permissions')
     op.drop_index(op.f('ix_lesson_types_name'), table_name='lesson_types')
     op.drop_table('lesson_types')
-    op.drop_index(op.f('ix_id_types_name'), table_name='id_types')
-    op.drop_table('id_types')
-    op.drop_index(op.f('ix_genders_name'), table_name='genders')
-    op.drop_table('genders')
     op.drop_index(op.f('ix_device_types_name'), table_name='device_types')
     op.drop_table('device_types')
     # ### end Alembic commands ###

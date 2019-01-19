@@ -3,7 +3,9 @@
 '''app/views/manage.py'''
 
 from htmlmin import minify
-from flask import Blueprint, render_template, redirect, request, make_response, url_for, abort, flash, current_app
+from flask import Blueprint
+from flask import render_template, redirect, request, make_response, url_for, abort, flash
+from flask import current_app
 from flask_login import login_required, current_user
 from app import db
 from app.models import Role, User
@@ -52,7 +54,11 @@ def student():
             .order_by(User.last_seen_at.desc())
     page = request.args.get('page', 1, type=int)
     try:
-        pagination = query.paginate(page, per_page=current_app.config['RECORD_PER_PAGE'], error_out=False)
+        pagination = query.paginate(
+            page,
+            per_page=current_app.config['RECORD_PER_PAGE'],
+            error_out=False
+        )
     except NameError:
         return redirect(url_for('manage.vb_students'))
     users = pagination.items
@@ -190,7 +196,11 @@ def staff():
             .order_by(User.last_seen_at.desc())
     page = request.args.get('page', 1, type=int)
     try:
-        pagination = query.paginate(page, per_page=current_app.config['RECORD_PER_PAGE'], error_out=False)
+        pagination = query.paginate(
+            page,
+            per_page=current_app.config['RECORD_PER_PAGE'],
+            error_out=False
+        )
     except NameError:
         return redirect(url_for('manage.clerks'))
     users = pagination.items
@@ -346,67 +356,6 @@ def suspended_staffs():
     return resp
 
 
-# @manage.route('/user/import', methods=['GET', 'POST'])
-# @login_required
-# @permission_required('管理用户')
-# def import_user():
-#     '''manage.import_user()'''
-#     form = ImportUserForm()
-#     if form.validate_on_submit():
-#         data = User.import_user(token=form.token.data)
-#         if data is None or reduce(operator.or_, [data.get(key) is None for key in ['id', 'role', 'name', 'id_type', 'id_number']]):
-#             flash('用户信息码有误', category='error')
-#             return redirect(url_for('manage.import_user', next=request.args.get('next')))
-#         if User.query.get(data.get('id')) is not None:
-#             flash('该用户已存在', category='error')
-#             return redirect(url_for('manage.import_user', next=request.args.get('next')))
-#         role = Role.query.filter_by(name=data.get('role')).first()
-#         if role is None:
-#             flash('用户角色信息有误：{}'.format(data.get('role')), category='error')
-#             return redirect(url_for('manage.import_user', next=request.args.get('next')))
-#         if not current_user.role.can_manage(role=role):
-#             flash('您无法创建该用户', category='error')
-#             return redirect(url_for('manage.import_user', next=request.args.get('next')))
-#         id_type = IDType.query.filter_by(name=data.get('id_type')).first()
-#         if id_type is None:
-#             flash('证件类型信息有误：{}'.format(data.get('id_type')), category='error')
-#             return redirect(url_for('manage.import_user', next=request.args.get('next')))
-#         user = User(
-#             id=data.get('id'),
-#             role_id=role.id,
-#             name=data.get('name'),
-#             id_type_id=id_type.id,
-#             id_number=data.get('id_number')
-#         )
-#         if data.get('gender') is not None:
-#             gender = Gender.query.filter_by(name=data.get('gender')).first()
-#             if gender is None:
-#                 flash('性别信息有误：{}'.format(data.get('gender')), category='error')
-#                 return redirect(url_for('manage.import_user', next=request.args.get('next')))
-#             user.gender_id = gender.id
-#         db.session.add(user)
-#         db.session.commit()
-#         current_user.create_user(user=user)
-#         if user.is_student:
-#             if data.get('vb_progress') is not None:
-#                 vb_lesson = Lesson.query.filter_by(name=data.get('vb_progress')).first()
-#                 if vb_lesson is not None:
-#                     user.punch_through(lesson=vb_lesson)
-#             if data.get('y_gre_progress') is not None:
-#                 y_gre_lesson = Lesson.query.filter_by(name=data.get('y_gre_progress')).first()
-#                 if y_gre_lesson is not None:
-#                     user.punch_through(lesson=y_gre_lesson)
-#         flash('已导入用户：{}'.format(user.name_with_role), category='success')
-#         add_user_log(user=user, event='用户信息被导入', category='auth')
-#         add_user_log(user=current_user._get_current_object(), event='导入用户：{}'.format(user.name_with_role), category='manage')
-#         db.session.commit()
-#         return redirect(request.args.get('next') or url_for('manage.{}'.format(role.category)))
-#     return minify(render_template(
-#         'manage/user/import.html',
-#         form=form
-#     ))
-
-
 @manage.route('/user/suspend/<int:id>')
 @login_required
 @permission_required('管理用户')
@@ -421,7 +370,11 @@ def suspend_user(id):
     user.suspend()
     flash('已挂起用户：{}'.format(user.name_with_role), category='success')
     add_user_log(user=user, event='用户被挂起', category='auth')
-    add_user_log(user=current_user._get_current_object(), event='挂起用户：{}'.format(user.name_with_role), category='manage')
+    add_user_log(
+        user=current_user._get_current_object(),
+        event='挂起用户：{}'.format(user.name_with_role),
+        category='manage'
+    )
     db.session.commit()
     return redirect(request.args.get('next') or url_for('profile.overview', id=user.id))
 
@@ -440,7 +393,11 @@ def restore_user(id):
     user.restore()
     flash('已恢复用户：{}'.format(user.name_with_role), category='success')
     add_user_log(user=user, event='用户被恢复', category='auth')
-    add_user_log(user=current_user._get_current_object(), event='恢复用户：{}'.format(user.name_with_role), category='manage')
+    add_user_log(
+        user=current_user._get_current_object(),
+        event='恢复用户：{}'.format(user.name_with_role),
+        category='manage'
+    )
     db.session.commit()
     return redirect(request.args.get('next') or url_for('profile.overview', id=user.id))
 
@@ -462,7 +419,8 @@ def device():
             type_id=int(form.device_type.data),
             room_id=(None if int(form.room.data) == 0 else int(form.room.data)),
             mac_address=(None if form.mac_address.data == '' else form.mac_address.data),
-            category=('development' if form.development_machine.data and current_user.is_developer else 'production'),
+            category=('development' if form.development_machine.data and \
+                current_user.is_developer else 'production'),
             modified_by_id=current_user.id
         )
         db.session.add(device)
@@ -471,7 +429,11 @@ def device():
             device.add_lesson_type(lesson_type=LessonType.query.get(int(lesson_type_id)))
         db.session.commit()
         flash('已添加设备：{} [{}]'.format(device.alias, device.serial), category='success')
-        add_user_log(user=current_user._get_current_object(), event='添加设备：{} [{}]'.format(device.alias, device.serial), category='manage')
+        add_user_log(
+            user=current_user._get_current_object(),
+            event='添加设备：{} [{}]'.format(device.alias, device.serial),
+            category='manage'
+        )
         db.session.commit()
         return redirect(url_for('manage.device'))
     show_tablet_devices = True
@@ -531,7 +493,11 @@ def device():
                 .order_by(Device.alias.asc())
     page = request.args.get('page', 1, type=int)
     try:
-        pagination = query.paginate(page, per_page=current_app.config['RECORD_PER_PAGE'], error_out=False)
+        pagination = query.paginate(
+            page,
+            per_page=current_app.config['RECORD_PER_PAGE'],
+            error_out=False
+        )
     except NameError:
         return redirect(url_for('manage.tablet_devices'))
     devices = pagination.items
@@ -641,14 +607,19 @@ def edit_device(id):
         device.type_id = int(form.device_type.data)
         device.room_id = (None if int(form.room.data) == 0 else int(form.room.data))
         device.mac_address = (None if form.mac_address.data == '' else form.mac_address.data)
-        device.category = ('development' if form.development_machine.data and current_user.is_developer else 'production')
+        device.category = ('development' if form.development_machine.data and \
+            current_user.is_developer else 'production')
         db.session.add(device)
         device.remove_all_lesson_types()
         for lesson_type_id in form.lesson_types.data:
             device.add_lesson_type(lesson_type=LessonType.query.get(int(lesson_type_id)))
         db.session.commit()
         flash('已更新设备信息：{}'.format(device.alias_serial), category='success')
-        add_user_log(user=current_user._get_current_object(), event='更新设备信息：{}'.format(device.alias_serial), category='manage')
+        add_user_log(
+            user=current_user._get_current_object(),
+            event='更新设备信息：{}'.format(device.alias_serial),
+            category='manage'
+        )
         db.session.commit()
         return redirect(request.args.get('next') or url_for('manage.device'))
     form.alias.data = device.alias
@@ -656,7 +627,8 @@ def edit_device(id):
     form.device_type.data = str(device.type_id)
     form.room.data = ('0' if device.room_id == None else str(device.room_id))
     form.mac_address.data = device.mac_address
-    form.lesson_types.data = [str(item.lesson_type_id) for item in device.lesson_type_authorizations]
+    form.lesson_types.data = [str(item.lesson_type_id) \
+        for item in device.lesson_type_authorizations]
     form.development_machine.data = (device.category == 'development')
     return minify(render_template(
         'manage/edit_device.html',
@@ -676,10 +648,18 @@ def toggle_device_obsolete(id):
     device.toggle_obsolete(modified_by=current_user._get_current_object())
     if device.obsolete:
         flash('已标记报废设备：{}'.format(device.alias_serial), category='success')
-        add_user_log(user=current_user._get_current_object(), event='标记报废设备：{}'.format(device.alias_serial), category='manage')
+        add_user_log(
+            user=current_user._get_current_object(),
+            event='标记报废设备：{}'.format(device.alias_serial),
+            category='manage'
+        )
     else:
         flash('已恢复使用设备：{}'.format(device.alias_serial), category='success')
-        add_user_log(user=current_user._get_current_object(), event='恢复使用设备：{}'.format(device.alias_serial), category='manage')
+        add_user_log(
+            user=current_user._get_current_object(),
+            event='恢复使用设备：{}'.format(device.alias_serial),
+            category='manage'
+        )
     db.session.commit()
     return redirect(request.args.get('next') or url_for('manage.device'))
 
@@ -695,7 +675,11 @@ def delete_device(id):
     device.remove_all_lesson_types()
     db.session.delete(device)
     flash('已删除设备：{}'.format(device.alias_serial), category='success')
-    add_user_log(user=current_user._get_current_object(), event='删除设备：{}'.format(device.alias_serial), category='manage')
+    add_user_log(
+        user=current_user._get_current_object(),
+        event='删除设备：{}'.format(device.alias_serial),
+        category='manage'
+    )
     db.session.commit()
     return redirect(request.args.get('next') or url_for('manage.device'))
 
@@ -732,7 +716,11 @@ def lesson():
             .join(LessonType, LessonType.id == Lesson.type_id)\
             .filter(LessonType.name == lesson_type)\
             .order_by(Lesson.id.asc())
-        pagination = query.paginate(page, per_page=current_app.config['RECORD_PER_PAGE'], error_out=False)
+        pagination = query.paginate(
+            page,
+            per_page=current_app.config['RECORD_PER_PAGE'],
+            error_out=False
+        )
     except NameError:
         return redirect(url_for('manage.vb_lessons'))
     lessons = pagination.items
@@ -829,7 +817,11 @@ def video(lesson_id):
         .filter(Video.lesson_id == lesson.id)\
         .order_by(Video.id.asc())
     page = request.args.get('page', 1, type=int)
-    pagination = query.paginate(page, per_page=current_app.config['RECORD_PER_PAGE'], error_out=False)
+    pagination = query.paginate(
+        page,
+        per_page=current_app.config['RECORD_PER_PAGE'],
+        error_out=False
+    )
     videos = pagination.items
     return minify(render_template(
         'manage/video.html',

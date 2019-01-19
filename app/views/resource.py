@@ -3,7 +3,9 @@
 '''app/views/resource.py'''
 
 import os
-from flask import Blueprint, send_file, redirect, request, url_for, abort, current_app
+from flask import Blueprint
+from flask import send_file, redirect, request, url_for, abort
+from flask import current_app
 from flask_login import login_required, current_user
 from app.models import Device
 from app.models import Video
@@ -35,7 +37,8 @@ def video(id):
 @resource.route('/demo/video/<int:id>')
 def demo_video(id):
     '''resource.demo_video(id)'''
-    mac_address = get_mac_address_from_ip(ip_address=request.headers.get('X-Forwarded-For', request.remote_addr))
+    mac_address = get_mac_address_from_ip(ip_address=request.headers\
+        .get('X-Forwarded-For', request.remote_addr))
     if mac_address is None:
         abort(403)
     device = Device.query.filter_by(mac_address=mac_address).first()

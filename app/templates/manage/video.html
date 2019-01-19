@@ -39,7 +39,7 @@
             <tbody>
                 {% for video in videos %}
                 <tr>
-                    <td>{{ macros.video_label_widget(video=video) }}</td>
+                    <td>{{ macros.video_label_widget(video) }}</td>
                     <td><code>{{ video.duration_format }}</code></td>
                     {% if current_user.is_developer %}<td><code>{{ video.file_name }}</code></td>
                     {% if config.HLS_ENABLE %}<td><code>{{ video.hls_cache_file_name }}</code></td>

@@ -3,7 +3,9 @@
 '''app/views/develop.py'''
 
 from htmlmin import minify
-from flask import Blueprint, render_template, redirect, request, make_response, url_for, current_app
+from flask import Blueprint
+from flask import render_template, redirect, request, make_response, url_for
+from flask import current_app
 from flask_login import login_required, current_user
 from app.models import Role
 from app.models import Permission
@@ -21,7 +23,11 @@ def role():
     '''develop.role()'''
     query = Role.query.order_by(Role.id.asc())
     page = request.args.get('page', 1, type=int)
-    pagination = query.paginate(page, per_page=current_app.config['RECORD_PER_PAGE'], error_out=False)
+    pagination = query.paginate(
+        page,
+        per_page=current_app.config['RECORD_PER_PAGE'],
+        error_out=False
+    )
     roles = pagination.items
     return minify(render_template(
         'develop/role.html',
@@ -37,7 +43,11 @@ def permission():
     '''develop.permission()'''
     query = Permission.query.order_by(Permission.id.asc())
     page = request.args.get('page', 1, type=int)
-    pagination = query.paginate(page, per_page=current_app.config['RECORD_PER_PAGE'], error_out=False)
+    pagination = query.paginate(
+        page,
+        per_page=current_app.config['RECORD_PER_PAGE'],
+        error_out=False
+    )
     permissions = pagination.items
     return minify(render_template(
         'develop/permission.html',
@@ -83,7 +93,11 @@ def log():
             .order_by(UserLog.timestamp.desc())
     page = request.args.get('page', 1, type=int)
     try:
-        pagination = query.paginate(page, per_page=current_app.config['RECORD_PER_PAGE'], error_out=False)
+        pagination = query.paginate(
+            page,
+            per_page=current_app.config['RECORD_PER_PAGE'],
+            error_out=False
+        )
     except NameError:
         return redirect(url_for('develop.all_logs'))
     logs = pagination.items
