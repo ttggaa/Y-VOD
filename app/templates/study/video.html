@@ -82,7 +82,7 @@ const basePlayTimeGranularity = granularity / 1000 * acceleratingFactor;
 var elapsedTime = 0;
 var playTime = {{ current_user.video_play_time(video=video).total_seconds() }};
 var lastVideoCurrentTime = null;
-function updatePunch() {
+function punch() {
     if (!document.hidden) {
         $.ajax({
             beforeSend: function(xhr, settings) {
@@ -98,23 +98,22 @@ function updatePunch() {
             dataType: 'json',
             contentType: 'application/json; charset=utf-8',
             success: function (data) {
-                playTime = data.play_time.seconds;
                 updateVideoProgress(data.progress);
             }
         });
     };
 };
 videoPlayer.on('pause', function () {
-    updatePunch();
+    punch();
 });
 videoPlayer.on('ended', function () {
-    updatePunch();
+    punch();
 });
 videoPlayer.on('waiting', function () {
-    updatePunch();
+    punch();
 });
 videoPlayer.on('error', function () {
-    updatePunch();
+    punch();
 });
 setInterval(function () {
     if (!videoPlayer.video.paused && videoPlayer.video.currentTime !== lastVideoCurrentTime) {
@@ -123,7 +122,7 @@ setInterval(function () {
     };
     elapsedTime += granularity;
     if (elapsedTime % updateInterval === 0) {
-        updatePunch();
+        punch();
     };
 }, granularity);
 </script>

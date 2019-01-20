@@ -169,13 +169,18 @@ def punch(id):
         abort(500)
     current_user.punch(video=video, play_time=request.json.get('play_time'))
     db.session.commit()
-    if video.lesson.type.name in ['VB', 'Y-GRE', 'Y-GRE AW']:
+    if video.lesson.type.name == 'VB' and current_user.complete_video(video=video):
         y_system_api_request(api='punch', token_data={
             'user_id': current_user.id,
-            'section': video.name if video.lesson.type.name == 'VB' \
-                else '{} 视频研修'.format(video.lesson.name),
-            'progress': current_user.video_progress(video=video) \
-                if video.lesson.type.name == 'VB' \
-                else current_user.lesson_progress(lesson=video.lesson),
+            'section': video.name,
         })
-    return jsonify(current_user.video_punch(video=video).to_json())
+    elif video.lesson.type.name in ['Y-GRE', 'Y-GRE AW'] and \
+        current_user.complete_lesson(lesson=video.lesson):
+        y_system_api_request(api='punch', token_data={
+            'user_id': current_user.id,
+            'section': '{} 视频研修'.format(video.lesson.name),
+        })
+    punch = current_user.punches.filter_by(video_id=video.id).first()
+    return jsonify({
+        'progress': current_user.video_progress(video=video),
+    })

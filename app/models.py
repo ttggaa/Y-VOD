@@ -206,20 +206,6 @@ class Punch(db.Model):
         '''Punch.progress_percentage(self)'''
         return '{:.0%}'.format(self.progress_trim)
 
-    def to_json(self):
-        '''Punch.to_json(self)'''
-        json_entry = {
-            'user': self.user.name,
-            'video': self.video.to_json(),
-            'play_time': {
-                'format': format_duration(duration=self.play_time),
-                'seconds': self.play_time.total_seconds(),
-            },
-            'progress': self.progress_trim,
-            'punched_at': self.timestamp.strftime(current_app.config['DATETIME_FORMAT_ISO']),
-        }
-        return json_entry
-
     def to_csv(self):
         '''Punch.to_csv(self)'''
         csv_entry = [
@@ -515,10 +501,6 @@ class User(UserMixin, db.Model):
             .order_by(Punch.timestamp.desc())\
             .first()
 
-    def video_punch(self, video):
-        '''User.video_punch(self, video)'''
-        return self.punches.filter_by(video_id=video.id).first()
-
     def video_play_time(self, video):
         '''User.video_play_time(self, video)'''
         punch = self.punches.filter_by(video_id=video.id).first()
@@ -541,6 +523,11 @@ class User(UserMixin, db.Model):
         '''User.complete_video(self, video)'''
         punch = self.punches.filter_by(video_id=video.id).first()
         return punch is not None and punch.complete
+
+    def complete_lesson(self, lesson):
+        '''User.complete_lesson(self, lesson)'''
+        return reduce(operator.and_, [self.complete_video(video=video) \
+            for video in lesson.videos], True)
 
     def can_study(self, lesson):
         '''User.can_study(self, lesson)'''
@@ -1065,15 +1052,6 @@ class Lesson(db.Model):
         '''Lesson.duration_format(self)'''
         return format_duration(duration=self.duration)
 
-    def to_json(self):
-        '''Lesson.to_json(self)'''
-        json_entry = {
-            'name': self.name,
-            'abbr': self.abbr,
-            'type': self.type.name,
-        }
-        return json_entry
-
     @staticmethod
     def insert_entries(data, verbose=False):
         '''Lesson.insert_entries(data, verbose=False)'''
@@ -1151,20 +1129,6 @@ class Video(db.Model):
         self.hls_cache_file_name = new_hls_cache_file_name
         self.timestamp = datetime.utcnow()
         db.session.add(self)
-
-    def to_json(self):
-        '''Video.to_json(self)'''
-        json_entry = {
-            'name': self.name,
-            'abbr': self.abbr,
-            'description': self.description,
-            'lesson': self.lesson.to_json(),
-            'duration': {
-                'format': format_duration(duration=self.duration),
-                'seconds': self.duration.total_seconds(),
-            },
-        }
-        return json_entry
 
     @staticmethod
     def insert_entries(data, verbose=False):

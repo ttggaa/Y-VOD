@@ -11,7 +11,8 @@ from app import db
 from app.models import Role, User
 from app.models import Device
 from app.models import LessonType, Lesson, Video
-from app.utils import get_mac_address_from_ip, y_system_api_request, verify_data_keys
+from app.utils import get_mac_address_from_ip
+from app.utils import y_system_api_request, verify_data_keys
 from app.utils2 import get_device_info, add_user_log
 from app.forms.auth import LoginForm
 
