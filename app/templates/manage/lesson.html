@@ -17,11 +17,11 @@
             <div class="content">研修课程列表<div class="sub header">{{ header }}：共 {{ pagination.total }} 课</div></div>
         </h3>
         <div class="ui secondary stackable menu">
-            <a class="item {% if show_vb_lessons %}active {% endif %}" href="{{ url_for('manage.vb_lessons') }}">VB</a>
-            <a class="item {% if show_y_gre_lessons %}active {% endif %}" href="{{ url_for('manage.y_gre_lessons') }}">Y-GRE</a>
-            <a class="item {% if show_y_gre_aw_lessons %}active {% endif %}" href="{{ url_for('manage.y_gre_aw_lessons') }}">Y-GRE AW</a>
-            <a class="item {% if show_test_review_lessons %}active {% endif %}" href="{{ url_for('manage.test_review_lessons') }}">考试讲解</a>
-            <a class="item {% if show_demo_lessons %}active {% endif %}" href="{{ url_for('manage.demo_lessons') }}">体验课程</a>
+            <a class="{% if show_vb_lessons %}active {% endif %}item" href="{{ url_for('manage.vb_lessons') }}">VB</a>
+            <a class="{% if show_y_gre_lessons %}active {% endif %}item" href="{{ url_for('manage.y_gre_lessons') }}">Y-GRE</a>
+            <a class="{% if show_y_gre_aw_lessons %}active {% endif %}item" href="{{ url_for('manage.y_gre_aw_lessons') }}">Y-GRE AW</a>
+            <a class="{% if show_test_review_lessons %}active {% endif %}item" href="{{ url_for('manage.test_review_lessons') }}">考试讲解</a>
+            <a class="{% if show_demo_lessons %}active {% endif %}item" href="{{ url_for('manage.demo_lessons') }}">体验课程</a>
         </div>
         {% if pagination.total > 0 %}
         <table class="ui sortable selectable celled table">
