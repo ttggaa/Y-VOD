@@ -23,6 +23,9 @@ class Config:
     # SSL
     SSL_DISABLE = True
 
+    # CSRF
+    WTF_CSRF_CHECK_DEFAULT = False
+
     # Security
     SECRET_KEY = os.getenv('YVOD_SECRET_KEY')
     AUTH_TOKEN_SECRET_KEY = os.getenv('YVOD_AUTH_TOKEN_SECRET_KEY')

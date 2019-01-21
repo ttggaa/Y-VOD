@@ -6,7 +6,7 @@ from htmlmin import minify
 from flask import Blueprint
 from flask import render_template, jsonify, redirect, request, url_for, abort, flash
 from flask_login import login_required, current_user
-from app import db
+from app import db, csrf
 from app.models import Device
 from app.models import LessonType, Lesson, Video
 from app.decorators import permission_required
@@ -161,6 +161,7 @@ def video(id):
 @permission_required('研修')
 def punch(id):
     '''study.punch(id)'''
+    csrf.protect()
     video = Video.query.get_or_404(id)
     if not current_user.can('研修{}'.format(video.lesson.type.name)) or \
         not current_user.can_study(lesson=video.lesson):
