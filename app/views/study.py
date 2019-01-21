@@ -11,7 +11,7 @@ from app.models import Device
 from app.models import LessonType, Lesson, Video
 from app.decorators import permission_required
 from app.utils import get_mac_address_from_ip
-from app.utils import y_system_api_request
+from app.utils import y_system_api_request, verify_data_keys
 from app.utils2 import add_user_log
 
 
@@ -140,8 +140,8 @@ def test_review():
 def video(id):
     '''study.video(id)'''
     video = Video.query.get_or_404(id)
-    if not current_user.can_study(lesson=video.lesson):
-        flash('请先完成本课程的前序内容！', category='warning')
+    if not current_user.can_play(video=video):
+        flash('无法播放当前视频内容：{}'.format(video.name), category='warning')
         return redirect(url_for('study.{}'.format(video.lesson.type.view_point)))
     if not current_user.punched(video=video):
         add_user_log(
@@ -163,25 +163,32 @@ def punch(id):
     '''study.punch(id)'''
     csrf.protect()
     video = Video.query.get_or_404(id)
-    if not current_user.can('研修{}'.format(video.lesson.type.name)) or \
-        not current_user.can_study(lesson=video.lesson):
+    if not current_user.can_play(video=video):
         abort(403)
     if request.json is None:
         abort(500)
     current_user.punch(video=video, play_time=request.json.get('play_time'))
     db.session.commit()
-    if video.lesson.type.name == 'VB' and current_user.complete_video(video=video):
-        y_system_api_request(api='punch', token_data={
-            'user_id': current_user.id,
-            'section': video.name,
-        })
-    elif video.lesson.type.name in ['Y-GRE', 'Y-GRE AW'] and \
-        current_user.complete_lesson(lesson=video.lesson):
-        y_system_api_request(api='punch', token_data={
-            'user_id': current_user.id,
-            'section': '{} 视频研修'.format(video.lesson.name),
-        })
-    punch = current_user.punches.filter_by(video_id=video.id).first()
+    if video.lesson.type.name in ['VB', 'Y-GRE', 'Y-GRE AW']:
+        # synchronize study progress with Y-System
+        punch = current_user.get_punch(video=video)
+        if not punch.synchronized:
+            if video.lesson.type.name == 'VB' and current_user.complete_video(video=video):
+                section = video.name
+            elif current_user.complete_lesson(lesson=video.lesson):
+                section = '{} 视频研修'.format(video.lesson.name)
+            data = y_system_api_request(api='punch', token_data={
+                'user_id': current_user.id,
+                'section': section,
+            })
+            if verify_data_keys(data=data, keys=['success']):
+                punch.set_synchronized()
+                add_user_log(
+                    user=current_user._get_current_object(),
+                    event='同步研修进度至Y-System：{}'.format(section),
+                    category='study'
+                )
+                db.session.commit()
     return jsonify({
         'progress': current_user.video_progress(video=video),
     })

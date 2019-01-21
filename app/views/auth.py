@@ -62,7 +62,6 @@ def login():
             'password': form.password.data,
             'device': device.alias,
         })
-        print(data)
         if data is None:
             flash('网络通信故障', category='error')
             return redirect(url_for('auth.login', next=request.args.get('next')))
@@ -110,7 +109,7 @@ def login():
                         .filter(Video.id <= vb_video.id)\
                         .order_by(Video.id.asc())\
                         .all():
-                        user.punch(video=video, play_time=video.duration)
+                        user.punch(video=video, play_time=video.duration, synchronized=True)
             if data.get('y_gre_progress') is not None:
                 y_gre_lesson = Lesson.query.filter_by(name=data.get('y_gre_progress')).first()
                 if y_gre_lesson is not None:
@@ -121,7 +120,7 @@ def login():
                         .filter(Lesson.id <= y_gre_lesson.id)\
                         .order_by(Video.id.asc())\
                         .all():
-                        user.punch(video=video, play_time=video.duration)
+                        user.punch(video=video, play_time=video.duration, synchronized=True)
             add_user_log(user=user, event='从Y-System导入用户信息', category='auth')
         login_user(user, remember=current_app.config['AUTH_REMEMBER_LOGIN'])
         add_user_log(user=user, event='登录系统', category='auth')
