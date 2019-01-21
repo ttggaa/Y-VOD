@@ -185,6 +185,15 @@ class Punch(db.Model):
         db.session.add(self)
 
     @property
+    def sync_required(self):
+        '''Punch.sync_required(self)'''
+        if self.video.lesson.type.name == 'VB':
+            return not self.synchronized and self.user.complete_video(video=self.video)
+        if self.video.lesson.type.name in ['Y-GRE', 'Y-GRE AW']:
+            return not self.synchronized and self.user.complete_lesson(lesson=self.video.lesson)
+        return False
+
+    @property
     def complete(self):
         '''Punch.complete(self)'''
         return self.play_time >= self.video.duration
@@ -1109,6 +1118,15 @@ class Video(db.Model):
         lazy='dynamic',
         cascade='all, delete-orphan'
     )
+
+    @property
+    def section(self):
+        '''Video.section(self)'''
+        if self.lesson.type.name == 'VB':
+            return self.name
+        if self.lesson.type.name in ['Y-GRE', 'Y-GRE AW']:
+            return '{} 视频研修'.format(self.lesson.name)
+        return None
 
     @property
     def duration_format(self):

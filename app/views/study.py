@@ -140,16 +140,9 @@ def test_review():
 def video(id):
     '''study.video(id)'''
     video = Video.query.get_or_404(id)
-    if not current_user.can_play(video=video):
-        flash('无法播放当前视频内容：{}'.format(video.name), category='warning')
+    if not current_user.can_study(lesson=video.lesson):
+        flash('无法研修当前课程：{}'.format(video.lesson.name), category='warning')
         return redirect(url_for('study.{}'.format(video.lesson.type.view_point)))
-    if not current_user.punched(video=video):
-        add_user_log(
-            user=current_user._get_current_object(),
-            event='视频研修：{}'.format(video.name),
-            category='study'
-        )
-        db.session.commit()
     return minify(render_template(
         'study/video.html',
         video=video
@@ -167,25 +160,27 @@ def punch(id):
         abort(403)
     if request.json is None:
         abort(500)
+    if not current_user.punched(video=video):
+        add_user_log(
+            user=current_user._get_current_object(),
+            event='视频研修：{}'.format(video.name),
+            category='study'
+        )
     current_user.punch(video=video, play_time=request.json.get('play_time'))
     db.session.commit()
     if video.lesson.type.name in ['VB', 'Y-GRE', 'Y-GRE AW']:
         # synchronize study progress with Y-System
         punch = current_user.get_punch(video=video)
-        if not punch.synchronized:
-            if video.lesson.type.name == 'VB' and current_user.complete_video(video=video):
-                section = video.name
-            elif current_user.complete_lesson(lesson=video.lesson):
-                section = '{} 视频研修'.format(video.lesson.name)
+        if punch.sync_required:
             data = y_system_api_request(api='punch', token_data={
                 'user_id': current_user.id,
-                'section': section,
+                'section': video.section,
             })
             if verify_data_keys(data=data, keys=['success']):
                 punch.set_synchronized()
                 add_user_log(
                     user=current_user._get_current_object(),
-                    event='同步研修进度至Y-System：{}'.format(section),
+                    event='同步研修进度至Y-System：{}'.format(video.section),
                     category='study'
                 )
                 db.session.commit()
