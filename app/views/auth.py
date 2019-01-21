@@ -10,7 +10,6 @@ from flask_login import login_user, logout_user, login_required, current_user
 from app import db
 from app.models import Role, User
 from app.models import Device
-from app.models import LessonType, Lesson, Video
 from app.utils import get_mac_address_from_ip
 from app.utils import y_system_api_request, verify_data_keys
 from app.utils2 import get_device_info, add_user_log
@@ -99,29 +98,11 @@ def login():
             )
             db.session.add(user)
             db.session.commit()
-            if data.get('vb_progress') is not None:
-                vb_video = Video.query.filter_by(name=data.get('vb_progress')).first()
-                if vb_video is not None:
-                    for video in Video.query\
-                        .join(Lesson, Lesson.id == Video.lesson_id)\
-                        .join(LessonType, LessonType.id == Lesson.type_id)\
-                        .filter(LessonType.name == 'VB')\
-                        .filter(Video.id <= vb_video.id)\
-                        .order_by(Video.id.asc())\
-                        .all():
-                        user.punch(video=video, play_time=video.duration, synchronized=True)
-            if data.get('y_gre_progress') is not None:
-                y_gre_lesson = Lesson.query.filter_by(name=data.get('y_gre_progress')).first()
-                if y_gre_lesson is not None:
-                    for video in Video.query\
-                        .join(Lesson, Lesson.id == Video.lesson_id)\
-                        .join(LessonType, LessonType.id == Lesson.type_id)\
-                        .filter(LessonType.name == 'Y-GRE')\
-                        .filter(Lesson.id <= y_gre_lesson.id)\
-                        .order_by(Video.id.asc())\
-                        .all():
-                        user.punch(video=video, play_time=video.duration, synchronized=True)
             add_user_log(user=user, event='从Y-System导入用户信息', category='auth')
+        if data.get('vb_progress') is not None:
+            user.sync_punch(section=data.get('vb_progress'))
+        if data.get('y_gre_progress') is not None:
+            user.sync_punch(section=data.get('y_gre_progress'))
         login_user(user, remember=current_app.config['AUTH_REMEMBER_LOGIN'])
         add_user_log(user=user, event='登录系统', category='auth')
         db.session.commit()

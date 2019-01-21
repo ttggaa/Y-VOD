@@ -475,6 +475,33 @@ class User(UserMixin, db.Model):
         '''User.get_punch(self, video)'''
         return self.punches.filter_by(video_id=video.id).first()
 
+    def sync_punch(self, section):
+        '''User.sync_punch(self, section)'''
+        if section.startswith('VB'):
+            video = Video.query.filter_by(name=section).first()
+            if video is not None:
+                for video in Video.query\
+                    .join(Lesson, Lesson.id == Video.lesson_id)\
+                    .join(LessonType, LessonType.id == Lesson.type_id)\
+                    .filter(LessonType.name == 'VB')\
+                    .filter(Video.id <= video.id)\
+                    .order_by(Video.id.asc())\
+                    .all():
+                    if not self.punched(video=video):
+                        self.punch(video=video, play_time=video.duration, synchronized=True)
+        if section.startswith('Y-GRE'):
+            lesson = Lesson.query.filter_by(name=section).first()
+            if lesson is not None:
+                for video in Video.query\
+                    .join(Lesson, Lesson.id == Video.lesson_id)\
+                    .join(LessonType, LessonType.id == Lesson.type_id)\
+                    .filter(LessonType.name == 'Y-GRE')\
+                    .filter(Lesson.id <= lesson.id)\
+                    .order_by(Video.id.asc())\
+                    .all():
+                    if not self.punched(video=video):
+                        self.punch(video=video, play_time=video.duration, synchronized=True)
+
     @property
     def latest_punch(self):
         '''User.latest_punch(self)'''
