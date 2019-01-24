@@ -99,6 +99,15 @@ def login():
             db.session.add(user)
             db.session.commit()
             add_user_log(user=user, event='从Y-System导入用户信息', category='auth')
+        if verify_data_keys(data=data, keys=['role', 'name']):
+            if data.get('role') != user.role.name:
+                role = Role.query.filter_by(name=data.get('role')).first()
+                if role is not None:
+                    user.role_id = role.id
+                    db.session.add(user)
+            if data.get('name') != user.name:
+                user.name = data.get('name')
+                db.session.add(user)
         if data.get('vb_progress') is not None:
             user.sync_punch(section=data.get('vb_progress'))
         if data.get('y_gre_progress') is not None:

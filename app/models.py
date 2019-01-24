@@ -415,6 +415,7 @@ class User(UserMixin, db.Model):
 
     @property
     def role_name(self):
+        '''User.role_name(self)'''
         if self.suspended:
             return '[挂起] {}'.format(self.role.name)
         return self.role.name
