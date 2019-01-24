@@ -45,8 +45,8 @@ def internal_server_error(e):
 
 
 @main.app_errorhandler(CSRFError)
-def csrf_error(e):
-    '''main.csrf_error(e)'''
+def cross_site_request_forgery(e):
+    '''main.cross_site_request_forgery(e)'''
     if request.accept_mimetypes.accept_json and not request.accept_mimetypes.accept_html:
         response = jsonify({'error': 'csrf error'})
         response.status_code = 400

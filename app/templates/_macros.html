@@ -25,13 +25,11 @@
 
 
 {% macro message_widget() -%}
-{% with messages = get_flashed_messages(with_categories=true) %}{% if messages %}<div id="message-container">
-    {% for category, message in messages %}<div class="ui {% if category == 'message' %}info{% else %}{{ category }}{% endif %} message">
-        <i class="close icon"></i>
-        {% if category == 'message' %}<i class="info circle icon"></i>{% elif category == 'success' %}<i class="check circle icon"></i>{% elif category == 'warning' %}<i class="exclamation circle icon"></i>{% elif category == 'error' %}<i class="times circle icon"></i>{% else %}<i class="{{ category }} circle icon"></i>{% endif %}
-        {{ message }}
-    </div>{% endfor %}
-</div>{% endif %}{% endwith %}
+{% with messages = get_flashed_messages(with_categories=true) %}{% for category, message in messages %}<div class="ui {% if category == 'message' %}info{% else %}{{ category }}{% endif %} message">
+    <i class="close icon"></i>
+    {% if category == 'message' %}<i class="info circle icon"></i>{% elif category == 'success' %}<i class="check circle icon"></i>{% elif category == 'warning' %}<i class="exclamation circle icon"></i>{% elif category == 'error' %}<i class="times circle icon"></i>{% else %}<i class="{{ category }} circle icon"></i>{% endif %}
+    {{ message }}
+</div>{% endfor %}{% endwith %}
 {%- endmacro %}
 
 

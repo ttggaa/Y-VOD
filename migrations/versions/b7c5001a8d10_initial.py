@@ -1,8 +1,8 @@
 """initial
 
-Revision ID: 62ce67eef008
+Revision ID: b7c5001a8d10
 Revises: 
-Create Date: 2019-01-20 00:30:02.040428
+Create Date: 2019-01-22 01:52:49.696895
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '62ce67eef008'
+revision = 'b7c5001a8d10'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -63,6 +63,7 @@ def upgrade():
     sa.Column('name', sa.Unicode(length=64), nullable=True),
     sa.Column('abbr', sa.Unicode(length=64), nullable=True),
     sa.Column('type_id', sa.Integer(), nullable=True),
+    sa.Column('progress_threshold', sa.Float(), nullable=True),
     sa.ForeignKeyConstraint(['type_id'], ['lesson_types.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
@@ -142,6 +143,7 @@ def upgrade():
     sa.Column('user_id', sa.Integer(), nullable=False),
     sa.Column('video_id', sa.Integer(), nullable=False),
     sa.Column('play_time', sa.Interval(), nullable=True),
+    sa.Column('synchronized', sa.Boolean(), nullable=True),
     sa.Column('timestamp', sa.DateTime(), nullable=True),
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
     sa.ForeignKeyConstraint(['video_id'], ['videos.id'], ),

@@ -1,6 +1,6 @@
 ## RELEASE NOTES
 
-### Version 1.0.1 - January 19, 2019
+### Version 1.0.1 - January 24, 2019
 
 **NEW**
 - **Model** - Add `demo` attribute to video data model #1
@@ -17,6 +17,10 @@
 - **Feature** - Adopt Y-System progress report API #31
 - **Feature** - Adopt Y-System user authentication API #32
 - **Feature** - Authenticate user via Y-System #37
+- **Feature** - Email production server errors to system operator #39
+- **Model** - Add `synchronized` attribute to punch data model #40
+- **Model** - Add `progress_threshold` attribute to lesson data model #41
+- **Feature** - Adopt Y-System lesson access API #42
 
 **IMPROVED**
 - **Model** - Change `demo` attribute of video data model to `restricted` #7

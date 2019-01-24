@@ -4,7 +4,7 @@
 {% block title %}{{ video.abbr }} &middot; {{ video.lesson.name }}{% endblock %}
 
 {% block css %}
-<link rel="stylesheet" type="text/css" href="//static.y-english.cn/assets/player/player.min.css">
+{% if current_user.can_play(video=video) %}<link rel="stylesheet" type="text/css" href="//static.y-english.cn/assets/player/player.min.css">{% endif %}
 {% endblock %}
 
 {% block content %}
@@ -21,7 +21,7 @@
                 <div class="ui vertical segment">
                     <div class="ui header">视频列表</div>
                     <div class="ui small secondary fluid vertical menu">
-                        {% for item in video.lesson.videos %}<a class="{% if item.id == video.id %}active {% endif %}item" href="{{ url_for('study.video', id=item.id) }}#main"><i class="file video icon"></i>{{ item.abbr }}<div {% if item.id == video.id %}id="video-progress-side" {% endif %}class="ui {% if current_user.complete_video(video=item) %}green {% elif item.id == video.id %}orange {% endif %}label">{{ current_user.video_progress_percentage(video=item) }}</div></a>{% endfor %}
+                        {% for item in video.lesson.videos %}<a class="{% if item.id == video.id %}active {% endif %}item" href="{{ url_for('study.video', id=item.id) }}#main"><i class="file video icon"></i>{{ item.abbr }}<div {% if item.id == video.id %}id="video-progress-side" {% endif %}class="ui {% if current_user.complete_video(video=item, progress_threshold=1.0) %}green {% elif item.id == video.id %}orange {% endif %}label">{{ current_user.video_progress_percentage(video=item) }}</div></a>{% endfor %}
                         <a class="item" href="{{ url_for('study.{}'.format(video.lesson.type.view_point)) }}"><i class="arrow left icon"></i>返回课程列表</a>
                     </div>
                 </div>
@@ -30,7 +30,7 @@
                 <div class="ui sticky">
                     <div class="ui vertical segment">
                         <div class="ui header">{{ video.name }}{% if video.description %}<div class="ui {{ video.lesson.type.color }} horizontal label">{{ video.description }}</div>{% endif %}<div id="video-progress" class="ui orange horizontal label">0</div></div>
-                        <div id="player-container"></div>
+                        {% if current_user.can_play(video=video) %}<div id="player-container"></div>{% else %}{{ macros.placeholder_widget() }}{% endif %}
                     </div>
                 </div>
             </div>
@@ -41,8 +41,8 @@
 
 {% block js %}
 <script type="text/javascript" src="//static.y-english.cn/assets/count/countUp.min.js"></script>
-{% if config.HLS_ENABLE %}<script type="text/javascript" src="//static.y-english.cn/assets/hls/hls.min.css"></script>{% endif %}
-<script type="text/javascript" src="//static.y-english.cn/assets/player/player.min.js"></script>
+{% if current_user.can_play(video=video) %}{% if config.HLS_ENABLE %}<script type="text/javascript" src="//static.y-english.cn/assets/hls/hls.min.css"></script>{% endif %}
+<script type="text/javascript" src="//static.y-english.cn/assets/player/player.min.js"></script>{% endif %}
 <script type="text/javascript">
 {{ macros.close_message_js_snippet() }}
 
@@ -57,16 +57,17 @@ var countUpOptions = {
     suffix: '%'
 };
 var videoProgressCountUp = new CountUp('video-progress', 0, 0, 0, 2.5, countUpOptions);
-var videoProgressSideCountUp = new CountUp('video-progress-side', 0, 0, 0, 2.5, countUpOptions);
 function updateVideoProgress(progress) {
     videoProgressCountUp.update((progress * 100).toFixed(0));
-    videoProgressSideCountUp.update((progress * 100).toFixed(0));
+    $('#video-progress-side').text(`${(progress * 100).toFixed(0)}%`)
     if (progress >= 1) {
         $('#video-progress').attr('class', 'ui green horizontal label');
         $('#video-progress-side').attr('class', 'ui green label');
     };
 };
 updateVideoProgress({{ current_user.video_progress(video=video) }});
+
+{% if current_user.can_play(video=video) %}
 const videoPlayer = new Player({
     container: document.getElementById('player-container'),
     volume: 1.0,
@@ -82,39 +83,42 @@ const basePlayTimeGranularity = granularity / 1000 * acceleratingFactor;
 var elapsedTime = 0;
 var playTime = {{ current_user.video_play_time(video=video).total_seconds() }};
 var lastVideoCurrentTime = null;
-function updatePunch() {
-    if (!document.hidden) {
-        $.ajax({
-            beforeSend: function(xhr, settings) {
-                if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type) && !this.crossDomain) {
-                    xhr.setRequestHeader('X-CSRFToken', '{{ csrf_token() }}');
-                };
-            },
-            url: "{{ url_for('study.punch', id=video.id) }}",
-            method: 'POST',
-            data: JSON.stringify({
-                'play_time': playTime
-            }),
-            dataType: 'json',
-            contentType: 'application/json; charset=utf-8',
-            success: function (data) {
-                playTime = data.play_time.seconds;
-                updateVideoProgress(data.progress);
-            }
-        });
+var lastPunchAt = null;
+function punch() {
+    if (lastPunchAt === null || lastPunchAt + updateInterval <= elapsedTime) {
+        if (!document.hidden) {
+            $.ajax({
+                beforeSend: function(xhr, settings) {
+                    if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type) && !this.crossDomain) {
+                        xhr.setRequestHeader('X-CSRFToken', '{{ csrf_token() }}');
+                    };
+                },
+                url: "{{ url_for('study.punch', id=video.id) }}",
+                method: 'POST',
+                data: JSON.stringify({
+                    'play_time': playTime
+                }),
+                dataType: 'json',
+                contentType: 'application/json; charset=utf-8',
+                success: function (data) {
+                    updateVideoProgress(data.progress);
+                }
+            });
+        };
+        lastPunchAt = elapsedTime;
     };
 };
 videoPlayer.on('pause', function () {
-    updatePunch();
+    punch();
 });
 videoPlayer.on('ended', function () {
-    updatePunch();
+    punch();
 });
 videoPlayer.on('waiting', function () {
-    updatePunch();
+    punch();
 });
 videoPlayer.on('error', function () {
-    updatePunch();
+    punch();
 });
 setInterval(function () {
     if (!videoPlayer.video.paused && videoPlayer.video.currentTime !== lastVideoCurrentTime) {
@@ -123,8 +127,9 @@ setInterval(function () {
     };
     elapsedTime += granularity;
     if (elapsedTime % updateInterval === 0) {
-        updatePunch();
+        punch();
     };
 }, granularity);
+{% endif %}
 </script>
 {% endblock %}

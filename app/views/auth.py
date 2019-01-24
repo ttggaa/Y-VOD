@@ -10,8 +10,8 @@ from flask_login import login_user, logout_user, login_required, current_user
 from app import db
 from app.models import Role, User
 from app.models import Device
-from app.models import LessonType, Lesson, Video
-from app.utils import get_mac_address_from_ip, y_system_api_request, verify_data_keys
+from app.utils import get_mac_address_from_ip
+from app.utils import y_system_api_request, verify_data_keys
 from app.utils2 import get_device_info, add_user_log
 from app.forms.auth import LoginForm
 
@@ -57,8 +57,9 @@ def login():
             return redirect(url_for('auth.login', next=request.args.get('next')))
         # authenticate user via Y-System
         data = y_system_api_request(api='login-user', token_data={
-            'email': form.email.data,
+            'email': form.email.data.strip().lower(),
             'password': form.password.data,
+            'device': device.alias,
         })
         if data is None:
             flash('网络通信故障', category='error')
@@ -74,7 +75,7 @@ def login():
         if user is None:
             # migrate user from Y-System
             data = y_system_api_request(api='migrate-user', token_data={
-                'user_id': user.id,
+                'user_id': data.get('user_id'),
             })
             if data is None:
                 flash('网络通信故障', category='error')
@@ -91,35 +92,26 @@ def login():
                 flash('登录失败：无效的用户角色“{}”'.format(data.get('role')), category='error')
                 return redirect(url_for('auth.login', next=request.args.get('next')))
             user = User(
-                id=data.get('id'),
+                id=data.get('user_id'),
                 role_id=role.id,
                 name=data.get('name')
             )
             db.session.add(user)
             db.session.commit()
-            if data.get('vb_progress') is not None:
-                vb_video = Video.query.filter_by(name=data.get('vb_progress')).first()
-                if vb_video is not None:
-                    for video in Video.query\
-                        .join(Lesson, Lesson.id == Video.lesson_id)\
-                        .join(LessonType, LessonType.id == Lesson.type_id)\
-                        .filter(LessonType.name == 'VB')\
-                        .filter(Video.id <= vb_video.id)\
-                        .order_by(Video.id.asc())\
-                        .all():
-                        user.punch(video=video, play_time=video.duration)
-            if data.get('y_gre_progress') is not None:
-                y_gre_lesson = Lesson.query.filter_by(name=data.get('y_gre_progress')).first()
-                if y_gre_lesson is not None:
-                    for video in Video.query\
-                        .join(Lesson, Lesson.id == Video.lesson_id)\
-                        .join(LessonType, LessonType.id == Lesson.type_id)\
-                        .filter(LessonType.name == 'Y-GRE')\
-                        .filter(Lesson.id <= y_gre_lesson.id)\
-                        .order_by(Video.id.asc())\
-                        .all():
-                        user.punch(video=video, play_time=video.duration)
             add_user_log(user=user, event='从Y-System导入用户信息', category='auth')
+        if verify_data_keys(data=data, keys=['role', 'name']):
+            if data.get('role') != user.role.name:
+                role = Role.query.filter_by(name=data.get('role')).first()
+                if role is not None:
+                    user.role_id = role.id
+                    db.session.add(user)
+            if data.get('name') != user.name:
+                user.name = data.get('name')
+                db.session.add(user)
+        if data.get('vb_progress') is not None:
+            user.sync_punch(section=data.get('vb_progress'))
+        if data.get('y_gre_progress') is not None:
+            user.sync_punch(section=data.get('y_gre_progress'))
         login_user(user, remember=current_app.config['AUTH_REMEMBER_LOGIN'])
         add_user_log(user=user, event='登录系统', category='auth')
         db.session.commit()

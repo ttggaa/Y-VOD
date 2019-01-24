@@ -14,11 +14,11 @@
     <div class="ui container">
         <h3 class="ui header"><i class="history icon"></i>日志列表</h3>
         <div class="ui secondary stackable menu">
-            <a class="item {% if show_all_logs %}active {% endif %}" href="{{ url_for('develop.all_logs') }}">全部</a>
-            <a class="item {% if show_study_logs %}active {% endif %}" href="{{ url_for('develop.study_logs') }}">研修</a>
-            <a class="item {% if show_manage_logs %}active {% endif %}" href="{{ url_for('develop.manage_logs') }}">管理</a>
-            <a class="item {% if show_auth_logs %}active {% endif %}" href="{{ url_for('develop.auth_logs') }}">鉴权</a>
-            <a class="item {% if show_access_logs %}active {% endif %}" href="{{ url_for('develop.access_logs') }}">访问</a>
+            <a class="{% if show_all_logs %}active {% endif %}item" href="{{ url_for('develop.all_logs') }}">全部</a>
+            <a class="{% if show_study_logs %}active {% endif %}item" href="{{ url_for('develop.study_logs') }}">研修</a>
+            <a class="{% if show_manage_logs %}active {% endif %}item" href="{{ url_for('develop.manage_logs') }}">管理</a>
+            <a class="{% if show_auth_logs %}active {% endif %}item" href="{{ url_for('develop.auth_logs') }}">鉴权</a>
+            <a class="{% if show_access_logs %}active {% endif %}item" href="{{ url_for('develop.access_logs') }}">访问</a>
         </div>
         {% if pagination.total > 0 %}
         <div class="ui feed">

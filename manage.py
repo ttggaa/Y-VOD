@@ -99,7 +99,7 @@ def deploy():
     from app.models import Video
     Video.insert_entries(data=data, verbose=verbose)
 
-    data = input('Enter data identifier (e.g.: initial or 20180805 or press the enter/return key): ')
+    data = input('Enter data identifier (e.g.: 20180805 or press the enter/return key for initial data): ')
     if data == '':
         data = 'initial'
     datadir = os.path.join(app.config['DATA_DIR'], data)

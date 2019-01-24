@@ -170,12 +170,28 @@ class Role(db.Model):
 
 
 class Punch(db.Model):
-    """Table: punches"""
+    '''Table: punches'''
     __tablename__ = 'punches'
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), primary_key=True)
     video_id = db.Column(db.Integer, db.ForeignKey('videos.id'), primary_key=True)
     play_time = db.Column(db.Interval, default=timedelta())
+    synchronized = db.Column(db.Boolean, default=False)
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def set_synchronized(self):
+        '''Punch.set_synchronized(self)'''
+        self.synchronized = True
+        self.timestamp = datetime.utcnow()
+        db.session.add(self)
+
+    @property
+    def sync_required(self):
+        '''Punch.sync_required(self)'''
+        if self.video.lesson.type.name == 'VB':
+            return not self.synchronized and self.user.complete_video(video=self.video)
+        if self.video.lesson.type.name in ['Y-GRE', 'Y-GRE AW']:
+            return not self.synchronized and self.user.complete_lesson(lesson=self.video.lesson)
+        return False
 
     @property
     def complete(self):
@@ -206,26 +222,13 @@ class Punch(db.Model):
         '''Punch.progress_percentage(self)'''
         return '{:.0%}'.format(self.progress_trim)
 
-    def to_json(self):
-        '''Punch.to_json(self)'''
-        json_entry = {
-            'user': self.user.name,
-            'video': self.video.to_json(),
-            'play_time': {
-                'format': format_duration(duration=self.play_time),
-                'seconds': self.play_time.total_seconds(),
-            },
-            'progress': self.progress_trim,
-            'punched_at': self.timestamp.strftime(current_app.config['DATETIME_FORMAT_ISO']),
-        }
-        return json_entry
-
     def to_csv(self):
         '''Punch.to_csv(self)'''
         csv_entry = [
             str(self.user_id),
             str(self.video_id),
             str(self.play_time.total_seconds()),
+            str(int(self.synchronized)),
             self.timestamp.strftime(current_app.config['DATETIME_FORMAT']),
         ]
         return csv_entry
@@ -245,8 +248,9 @@ class Punch(db.Model):
                             user_id=int(entry[0]),
                             video_id=int(entry[1]),
                             play_time=timedelta(seconds=float(entry[2])),
+                            synchronized=bool(int(entry[3])),
                             timestamp=datetime.strptime(
-                                entry[3],
+                                entry[4],
                                 current_app.config['DATETIME_FORMAT']
                             )
                         )
@@ -270,6 +274,7 @@ class Punch(db.Model):
                 'user_id',
                 'video_id',
                 'play_time',
+                'synchronized',
                 'timestamp',
             ])
             for entry in Punch.query.all():
@@ -409,6 +414,13 @@ class User(UserMixin, db.Model):
         return '[{}] {}'.format(self.role.name, self.name)
 
     @property
+    def role_name(self):
+        '''User.role_name(self)'''
+        if self.suspended:
+            return '[挂起] {}'.format(self.role.name)
+        return self.role.name
+
+    @property
     def url(self):
         '''User.url(self)'''
         return url_for('profile.overview', id=self.id)
@@ -434,33 +446,62 @@ class User(UserMixin, db.Model):
         json_entry = {
             'title': self.name,
             'url': self.profile_url(tab=url_tab),
+            'description': self.role_name,
         }
-        if self.suspended:
-            json_entry['description'] = '[挂起] {}'.format(self.role.name)
-        else:
-            json_entry['description'] = self.role.name
         return json_entry
 
-    def punch(self, video, play_time=None):
-        '''User.punch(self, video, play_time=None)'''
+    def punch(self, video, play_time, synchronized=False):
+        '''User.punch(self, video, play_time, synchronized=False)'''
         punch = self.punches.filter_by(video_id=video.id).first()
         if punch is not None:
+            punch.synchronized = synchronized
             punch.timestamp = datetime.utcnow()
         else:
             punch = Punch(
                 user_id=self.id,
-                video_id=video.id
+                video_id=video.id,
+                synchronized=synchronized
             )
-        if play_time is not None:
-            if isinstance(play_time, timedelta):
-                punch.play_time = play_time
-            else:
-                punch.play_time = timedelta(seconds=play_time)
+        if isinstance(play_time, timedelta):
+            punch.play_time = play_time
+        else:
+            punch.play_time = timedelta(seconds=play_time)
         db.session.add(punch)
 
     def punched(self, video):
         '''User.punched(self, video)'''
-        return self.punches.filter_by(video_id=video.id).first() is not None
+        return self.get_punch(video=video) is not None
+
+    def get_punch(self, video):
+        '''User.get_punch(self, video)'''
+        return self.punches.filter_by(video_id=video.id).first()
+
+    def sync_punch(self, section):
+        '''User.sync_punch(self, section)'''
+        if section.startswith('VB'):
+            video = Video.query.filter_by(name=section).first()
+            if video is not None:
+                for video in Video.query\
+                    .join(Lesson, Lesson.id == Video.lesson_id)\
+                    .join(LessonType, LessonType.id == Lesson.type_id)\
+                    .filter(LessonType.name == 'VB')\
+                    .filter(Video.id <= video.id)\
+                    .order_by(Video.id.asc())\
+                    .all():
+                    if not self.punched(video=video):
+                        self.punch(video=video, play_time=video.duration, synchronized=True)
+        if section.startswith('Y-GRE'):
+            lesson = Lesson.query.filter_by(name=section).first()
+            if lesson is not None:
+                for video in Video.query\
+                    .join(Lesson, Lesson.id == Video.lesson_id)\
+                    .join(LessonType, LessonType.id == Lesson.type_id)\
+                    .filter(LessonType.name == 'Y-GRE')\
+                    .filter(Lesson.id <= lesson.id)\
+                    .order_by(Video.id.asc())\
+                    .all():
+                    if not self.punched(video=video):
+                        self.punch(video=video, play_time=video.duration, synchronized=True)
 
     @property
     def latest_punch(self):
@@ -491,30 +532,39 @@ class User(UserMixin, db.Model):
             .order_by(Video.id.desc())\
             .first()
 
-    def lesson_progress(self, lesson):
-        '''User.lesson_progress(self, lesson)'''
+    def lesson_play_time(self, lesson):
+        '''User.lesson_play_time(self, lesson)'''
         return reduce(operator.add, [punch.play_time_trim for punch in Punch.query\
             .join(Video, Video.id == Punch.video_id)\
             .filter(Video.lesson_id == lesson.id)\
             .filter(Punch.user_id == self.id)\
-            .all()], timedelta()) / lesson.duration
+            .all()], timedelta())
+
+    def lesson_progress(self, lesson):
+        '''User.lesson_progress(self, lesson)'''
+        return self.lesson_play_time(lesson=lesson) / lesson.duration
 
     def lesson_progress_percentage(self, lesson):
         '''User.lesson_progress_percentage(self, lesson)'''
         return '{:.0%}'.format(self.lesson_progress(lesson=lesson))
 
-    def lesson_punch(self, lesson):
-        '''User.lesson_punch(self, lesson)'''
-        return Punch.query\
-            .join(Video, Video.id == Punch.video_id)\
-            .filter(Video.lesson_id == lesson.id)\
-            .filter(Punch.user_id == self.id)\
-            .order_by(Punch.timestamp.desc())\
-            .first()
+    def complete_lesson(self, lesson, progress_threshold=None):
+        '''User.complete_lesson(self, lesson, progress_threshold=None)'''
+        if progress_threshold is not None:
+            return self.lesson_progress(lesson=lesson) >= progress_threshold
+        return self.lesson_progress(lesson=lesson) >= lesson.progress_threshold
 
-    def video_punch(self, video):
-        '''User.video_punch(self, video)'''
-        return self.punches.filter_by(video_id=video.id).first()
+    def can_study(self, lesson):
+        '''User.can_study(self, lesson)'''
+        if lesson.type.name in ['VB', 'Y-GRE', 'Y-GRE AW']:
+            return self.plays(role_name='协调员') or \
+                reduce(operator.and_, [self.complete_lesson(lesson=lesson) \
+                    for lesson in Lesson.query\
+                    .join(LessonType, LessonType.id == Lesson.type_id)\
+                    .filter(Lesson.type_id == lesson.type_id)\
+                    .filter(Lesson.id < lesson.id)\
+                    .all()], True)
+        return True
 
     def video_play_time(self, video):
         '''User.video_play_time(self, video)'''
@@ -534,22 +584,11 @@ class User(UserMixin, db.Model):
         '''User.video_progress_percentage(self, video)'''
         return '{:.0%}'.format(self.video_progress(video=video))
 
-    def complete_video(self, video):
-        '''User.complete_video(self, video)'''
-        punch = self.punches.filter_by(video_id=video.id).first()
-        return punch is not None and punch.complete
-
-    def can_study(self, lesson):
-        '''User.can_study(self, lesson)'''
-        if lesson.type.name in ['VB', 'Y-GRE', 'Y-GRE AW']:
-            return self.plays(role_name='协调员') or \
-                reduce(operator.and_, [self.complete_video(video=video) for video in Video.query\
-                    .join(Lesson, Lesson.id == Video.lesson_id)\
-                    .join(LessonType, LessonType.id == Lesson.type_id)\
-                    .filter(Lesson.type_id == lesson.type_id)\
-                    .filter(Lesson.id < lesson.id)\
-                    .all()], True)
-        return True
+    def complete_video(self, video, progress_threshold=None):
+        '''User.complete_video(self, video, progress_threshold=None)'''
+        if progress_threshold is not None:
+            return self.video_progress(video=video) >= progress_threshold
+        return self.video_progress(video=video) >= video.lesson.progress_threshold
 
     def can_play(self, video):
         '''User.can_play(self, video)'''
@@ -1050,6 +1089,7 @@ class Lesson(db.Model):
     name = db.Column(db.Unicode(64), unique=True, index=True)
     abbr = db.Column(db.Unicode(64))
     type_id = db.Column(db.Integer, db.ForeignKey('lesson_types.id'))
+    progress_threshold = db.Column(db.Float, default=0.0)
     videos = db.relationship('Video', backref='lesson', lazy='dynamic')
 
     @property
@@ -1062,15 +1102,6 @@ class Lesson(db.Model):
         '''Lesson.duration_format(self)'''
         return format_duration(duration=self.duration)
 
-    def to_json(self):
-        '''Lesson.to_json(self)'''
-        json_entry = {
-            'name': self.name,
-            'abbr': self.abbr,
-            'type': self.type.name,
-        }
-        return json_entry
-
     @staticmethod
     def insert_entries(data, verbose=False):
         '''Lesson.insert_entries(data, verbose=False)'''
@@ -1082,7 +1113,8 @@ class Lesson(db.Model):
                 lesson = Lesson(
                     name='{} {}'.format(entry['lesson_type_name'], entry['abbr']),
                     abbr=entry['abbr'],
-                    type_id=LessonType.query.filter_by(name=entry['lesson_type_name']).first().id
+                    type_id=LessonType.query.filter_by(name=entry['lesson_type_name']).first().id,
+                    progress_threshold=entry['progress_threshold']
                 )
                 db.session.add(lesson)
                 if verbose:
@@ -1114,6 +1146,15 @@ class Video(db.Model):
         lazy='dynamic',
         cascade='all, delete-orphan'
     )
+
+    @property
+    def section(self):
+        '''Video.section(self)'''
+        if self.lesson.type.name == 'VB':
+            return self.name
+        if self.lesson.type.name in ['Y-GRE', 'Y-GRE AW']:
+            return '{} 视频研修'.format(self.lesson.name)
+        return None
 
     @property
     def duration_format(self):
@@ -1148,20 +1189,6 @@ class Video(db.Model):
         self.hls_cache_file_name = new_hls_cache_file_name
         self.timestamp = datetime.utcnow()
         db.session.add(self)
-
-    def to_json(self):
-        '''Video.to_json(self)'''
-        json_entry = {
-            'name': self.name,
-            'abbr': self.abbr,
-            'description': self.description,
-            'lesson': self.lesson.to_json(),
-            'duration': {
-                'format': format_duration(duration=self.duration),
-                'seconds': self.duration.total_seconds(),
-            },
-        }
-        return json_entry
 
     @staticmethod
     def insert_entries(data, verbose=False):
