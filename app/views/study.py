@@ -143,16 +143,17 @@ def video(id):
     if not current_user.can_study(lesson=video.lesson):
         flash('无法研修当前课程：{}'.format(video.lesson.name), category='warning')
         return redirect(url_for('study.{}'.format(video.lesson.type.view_point)))
-    data = y_system_api_request(api='lesson-access', token_data={
-        'user_id': current_user.id,
-        'lesson': video.lesson,
-    })
-    if data is None:
-        flash('网络通信故障', category='error')
-        return redirect(url_for('study.{}'.format(video.lesson.type.view_point)))
-    if verify_data_keys(data=data, keys=['error']):
-        flash('无法研修当前课程：{}'.format(data.get('error')), category='error')
-        return redirect(url_for('study.{}'.format(video.lesson.type.view_point)))
+    if video.lesson.type.name in ['VB', 'Y-GRE', 'Y-GRE AW']:
+        data = y_system_api_request(api='lesson-access', token_data={
+            'user_id': current_user.id,
+            'lesson': video.lesson.name,
+        })
+        if data is None:
+            flash('网络通信故障', category='error')
+            return redirect(url_for('study.{}'.format(video.lesson.type.view_point)))
+        if verify_data_keys(data=data, keys=['error']):
+            flash('无法研修当前课程：{}'.format(data.get('error')), category='error')
+            return redirect(url_for('study.{}'.format(video.lesson.type.view_point)))
     return minify(render_template(
         'study/video.html',
         video=video
