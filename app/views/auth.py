@@ -112,6 +112,8 @@ def login():
             user.sync_punch(section=data.get('vb_progress'))
         if data.get('y_gre_progress') is not None:
             user.sync_punch(section=data.get('y_gre_progress'))
+        if data.get('y_gre_aw_progress') is not None:
+            user.sync_punch(section=data.get('y_gre_aw_progress'))
         login_user(user, remember=current_app.config['AUTH_REMEMBER_LOGIN'])
         add_user_log(user=user, event='登录系统', category='auth')
         db.session.commit()
