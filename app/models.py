@@ -452,7 +452,7 @@ class User(UserMixin, db.Model):
 
     def punch(self, video, play_time, synchronized=False):
         '''User.punch(self, video, play_time, synchronized=False)'''
-        punch = self.punches.filter_by(video_id=video.id).first()
+        punch = self.get_punch(video=video)
         if punch is not None:
             punch.synchronized = synchronized
             punch.timestamp = datetime.utcnow()
@@ -478,30 +478,37 @@ class User(UserMixin, db.Model):
 
     def sync_punch(self, section):
         '''User.sync_punch(self, section)'''
-        if section.startswith('VB'):
-            video = Video.query.filter_by(name=section).first()
-            if video is not None:
-                for video in Video.query\
-                    .join(Lesson, Lesson.id == Video.lesson_id)\
-                    .join(LessonType, LessonType.id == Lesson.type_id)\
-                    .filter(LessonType.name == 'VB')\
-                    .filter(Video.id <= video.id)\
-                    .order_by(Video.id.asc())\
-                    .all():
-                    if not self.punched(video=video):
-                        self.punch(video=video, play_time=video.duration, synchronized=True)
-        if section.startswith('Y-GRE'):
-            lesson = Lesson.query.filter_by(name=section).first()
-            if lesson is not None:
-                for video in Video.query\
-                    .join(Lesson, Lesson.id == Video.lesson_id)\
-                    .join(LessonType, LessonType.id == Lesson.type_id)\
-                    .filter(LessonType.name == 'Y-GRE')\
-                    .filter(Lesson.id <= lesson.id)\
-                    .order_by(Video.id.asc())\
-                    .all():
-                    if not self.punched(video=video):
-                        self.punch(video=video, play_time=video.duration, synchronized=True)
+        if isinstance(section, str):
+            if section.startswith('VB'):
+                video = Video.query.filter_by(name=section).first()
+                if video is not None:
+                    for video in Video.query\
+                        .join(Lesson, Lesson.id == Video.lesson_id)\
+                        .join(LessonType, LessonType.id == Lesson.type_id)\
+                        .filter(LessonType.name == 'VB')\
+                        .filter(Video.id <= video.id)\
+                        .all():
+                        if not self.punched(video=video):
+                            self.punch(video=video, play_time=video.duration, synchronized=True)
+            elif section.startswith('Y-GRE'):
+                lesson = Lesson.query.filter_by(name=section).first()
+                if lesson is not None:
+                    for video in Video.query\
+                        .join(Lesson, Lesson.id == Video.lesson_id)\
+                        .join(LessonType, LessonType.id == Lesson.type_id)\
+                        .filter(LessonType.name == 'Y-GRE')\
+                        .filter(Lesson.id <= lesson.id)\
+                        .all():
+                        if not self.punched(video=video):
+                            self.punch(video=video, play_time=video.duration, synchronized=True)
+        elif isinstance(section, bool) and section:
+            for video in Video.query\
+                .join(Lesson, Lesson.id == Video.lesson_id)\
+                .join(LessonType, LessonType.id == Lesson.type_id)\
+                .filter(LessonType.name == 'Y-GRE AW')\
+                .all():
+                if not self.punched(video=video):
+                    self.punch(video=video, play_time=video.duration, synchronized=True)
 
     @property
     def latest_punch(self):
@@ -568,14 +575,14 @@ class User(UserMixin, db.Model):
 
     def video_play_time(self, video):
         '''User.video_play_time(self, video)'''
-        punch = self.punches.filter_by(video_id=video.id).first()
+        punch = self.get_punch(video=video)
         if punch is not None:
             return punch.play_time
         return timedelta()
 
     def video_progress(self, video):
         '''User.video_progress(self, video)'''
-        punch = self.punches.filter_by(video_id=video.id).first()
+        punch = self.get_punch(video=video)
         if punch is not None:
             return punch.progress_trim
         return 0.0
