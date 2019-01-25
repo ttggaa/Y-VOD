@@ -96,7 +96,7 @@ class ProductionConfig(Config):
     ENV = 'production'
 
     # Database
-    SQLALCHEMY_DATABASE_URI = os.getenv('YVOD_PROD_DATABASE_URL')
+    SQLALCHEMY_DATABASE_URI = os.getenv('YVOD_DATABASE_URL')
 
     # Mail
     MAIL_SERVER = 'smtp.exmail.qq.com'
