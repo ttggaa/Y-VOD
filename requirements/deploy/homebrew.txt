@@ -1,5 +1,5 @@
 python
 media-info
-mariadb
+mysql
 supervisor
 nginx-vod
