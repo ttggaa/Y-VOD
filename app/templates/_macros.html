@@ -60,7 +60,7 @@ if ($(window).width() >= 768) {
 
 
 {% macro user_log_widget(log, is_self=False, show_role=False, show_category=False) -%}
-{% if show_category %}<div class="ui grey horizontal label">{{ log.category }}</div>{% endif %}{% if show_role %}<div class="ui horizontal label">{{ log.user.role.name }}</div>{% endif %}{% if is_self %}我{% else %}{{ user_url_widget(log.user) }}{% endif %} {{ log.event }}
+{% if show_category %}<div class="ui grey horizontal label">{{ log.category }}</div>{% endif %}{% if show_role %}<div class="ui horizontal label">{{ log.user.role.name }}</div>{% endif %}{% if is_self %}我{% else %}{{ user_widget(log.user, show_url=True) }}{% endif %} {{ log.event }}
 {%- endmacro %}
 
 
