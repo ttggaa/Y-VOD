@@ -41,7 +41,7 @@
 
 {% block js %}
 <script type="text/javascript" src="//static.y-english.cn/assets/count/countUp.min.js"></script>
-{% if current_user.can_play(video=video) %}{% if config.HLS_ENABLE %}<script type="text/javascript" src="//static.y-english.cn/assets/hls/hls.min.css"></script>{% endif %}
+{% if current_user.can_play(video=video) %}{% if config.HLS_ENABLE %}<script type="text/javascript" src="//static.y-english.cn/assets/hls/hls.min.js"></script>{% endif %}
 <script type="text/javascript" src="//static.y-english.cn/assets/player/player.min.js"></script>{% endif %}
 <script type="text/javascript">
 {{ macros.close_message_js_snippet() }}
