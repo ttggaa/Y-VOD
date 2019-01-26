@@ -9,8 +9,8 @@ import operator
 from functools import reduce
 from shutil import rmtree
 from datetime import datetime, timedelta
+from json import JSONDecodeError
 import csv
-from json.decoder import JSONDecodeError
 import yaml
 from getmac import get_mac_address
 from pymediainfo import MediaInfo
