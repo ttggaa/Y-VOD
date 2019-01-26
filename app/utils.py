@@ -10,6 +10,7 @@ from functools import reduce
 from shutil import rmtree
 from datetime import datetime, timedelta
 import csv
+from json.decoder import JSONDecodeError
 import yaml
 from getmac import get_mac_address
 from pymediainfo import MediaInfo
@@ -149,7 +150,7 @@ def y_system_api_request(api, token_data):
             serial.dumps(token_data).decode('ascii')
         ), timeout=current_app.config['REQUEST_TIMEOUT'])
         data = api_request.json()
-    except RequestException:
+    except (RequestException, JSONDecodeError):
         data = None
     return data
 
