@@ -180,9 +180,15 @@ class Punch(db.Model):
 
     def set_synchronized(self):
         '''Punch.set_synchronized(self)'''
-        self.synchronized = True
-        self.timestamp = datetime.utcnow()
-        db.session.add(self)
+        if self.video.lesson.type.name == 'VB':
+            self.synchronized = True
+            self.timestamp = datetime.utcnow()
+            db.session.add(self)
+        elif self.video.lesson.type.name in ['Y-GRE', 'Y-GRE AW']:
+            for video in Video.query\
+                .filter(Video.lesson_id == self.video.lesson_id)\
+                .all():
+                self.user.punch(video=video, synchronized=True)
 
     @property
     def sync_required(self):
@@ -450,22 +456,23 @@ class User(UserMixin, db.Model):
         }
         return json_entry
 
-    def punch(self, video, play_time, synchronized=False):
-        '''User.punch(self, video, play_time, synchronized=False)'''
+    def punch(self, video, play_time=None, synchronized=None):
+        '''User.punch(self, video, play_time=None, synchronized=None)'''
         punch = self.get_punch(video=video)
         if punch is not None:
-            punch.synchronized = synchronized
             punch.timestamp = datetime.utcnow()
         else:
             punch = Punch(
                 user_id=self.id,
-                video_id=video.id,
-                synchronized=synchronized
+                video_id=video.id
             )
-        if isinstance(play_time, timedelta):
-            punch.play_time = play_time
-        else:
-            punch.play_time = timedelta(seconds=play_time)
+        if play_time is not None:
+            if isinstance(play_time, timedelta):
+                punch.play_time = play_time
+            else:
+                punch.play_time = timedelta(seconds=play_time)
+        if synchronized is not None:
+            punch.synchronized = synchronized
         db.session.add(punch)
 
     def punched(self, video):
