@@ -495,7 +495,7 @@ class User(UserMixin, db.Model):
                         .filter(LessonType.name == 'VB')\
                         .filter(Video.id <= video.id)\
                         .all():
-                        if not self.punched(video=video):
+                        if not self.synced_punch(video=video):
                             self.punch(video=video, play_time=video.duration, synchronized=True)
             elif section.startswith('Y-GRE'):
                 lesson = Lesson.query.filter_by(name=section).first()
@@ -506,7 +506,7 @@ class User(UserMixin, db.Model):
                         .filter(LessonType.name == 'Y-GRE')\
                         .filter(Lesson.id <= lesson.id)\
                         .all():
-                        if not self.punched(video=video):
+                        if not self.synced_punch(video=video):
                             self.punch(video=video, play_time=video.duration, synchronized=True)
         elif isinstance(section, bool) and section:
             for video in Video.query\
@@ -514,8 +514,16 @@ class User(UserMixin, db.Model):
                 .join(LessonType, LessonType.id == Lesson.type_id)\
                 .filter(LessonType.name == 'Y-GRE AW')\
                 .all():
-                if not self.punched(video=video):
+                if not self.synced_punch(video=video):
                     self.punch(video=video, play_time=video.duration, synchronized=True)
+
+    @property
+    def synced_punch(self, video):
+        '''User.synced_punch(self, video)'''
+        punch = self.get_punch(video=video)
+        return punch is not None and \
+            punch.synchronized and \
+            punch.punch.progress_trim >= video.lesson.progress_threshold
 
     @property
     def latest_punch(self):

@@ -1,6 +1,6 @@
 ## RELEASE NOTES
 
-### Version 1.0.1 - January 28, 2019
+### Version 1.0.1 - February 1, 2019
 
 **NEW**
 - **Model** - Add `demo` attribute to video data model #1
@@ -41,6 +41,7 @@
 **FIXED**
 - **Feature** - Playback rate changes are not taken into account in total video play time calculation #23
 - **Feature** - Synchronized punches continue to synchronize #50
+- **Feature** - Punch synchronization failure due to existing unsynchronized punches #54
 
 ### Version 1.0.0 - December 24, 2018
 
