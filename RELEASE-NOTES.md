@@ -1,6 +1,6 @@
 ## RELEASE NOTES
 
-### Version 1.0.1 - February 13, 2019
+### Version 1.0.1 - February 14, 2019
 
 **NEW**
 - **Model** - Add `demo` attribute to video data model #1
@@ -21,6 +21,7 @@
 - **Model** - Add `synchronized` attribute to punch data model #40
 - **Model** - Add `progress_threshold` attribute to lesson data model #41
 - **Feature** - Adopt Y-System lesson access API #42
+- **Feature** - Add communication error alert to users on video page #61
 
 **IMPROVED**
 - **Model** - Change `demo` attribute of video data model to `restricted` #7
