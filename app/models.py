@@ -487,13 +487,13 @@ class User(UserMixin, db.Model):
         '''User.sync_punch(self, section)'''
         if isinstance(section, str):
             if section.startswith('VB'):
-                video = Video.query.filter_by(name=section).first()
-                if video is not None:
+                vb_video = Video.query.filter_by(name=section).first()
+                if vb_video is not None:
                     for video in Video.query\
                         .join(Lesson, Lesson.id == Video.lesson_id)\
                         .join(LessonType, LessonType.id == Lesson.type_id)\
                         .filter(LessonType.name == 'VB')\
-                        .filter(Video.id <= video.id)\
+                        .filter(Video.id <= vb_video.id)\
                         .all():
                         if not self.synced_punch(video=video):
                             self.punch(video=video, play_time=video.duration, synchronized=True)
@@ -616,7 +616,7 @@ class User(UserMixin, db.Model):
         '''User.can_play(self, video)'''
         if video.lesson.type.name == 'VB':
             return self.plays(role_name='协调员') or \
-                reduce(operator.and_, [self.complete_video(video=video) for video in Video.query\
+                reduce(operator.and_, [self.complete_video(video=item) for item in Video.query\
                     .join(Lesson, Lesson.id == Video.lesson_id)\
                     .filter(Lesson.type_id == video.lesson.type_id)\
                     .filter(Video.id < video.id)\
