@@ -517,7 +517,6 @@ class User(UserMixin, db.Model):
                 if not self.synced_punch(video=video):
                     self.punch(video=video, play_time=video.duration, synchronized=True)
 
-    @property
     def synced_punch(self, video):
         '''User.synced_punch(self, video)'''
         punch = self.get_punch(video=video)
