@@ -522,7 +522,7 @@ class User(UserMixin, db.Model):
         punch = self.get_punch(video=video)
         return punch is not None and \
             punch.synchronized and \
-            punch.punch.progress_trim >= video.lesson.progress_threshold
+            punch.progress_trim >= video.lesson.progress_threshold
 
     @property
     def latest_punch(self):
