@@ -91,8 +91,12 @@ def get_mac_address_from_ip(ip_address):
     if ip_address is None:
         return None
     if ip_address == '127.0.0.1':
-        return get_mac_address().upper()
-    return get_mac_address(ip=ip_address).upper()
+        mac_address = get_mac_address()
+    else:
+        mac_address = get_mac_address(ip=ip_address)
+    if mac_address is not None:
+        return mac_address.upper()
+    return None
 
 
 def get_video_duration(video_file):
