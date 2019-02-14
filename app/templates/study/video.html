@@ -84,8 +84,8 @@ var elapsedTime = 0;
 var playTime = {{ current_user.video_play_time(video=video).total_seconds() }};
 var lastVideoCurrentTime = null;
 var lastPunchAt = null;
-function punch() {
-    if (lastPunchAt === null || lastPunchAt + updateInterval <= elapsedTime) {
+function punch(forceSend) {
+    if (forceSend || lastPunchAt === null || lastPunchAt + updateInterval <= elapsedTime) {
         if (!document.hidden) {
             $.ajax({
                 beforeSend: function(jqXHR, settings) {
@@ -104,14 +104,17 @@ function punch() {
                     updateVideoProgress(data.progress);
                 },
                 error: function (jqXHR, textStatus, errorThrown) {
-                    $('body').toast({
-                        class: 'orange',
-                        showIcon: 'exclamation triangle',
-                        displayTime: 0,
-                        closeIcon: true,
-                        title: '网络通信故障',
-                        message: '您的研修进度未被上传存档，请检查设备的网络连接情况。'
-                    });
+                    if ($('.ui.toast').length === 0) {
+                        $('body').toast({
+                            class: 'orange',
+                            showIcon: 'exclamation triangle',
+                            displayTime: 0,
+                            closeIcon: true,
+                            title: '网络通信故障',
+                            message: '您的研修进度未被上传存档，请检查设备的网络连接情况。'
+                        });
+                    };
+                    console.log(textStatus);
                 }
             });
         };
@@ -119,16 +122,10 @@ function punch() {
     };
 };
 videoPlayer.on('pause', function () {
-    punch();
+    punch(true);
 });
 videoPlayer.on('ended', function () {
-    punch();
-});
-videoPlayer.on('waiting', function () {
-    punch();
-});
-videoPlayer.on('error', function () {
-    punch();
+    punch(true);
 });
 setInterval(function () {
     if (!videoPlayer.video.paused && videoPlayer.video.currentTime !== lastVideoCurrentTime) {
@@ -136,8 +133,8 @@ setInterval(function () {
         lastVideoCurrentTime = videoPlayer.video.currentTime;
     };
     elapsedTime += granularity;
-    if (elapsedTime % updateInterval === 0) {
-        punch();
+    if (!videoPlayer.video.paused && elapsedTime % updateInterval === 0) {
+        punch(false);
     };
 }, granularity);
 {% endif %}
