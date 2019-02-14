@@ -1,6 +1,6 @@
 ## RELEASE NOTES
 
-### Version 1.0.1 - February 14, 2019
+### Version 1.0.1 - February 15, 2019
 
 **NEW**
 - **Model** - Add `demo` attribute to video data model #1
@@ -44,6 +44,7 @@
 - **Feature** - Synchronized punches continue to synchronize #50
 - **Feature** - Punch synchronization failure due to existing unsynchronized punches #54
 - **Toolkit** - Exception on `get_mac_address_from_ip(ip_address)` #63
+- **Feature** - Exception on sending video progress data when video is paused #65
 
 ### Version 1.0.0 - December 24, 2018
 
